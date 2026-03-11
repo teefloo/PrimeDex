@@ -11,11 +11,17 @@ export const getPokemonList = async ({ pageParam = 0 }: { pageParam?: number }) 
   const limit = 20;
   const offset = pageParam * limit;
   const { data } = await api.get<PokemonListResponse>(`/pokemon?offset=${offset}&limit=${limit}`);
-  return { ...data, nextOffset: data.next ? pageParam + 1 : undefined };
+  
+  // On renvoie les résultats et le prochain offset s'il existe
+  return { 
+    results: data.results, 
+    nextParam: data.next ? pageParam + 1 : undefined 
+  };
 };
 
-export const getAllPokemon = async () => {
-  const { data } = await api.get<PokemonListResponse>('/pokemon?limit=10000');
+export const getAllPokemonNames = async () => {
+  // On ne récupère que les noms pour la recherche locale, c'est beaucoup plus léger
+  const { data } = await api.get<PokemonListResponse>('/pokemon?limit=2000');
   return data.results;
 };
 
@@ -29,8 +35,6 @@ export const getPokemonSpecies = async (name: string): Promise<PokemonSpecies & 
     const { data } = await api.get(`/pokemon-species/${name}`);
     return data;
   } catch (error) {
-    // If species not found by variant name, try getting the base species
-    // Note: the component now passes the species name directly, but this is a good safety net
     console.error(`Error fetching species for ${name}:`, error);
     throw error;
   }
@@ -41,7 +45,34 @@ export const getEvolutionChain = async (url: string) => {
   return data;
 };
 
+interface PokemonByTypeResponse {
+  pokemon: {
+    pokemon: {
+      name: string;
+      url: string;
+    };
+    slot: number;
+  }[];
+}
+
 export const getPokemonByType = async (type: string) => {
-  const { data } = await api.get(`/type/${type}`);
-  return data.pokemon.map((p: any) => p.pokemon);
+  const { data } = await api.get<PokemonByTypeResponse>(`/type/${type}`);
+  return data.pokemon.map((p) => p.pokemon);
+};
+
+interface GenerationResponse {
+  pokemon_species: {
+    name: string;
+    url: string;
+  }[];
+}
+
+export const getPokemonByGeneration = async (genId: string) => {
+  const { data } = await api.get<GenerationResponse>(`/generation/${genId}`);
+  // Pokémon species URL is /pokemon-species/{id}/
+  // We need to convert it to /pokemon/{id}/
+  return data.pokemon_species.map((species) => ({
+    name: species.name,
+    url: species.url.replace('pokemon-species', 'pokemon'),
+  }));
 };

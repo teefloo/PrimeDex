@@ -28,8 +28,8 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
 
   if (isLoading || !pokemon) {
     return (
-      <div className="py-4 px-2">
-        <div className="neu-flat h-80 animate-shimmer" />
+      <div className="py-4 px-2 h-80">
+        <div className="glass-panel w-full h-full rounded-[2rem] animate-pulse bg-white/5" />
       </div>
     );
   }
@@ -51,45 +51,59 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
   return (
     <Link href={`/pokemon/${name}`} className="block h-full py-4 px-2">
       <motion.div
-        whileHover={{ y: -5 }}
-        className="neu-flat type-glow relative h-full p-6 flex flex-col items-center group overflow-hidden"
+        whileHover={{ y: -8, scale: 1.02 }}
+        className="glass-panel type-glow relative h-full p-6 flex flex-col items-center group overflow-hidden rounded-[2rem]"
         style={{ '--type-color': `${color}40` } as React.CSSProperties}
       >
-        {/* Subtle type color accent */}
-        <div
-          className="absolute top-0 left-0 right-0 h-1 rounded-t-[2rem] opacity-60 transition-opacity group-hover:opacity-100"
+        {/* Colorful background mesh */}
+        <div 
+          className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+          style={{ backgroundColor: color }}
+        />
+        <div 
+          className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-[50px] opacity-10 group-hover:opacity-30 transition-opacity duration-500"
           style={{ backgroundColor: color }}
         />
 
-        <div className="absolute top-4 right-4 z-10">
-          <button
+        {/* Top bar with ID and Favorite */}
+        <div className="flex justify-between items-center w-full z-10 mb-4">
+          <span className="text-sm font-black text-foreground/40 drop-shadow-sm">
+            {formatId(pokemon.id)}
+          </span>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={toggleFavorite}
             className={cn(
-              "neu-btn-icon w-10 h-10 transition-all",
-              isFav ? "text-primary" : "text-foreground/30 hover:text-primary/60"
+              "p-2 rounded-full backdrop-blur-md transition-all",
+              isFav 
+                ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" 
+                : "bg-secondary/30 text-foreground/40 hover:text-foreground/80 hover:bg-secondary/50"
             )}
             aria-label={isFav ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
           >
             <Heart className={cn("w-5 h-5 transition-transform", isFav && "fill-current scale-110")} />
-          </button>
+          </motion.button>
         </div>
 
-        <span className="self-start text-xs font-bold text-foreground/30 mb-2">
-          {formatId(pokemon.id)}
-        </span>
-
-        <div className="relative w-32 h-32 my-2 z-10">
+        {/* Pokemon Image */}
+        <div className="relative w-36 h-36 my-4 z-10">
+          <div 
+            className="absolute inset-0 rounded-full blur-2xl opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500"
+            style={{ backgroundColor: color }}
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}
             alt={name}
-            className="w-full h-full object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-125 group-hover:-translate-y-2 relative z-10"
             loading="lazy"
           />
         </div>
 
-        <div className="mt-auto w-full text-center z-10 pt-4">
-          <h3 className="text-lg font-extrabold text-foreground capitalize mb-3 tracking-wide">
+        {/* Info Section */}
+        <div className="mt-auto w-full text-center z-10 pt-6">
+          <h3 className="text-xl font-black text-foreground capitalize mb-4 tracking-tight drop-shadow-sm">
             {pokemon.name}
           </h3>
 
@@ -97,8 +111,11 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
             {pokemon.types.map((t) => (
               <span
                 key={t.type.name}
-                className="neu-tag text-white shadow-sm"
-                style={{ backgroundColor: TYPE_COLORS[t.type.name] || color }}
+                className="glass-tag"
+                style={{ 
+                  backgroundColor: `${TYPE_COLORS[t.type.name]}cc`,
+                  borderColor: TYPE_COLORS[t.type.name]
+                }}
               >
                 {t.type.name}
               </span>

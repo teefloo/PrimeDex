@@ -15,6 +15,15 @@ interface PokedexStore {
   selectedType: string | null;
   setSelectedType: (type: string | null) => void;
 
+  selectedRegion: string | null;
+  setSelectedRegion: (region: string | null) => void;
+
+  showFavoritesOnly: boolean;
+  setShowFavoritesOnly: (show: boolean) => void;
+
+  sortBy: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc';
+  setSortBy: (sort: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc') => void;
+
   // Settings
   isSettingsOpen: boolean;
   toggleSettings: () => void;
@@ -40,6 +49,15 @@ export const usePokedexStore = create<PokedexStore>()(
       selectedType: null,
       setSelectedType: (type) => set({ selectedType: type }),
 
+      selectedRegion: null,
+      setSelectedRegion: (region) => set({ selectedRegion: region }),
+
+      showFavoritesOnly: false,
+      setShowFavoritesOnly: (show) => set({ showFavoritesOnly: show }),
+
+      sortBy: 'id-asc',
+      setSortBy: (sort) => set({ sortBy: sort }),
+
       isSettingsOpen: false,
       toggleSettings: () => set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
       soundEnabled: true,
@@ -51,6 +69,7 @@ export const usePokedexStore = create<PokedexStore>()(
     {
       name: 'pokedex-storage',
       partialize: (state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { searchTerm, ...rest } = state;
         return rest;
       },

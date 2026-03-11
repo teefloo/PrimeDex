@@ -3,6 +3,7 @@ import { Nunito, Geist } from "next/font/google";
 import Providers from "./providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Agentation } from "agentation";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -38,7 +39,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body className={`${mainFont.variable} antialiased bg-background text-foreground font-main`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          {process.env.NODE_ENV === "development" && <Agentation />}
+        </Providers>
       </body>
     </html>
   );

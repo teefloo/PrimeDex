@@ -47,12 +47,10 @@ export default function PokemonDetailPage() {
   const mainType = pokemon.types[0].type.name;
   const color = TYPE_COLORS[mainType] || '#A8A77A';
 
-  // Flavor text (English)
   const flavorText = species?.flavor_text_entries.find(
     (entry) => entry.language.name === 'en'
   )?.flavor_text.replace(/\f/g, ' ');
 
-  // Genus (English)
   const genus = species?.genera.find(
     (g) => g.language.name === 'en'
   )?.genus;
@@ -61,62 +59,73 @@ export default function PokemonDetailPage() {
   const totalStats = pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Hero Section */}
-      <div className="relative min-h-[40vh] w-full flex flex-col items-center justify-end pb-12 pt-24 bg-background overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
-          <div
-            className="absolute -top-1/2 -left-1/4 w-[150%] h-[150%] rounded-[100%] blur-3xl opacity-40 mix-blend-multiply"
-            style={{ backgroundColor: color }}
-          />
-        </div>
+    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <div
+          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] mix-blend-screen"
+          style={{ backgroundColor: color }}
+        />
+        <div
+          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[100px] mix-blend-screen opacity-50"
+          style={{ backgroundColor: color }}
+        />
+      </div>
 
+      {/* Hero Section */}
+      <div className="relative min-h-[45vh] w-full flex flex-col items-center justify-end pb-16 pt-28">
         <button
           onClick={() => router.back()}
-          className="absolute top-8 left-8 neu-btn-icon z-20 text-foreground/60 hover:text-primary transition-colors"
+          className="absolute top-8 left-6 md:left-12 p-3 bg-secondary/30 backdrop-blur-md rounded-full border border-white/10 z-30 text-foreground/70 hover:text-foreground hover:bg-white/10 hover:scale-105 transition-all"
           aria-label="Go back"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
 
-        <div className="absolute top-10 right-10 text-foreground/10 font-black text-7xl md:text-8xl select-none z-0">
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12rem] md:text-[18rem] font-black opacity-5 tracking-tighter select-none z-0"
+          style={{ color }}
+        >
           {formatId(pokemon.id)}
         </div>
 
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          initial={{ y: 50, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 z-10 group"
+          className="relative w-72 h-72 md:w-96 md:h-96 z-20 group"
         >
-          {/* Scan Effect Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/10 to-transparent h-[10%] w-full top-0 left-0 animate-[scan_3s_linear_infinite] z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-
+          <div 
+            className="absolute inset-0 rounded-full blur-[60px] opacity-40 group-hover:scale-110 transition-transform duration-700 pointer-events-none"
+            style={{ backgroundColor: color }}
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}
             alt={pokemon.name}
-            className="w-full h-full object-contain drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 transition-transform duration-700 group-hover:scale-110 group-hover:-translate-y-4"
           />
         </motion.div>
       </div>
 
-      <div className="container mx-auto px-4 -mt-8 relative z-20 pb-20 max-w-5xl">
+      <div className="container mx-auto px-4 md:px-6 relative z-30 max-w-6xl">
         <motion.div
-          initial={{ y: 30, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground capitalize mb-3 tracking-wide">
+          <h1 className="text-5xl md:text-7xl font-black text-foreground capitalize mb-4 tracking-tight drop-shadow-sm">
             {pokemon.name}
           </h1>
 
           {genus && (
-            <div className="flex flex-col items-center gap-1 mb-6">
-              <p className="text-sm text-foreground/50 font-semibold uppercase tracking-widest">{genus}</p>
+            <div className="flex flex-col items-center gap-2 mb-8">
+              <p className="text-sm md:text-base text-foreground/60 font-bold uppercase tracking-[0.2em]">{genus}</p>
               {species?.habitat && (
-                <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tighter italic">Found in {species.habitat.name}</p>
+                <p className="text-xs text-foreground/40 font-semibold uppercase tracking-widest bg-secondary/40 px-3 py-1 rounded-full border border-white/5">
+                  Habitat: {species.habitat.name}
+                </p>
               )}
             </div>
           )}
@@ -125,8 +134,11 @@ export default function PokemonDetailPage() {
             {pokemon.types.map((t) => (
               <span
                 key={t.type.name}
-                className="neu-tag text-white shadow-md px-5 py-1.5 text-sm"
-                style={{ backgroundColor: TYPE_COLORS[t.type.name] || color }}
+                className="glass-tag px-6 py-2 text-sm shadow-lg"
+                style={{ 
+                  backgroundColor: `${TYPE_COLORS[t.type.name]}dd`,
+                  borderColor: TYPE_COLORS[t.type.name]
+                }}
               >
                 {t.type.name}
               </span>
@@ -134,88 +146,92 @@ export default function PokemonDetailPage() {
           </div>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
+        <div className="grid lg:grid-cols-12 gap-6 md:gap-8">
           {/* Stats Section */}
           <motion.div
-            initial={{ x: -30, opacity: 0 }}
+            initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="neu-flat p-8 rounded-[2rem]"
+            className="lg:col-span-7 glass-panel p-6 md:p-8 rounded-[2.5rem]"
           >
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-foreground/80 flex items-center gap-2">
-                <Swords className="w-5 h-5 text-primary" />
-                Base Stats
+            <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/10">
+              <h3 className="text-2xl font-black text-foreground/90 flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Swords className="w-6 h-6 text-primary" />
+                </div>
+                Combat Stats
               </h3>
-              <span className="text-sm font-bold text-foreground/40">Total: {totalStats}</span>
+              <div className="text-right">
+                <p className="text-xs text-foreground/50 font-bold uppercase tracking-widest mb-1">Total</p>
+                <span className="text-xl font-black text-foreground/90">{totalStats}</span>
+              </div>
             </div>
-            <div className="space-y-5">
+            
+            <div className="space-y-6">
               {pokemon.stats.map((s) => (
-                <div key={s.stat.name} className="flex items-center gap-3">
-                  <span className="w-16 font-bold uppercase text-foreground/50 text-xs tracking-wider">
+                <div key={s.stat.name} className="flex items-center gap-4 group">
+                  <span className="w-16 font-bold uppercase text-foreground/50 text-xs tracking-wider group-hover:text-foreground/80 transition-colors">
                     {STAT_LABELS[s.stat.name] || s.stat.name}
                   </span>
-                  <span className="w-10 font-bold text-right text-foreground/80 text-sm tabular-nums">{s.base_stat}</span>
-                  <div
-                    className="flex-1 h-3 rounded-full overflow-hidden"
-                    style={{ boxShadow: 'var(--stat-inset)' }}
-                  >
+                  <span className="w-10 font-black text-right text-foreground/90 tabular-nums">
+                    {s.base_stat}
+                  </span>
+                  <div className="flex-1 h-3.5 rounded-full bg-secondary/50 overflow-hidden border border-white/5 relative">
+                    <div className="absolute inset-0 bg-black/10 shadow-inner" />
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min((s.base_stat / statMax) * 100, 100)}%` }}
-                      transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-                      className="h-full rounded-full"
+                      transition={{ duration: 1.2, ease: "easeOut", delay: 0.4 }}
+                      className="h-full rounded-full relative"
                       style={{
                         backgroundColor: color,
-                        boxShadow: 'var(--stat-bar-shadow)',
+                        boxShadow: `0 0 10px ${color}, inset 0 0 5px rgba(255,255,255,0.5)`
                       }}
-                    />
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    </motion.div>
                   </div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Info Section */}
-          <div className="space-y-8">
+          {/* Info & Sprites */}
+          <div className="lg:col-span-5 space-y-6 md:space-y-8">
             <motion.div
-              initial={{ x: 30, opacity: 0 }}
+              initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="neu-flat p-8 rounded-[2rem]"
+              className="glass-panel p-6 md:p-8 rounded-[2.5rem]"
             >
-              <h3 className="text-xl font-bold mb-6 text-foreground/80">About</h3>
+              <h3 className="text-xl font-black mb-4 text-foreground/90 border-b border-white/10 pb-4">Pokédex Entry</h3>
               {isSpeciesLoading ? (
-                <div className="h-20 animate-shimmer rounded-xl" />
+                <div className="h-24 animate-pulse bg-white/5 rounded-2xl" />
               ) : (
-                <p className="text-base md:text-lg text-foreground/70 leading-relaxed">
+                <p className="text-base text-foreground/70 leading-relaxed font-medium">
                   {flavorText || "No description available."}
                 </p>
               )}
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-                <div className="neu-pressed p-4 rounded-2xl flex flex-col items-center text-center">
-                  <Weight className="w-5 h-5 text-foreground/40 mb-2" />
-                  <p className="text-[10px] text-foreground/40 uppercase font-bold tracking-wider mb-1">Weight</p>
-                  <p className="text-base font-bold text-foreground/80">{pokemon.weight / 10} kg</p>
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                <div className="bg-secondary/30 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center text-center group hover:bg-secondary/50 transition-colors">
+                  <Weight className="w-5 h-5 text-foreground/40 mb-2 group-hover:text-primary transition-colors" />
+                  <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-1">Weight</p>
+                  <p className="text-lg font-black text-foreground/90">{pokemon.weight / 10} kg</p>
                 </div>
-                <div className="neu-pressed p-4 rounded-2xl flex flex-col items-center text-center">
-                  <Ruler className="w-5 h-5 text-foreground/40 mb-2" />
-                  <p className="text-[10px] text-foreground/40 uppercase font-bold tracking-wider mb-1">Height</p>
-                  <p className="text-base font-bold text-foreground/80">{pokemon.height / 10} m</p>
+                <div className="bg-secondary/30 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center text-center group hover:bg-secondary/50 transition-colors">
+                  <Ruler className="w-5 h-5 text-foreground/40 mb-2 group-hover:text-primary transition-colors" />
+                  <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-1">Height</p>
+                  <p className="text-lg font-black text-foreground/90">{pokemon.height / 10} m</p>
                 </div>
-                <div className="neu-pressed p-4 rounded-2xl flex flex-col items-center text-center">
-                  <Sparkles className="w-5 h-5 text-foreground/40 mb-2" />
-                  <p className="text-[10px] text-foreground/40 uppercase font-bold tracking-wider mb-1">Base Exp</p>
-                  <p className="text-base font-bold text-foreground/80">{pokemon.base_experience || '---'}</p>
-                </div>
-                <div className="neu-pressed p-4 rounded-2xl flex flex-col items-center text-center">
-                  <Swords className="w-5 h-5 text-foreground/40 mb-2" />
-                  <p className="text-[10px] text-foreground/40 uppercase font-bold tracking-wider mb-1">Abilities</p>
-                  <div className="flex flex-col">
-                    {pokemon.abilities.slice(0, 2).map(a => (
-                      <span key={a.ability.name} className="text-[10px] font-bold text-foreground/70 capitalize">
+                <div className="bg-secondary/30 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center text-center group hover:bg-secondary/50 transition-colors col-span-2">
+                  <Sparkles className="w-5 h-5 text-foreground/40 mb-2 group-hover:text-yellow-500 transition-colors" />
+                  <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">Abilities</p>
+                  <div className="flex gap-2 flex-wrap justify-center">
+                    {pokemon.abilities.map(a => (
+                      <span key={a.ability.name} className="px-3 py-1 bg-background/50 rounded-lg text-xs font-bold text-foreground/80 capitalize border border-white/5">
                         {a.ability.name.replace('-', ' ')}
+                        {a.is_hidden && <span className="ml-1 text-[10px] opacity-50">(Hidden)</span>}
                       </span>
                     ))}
                   </div>
@@ -225,37 +241,34 @@ export default function PokemonDetailPage() {
 
             {/* Sprites Gallery */}
             <motion.div
-              initial={{ x: 30, opacity: 0 }}
+              initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="neu-flat p-8 rounded-[2rem]"
+              className="glass-panel p-6 md:p-8 rounded-[2.5rem]"
             >
-              <h3 className="text-xl font-bold mb-8 flex items-center gap-2 text-foreground/80">
-                <Sparkles className="w-5 h-5 text-yellow-500" />
-                Variations
-              </h3>
-              <div className="flex justify-around items-center gap-4">
-                <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                  <div className="w-20 h-20 md:w-24 md:h-24 neu-flat rounded-2xl flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
+              <h3 className="text-xl font-black mb-6 text-foreground/90 border-b border-white/10 pb-4">Forms</h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col items-center gap-2 group">
+                  <div className="w-full aspect-square bg-secondary/30 border border-white/5 rounded-2xl flex items-center justify-center p-3 group-hover:bg-secondary/50 transition-colors">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pokemon.sprites.front_default} alt="Front" className="w-full h-full object-contain" />
+                    <img src={pokemon.sprites.front_default} alt="Front" className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform" />
                   </div>
-                  <span className="text-xs font-bold text-foreground/40">Default</span>
+                  <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Normal</span>
                 </div>
-                <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                  <div className="w-20 h-20 md:w-24 md:h-24 neu-flat rounded-2xl flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
+                <div className="flex flex-col items-center gap-2 group">
+                  <div className="w-full aspect-square bg-secondary/30 border border-white/5 rounded-2xl flex items-center justify-center p-3 group-hover:bg-secondary/50 transition-colors">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pokemon.sprites.back_default} alt="Back" className="w-full h-full object-contain" />
+                    <img src={pokemon.sprites.back_default} alt="Back" className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform" />
                   </div>
-                  <span className="text-xs font-bold text-foreground/40">Back</span>
+                  <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">Back</span>
                 </div>
-                <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                  <div className="w-20 h-20 md:w-24 md:h-24 neu-flat rounded-2xl flex items-center justify-center p-2 group-hover:scale-105 transition-transform relative overflow-hidden">
-                    <div className="absolute inset-0 bg-yellow-400/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+                <div className="flex flex-col items-center gap-2 group">
+                  <div className="w-full aspect-square bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-center justify-center p-3 group-hover:bg-yellow-500/20 transition-colors relative overflow-hidden">
+                    <div className="absolute inset-0 bg-yellow-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pokemon.sprites.front_shiny} alt="Shiny" className="w-full h-full object-contain relative z-10" />
+                    <img src={pokemon.sprites.front_shiny} alt="Shiny" className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(234,179,8,0.5)] group-hover:scale-110 transition-transform relative z-10" />
                   </div>
-                  <span className="text-xs font-bold text-yellow-500/80">Shiny ✨</span>
+                  <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider flex items-center gap-1">Shiny ✨</span>
                 </div>
               </div>
             </motion.div>
@@ -265,25 +278,26 @@ export default function PokemonDetailPage() {
         {/* Moves Preview */}
         {pokemon.moves.length > 0 && (
           <motion.div
-            initial={{ y: 30, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="mt-12 neu-flat p-8 rounded-[2rem]"
+            className="mt-6 md:mt-8 glass-panel p-6 md:p-8 rounded-[2.5rem]"
           >
-            <h3 className="text-xl font-bold mb-6 text-foreground/80">
-              Moves <span className="text-sm font-semibold text-foreground/40">({pokemon.moves.length})</span>
-            </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+              <h3 className="text-xl font-black text-foreground/90">Moveset</h3>
+              <span className="px-2 py-1 bg-secondary/50 rounded-md text-xs font-bold text-foreground/60">{pokemon.moves.length} moves</span>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
               {pokemon.moves.slice(0, 20).map((m) => (
                 <span
                   key={m.move.name}
-                  className="neu-tag bg-card text-foreground/60 text-xs capitalize"
+                  className="px-4 py-2 bg-secondary/20 hover:bg-secondary/40 border border-white/5 hover:border-white/20 rounded-xl text-xs md:text-sm font-semibold text-foreground/80 capitalize transition-colors cursor-default"
                 >
                   {m.move.name.replace('-', ' ')}
                 </span>
               ))}
               {pokemon.moves.length > 20 && (
-                <span className="neu-tag bg-card text-foreground/40 text-xs">
+                <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-xs md:text-sm font-bold text-primary/80">
                   +{pokemon.moves.length - 20} more
                 </span>
               )}
@@ -294,12 +308,15 @@ export default function PokemonDetailPage() {
         {/* Evolution Chain */}
         {species?.evolution_chain?.url && (
           <motion.div
-            initial={{ y: 30, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="mt-12 mb-20"
+            className="mt-6 md:mt-8 mb-20"
           >
-            <EvolutionChain url={species.evolution_chain.url} />
+            <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
+              <h3 className="text-xl font-black mb-8 text-foreground/90 border-b border-white/10 pb-4 text-center">Evolution Chain</h3>
+              <EvolutionChain url={species.evolution_chain.url} />
+            </div>
           </motion.div>
         )}
       </div>

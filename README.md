@@ -55,7 +55,7 @@ A modern, beautifully crafted Pokédex application built with **Next.js 16**, **
 
 ```bash
 # Clone the repository
-git clone https://github.com/estde/poke.git
+git clone https://github.com/Teeflo/Poke.git
 cd poke
 
 # Install dependencies
@@ -138,7 +138,7 @@ User → Next.js Page → Component → TanStack Query → PokéAPI
 
 Deploy to Vercel with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/estde/poke)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Teeflo/Poke)
 
 Or build manually:
 

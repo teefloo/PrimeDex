@@ -32,24 +32,25 @@ function EvolutionItem({ name }: { name: string }) {
   return (
     <Link href={`/pokemon/${name}`}>
       <motion.div
-        whileHover={{ y: -5 }}
+        whileHover={{ y: -5, scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="flex flex-col items-center cursor-pointer group"
       >
-        <div className="w-20 h-20 md:w-24 md:h-24 neu-flat rounded-2xl flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
+        <div className="w-20 h-20 md:w-28 md:h-28 bg-secondary/30 border border-white/5 rounded-[2rem] flex items-center justify-center p-3 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           {sprite ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={sprite}
               alt={name}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform duration-300 relative z-10"
               loading="lazy"
             />
           ) : (
             <Loader2 className="w-6 h-6 animate-spin text-foreground/20" />
           )}
         </div>
-        <span className="mt-3 text-xs font-bold capitalize text-foreground/60 group-hover:text-primary transition-colors">
+        <span className="mt-4 text-sm font-bold capitalize text-foreground/70 group-hover:text-primary transition-colors tracking-wide">
           {name}
         </span>
       </motion.div>
@@ -59,15 +60,15 @@ function EvolutionItem({ name }: { name: string }) {
 
 function ChainNode({ node }: { node: ChainLink }) {
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
       <EvolutionItem name={node.species.name} />
 
       {node.evolves_to.length > 0 && (
-        <div className="flex flex-col gap-6 md:gap-8 relative">
+        <div className="flex flex-col gap-8 md:gap-10 relative">
           {node.evolves_to.map((evolution) => (
-            <div key={evolution.species.name} className="flex flex-col md:flex-row items-center gap-6 md:gap-8 relative">
-              <div className="neu-btn-icon w-8 h-8 text-foreground/30">
-                <ArrowRight className="w-4 h-4 rotate-90 md:rotate-0" />
+            <div key={evolution.species.name} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 relative">
+              <div className="p-3 bg-secondary/30 rounded-full border border-white/5 text-foreground/40 shadow-sm">
+                <ArrowRight className="w-5 h-5 rotate-90 md:rotate-0" />
               </div>
               <ChainNode node={evolution} />
             </div>
@@ -90,7 +91,7 @@ export function EvolutionChain({ url }: EvolutionChainProps) {
 
   if (isLoading) {
     return (
-      <div className="mt-8 p-8 neu-flat h-40 flex items-center justify-center">
+      <div className="mt-8 p-8 h-40 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -99,11 +100,8 @@ export function EvolutionChain({ url }: EvolutionChainProps) {
   if (!data?.chain) return null;
 
   return (
-    <div className="neu-flat p-8 mt-8 overflow-x-auto">
-      <h3 className="text-xl font-bold mb-8 text-center text-foreground/80 uppercase tracking-wider">
-        Evolution Chain
-      </h3>
-      <div className="flex justify-center min-w-max p-4">
+    <div className="overflow-x-auto pb-8 scrollbar-hide">
+      <div className="flex justify-center min-w-max px-4">
         <ChainNode node={data.chain} />
       </div>
     </div>
