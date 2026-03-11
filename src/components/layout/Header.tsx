@@ -1,11 +1,41 @@
 'use client';
 
 import Link from 'next/link';
-import { Gamepad2, Settings, Github, Sun, Moon } from 'lucide-react';
+import { 
+  Gamepad2, 
+  Settings, 
+  Sun, 
+  Moon, 
+  Heart, 
+  Users, 
+  BrainCircuit 
+} from 'lucide-react';
 import { usePokedexStore } from '@/store/pokedex';
 import SettingsModal from './SettingsModal';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ButtonHTMLAttributes } from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+
+interface HeaderButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'ghost' | 'default' | 'outline' | 'destructive';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+}
+
+function HeaderButton({ children, variant, size, className, ...props }: HeaderButtonProps) {
+  return (
+    <button
+      className={cn(
+        "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+        variant === "ghost" && "hover:bg-accent hover:text-accent-foreground",
+        size === "sm" && "h-8 px-3 text-xs",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function Header() {
   const { toggleSettings, theme, setTheme } = usePokedexStore();
@@ -13,16 +43,10 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    // Avoid synchronous setState in effect
     const timer = setTimeout(() => setMounted(true), 0);
-    
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     handleScroll(); 
-    
     return () => {
       clearTimeout(timer);
       window.removeEventListener('scroll', handleScroll);
@@ -65,14 +89,38 @@ export default function Header() {
             </h1>
           </Link>
 
+          <nav className="hidden lg:flex items-center gap-1 bg-secondary/30 backdrop-blur-md border border-white/5 p-1 rounded-2xl">
+            <Link href="/team">
+              <HeaderButton variant="ghost" size="sm" className="rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 hover:text-primary transition-colors">
+                <Users className="w-3.5 h-3.5" /> Team
+              </HeaderButton>
+            </Link>
+            <Link href="/quiz">
+              <HeaderButton variant="ghost" size="sm" className="rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 hover:text-primary transition-colors">
+                <BrainCircuit className="w-3.5 h-3.5" /> Quiz
+              </HeaderButton>
+            </Link>
+          </nav>
+
           <div className="flex items-center gap-2 md:gap-3">
+            <Link href="/favorites">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors flex items-center gap-2"
+                title="View Favorites"
+              >
+                <Heart className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden xl:inline text-xs font-black uppercase tracking-widest px-1">Favorites</span>
+              </motion.button>
+            </Link>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={cycleTheme}
               className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-accent transition-colors"
               title={`Theme: ${theme}`}
-              aria-label={`Switch theme (currently ${theme})`}
             >
               {mounted && isDark ? (
                 <Moon className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
@@ -80,25 +128,13 @@ export default function Header() {
                 <Sun className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
               )}
             </motion.button>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              href="https://github.com/Teeflo/Poke"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-accent transition-colors hidden sm:flex"
-              title="View Source"
-              aria-label="View source code on GitHub"
-            >
-              <Github className="w-4 h-4 md:w-5 md:h-5" />
-            </motion.a>
+            
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleSettings}
               className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-accent transition-colors"
               title="Settings"
-              aria-label="Open settings"
             >
               <Settings className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>

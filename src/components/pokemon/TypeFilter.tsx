@@ -7,7 +7,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TypeFilter() {
-  const { selectedType, setSelectedType } = usePokedexStore();
+  const { selectedTypes, toggleType, setSelectedTypes } = usePokedexStore();
   const types = Object.keys(TYPE_COLORS);
 
   return (
@@ -19,28 +19,28 @@ export default function TypeFilter() {
     >
       <div className="flex flex-nowrap md:flex-wrap gap-3 justify-start md:justify-center px-4 min-w-max md:min-w-0 mx-auto max-w-6xl">
         <AnimatePresence>
-          {selectedType && (
+          {selectedTypes.length > 0 && (
             <motion.button
               initial={{ scale: 0.8, opacity: 0, width: 0 }}
               animate={{ scale: 1, opacity: 1, width: 'auto' }}
               exit={{ scale: 0.8, opacity: 0, width: 0 }}
-              onClick={() => setSelectedType(null)}
+              onClick={() => setSelectedTypes([])}
               className="flex items-center gap-1 glass-btn px-4 py-2.5 text-sm text-foreground/80 hover:text-destructive whitespace-nowrap overflow-hidden"
             >
               <X className="w-4 h-4" />
-              <span className="font-semibold">Clear</span>
+              <span className="font-semibold">Clear ({selectedTypes.length})</span>
             </motion.button>
           )}
         </AnimatePresence>
         
         {types.map((type) => {
-          const isActive = selectedType === type;
+          const isActive = selectedTypes.includes(type);
           const color = TYPE_COLORS[type];
           
           return (
             <button
               key={type}
-              onClick={() => setSelectedType(isActive ? null : type)}
+              onClick={() => toggleType(type)}
               className={cn(
                 "relative px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 overflow-hidden group",
                 isActive 

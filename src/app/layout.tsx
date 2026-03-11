@@ -4,6 +4,7 @@ import Providers from "./providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Agentation } from "agentation";
+import CompareBar from "@/components/pokemon/CompareBar";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={`${mainFont.variable} antialiased bg-background text-foreground font-main`}>
         <Providers>
           {children}
+          <CompareBar />
           {process.env.NODE_ENV === "development" && <Agentation />}
         </Providers>
       </body>

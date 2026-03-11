@@ -5,6 +5,8 @@ import TypeFilter from '@/components/pokemon/TypeFilter';
 import RegionFilter from '@/components/pokemon/RegionFilter';
 import FavoriteToggle from '@/components/pokemon/FavoriteToggle';
 import SortSelector from '@/components/pokemon/SortSelector';
+import AdvancedFilters from '@/components/pokemon/AdvancedFilters';
+import RecentlyViewed from '@/components/pokemon/RecentlyViewed';
 
 export default function Home() {
   return (
@@ -29,6 +31,7 @@ export default function Home() {
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 px-4">
               <div className="flex items-center gap-3">
                 <FavoriteToggle />
+                <AdvancedFilters />
               </div>
               <div className="h-px flex-1 bg-white/5 hidden md:block" />
               <SortSelector />
@@ -42,6 +45,7 @@ export default function Home() {
         </section>
 
         <PokemonList />
+        <RecentlyViewed />
       </main>
 
       <footer className="py-12 text-center text-xs text-foreground/40 font-semibold border-t border-white/5 mt-20 bg-background/40 backdrop-blur-md relative z-10">

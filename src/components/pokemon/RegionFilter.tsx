@@ -18,7 +18,7 @@ const REGIONS = [
 ];
 
 export default function RegionFilter() {
-  const { selectedRegion, setSelectedRegion } = usePokedexStore();
+  const { selectedGeneration, setSelectedGeneration } = usePokedexStore();
 
   return (
     <motion.div 
@@ -34,12 +34,12 @@ export default function RegionFilter() {
         </div>
 
         <AnimatePresence mode="popLayout">
-          {selectedRegion && (
+          {selectedGeneration && (
             <motion.button
               initial={{ scale: 0.8, opacity: 0, width: 0 }}
               animate={{ scale: 1, opacity: 1, width: 'auto' }}
               exit={{ scale: 0.8, opacity: 0, width: 0 }}
-              onClick={() => setSelectedRegion(null)}
+              onClick={() => setSelectedGeneration(null)}
               className="flex items-center gap-1 bg-destructive/10 border border-destructive/20 px-4 py-2 rounded-full text-xs text-destructive hover:bg-destructive/20 transition-colors whitespace-nowrap overflow-hidden"
             >
               <X className="w-3 h-3" />
@@ -49,12 +49,12 @@ export default function RegionFilter() {
         </AnimatePresence>
         
         {REGIONS.map((region) => {
-          const isActive = selectedRegion === region.gen;
+          const isActive = selectedGeneration === parseInt(region.gen);
           
           return (
             <button
               key={region.name}
-              onClick={() => setSelectedRegion(isActive ? null : region.gen)}
+              onClick={() => setSelectedGeneration(isActive ? null : parseInt(region.gen))}
               className={cn(
                 "relative px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-300 overflow-hidden group border",
                 isActive 

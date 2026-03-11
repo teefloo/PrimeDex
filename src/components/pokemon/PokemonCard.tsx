@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { PokemonDetail, TYPE_COLORS } from '@/types/pokemon';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePokedexStore } from '@/store/pokedex';
 import { cn, formatId } from '@/lib/utils';
 import Link from 'next/link';
@@ -12,12 +12,30 @@ import Link from 'next/link';
 interface PokemonCardProps {
   name: string;
   url: string;
+  filters?: {
+    isLegendary: boolean | null;
+    minBaseStats: number;
+    heightRange: [number, number];
+    weightRange: [number, number];
+  };
 }
 
-export function PokemonCard({ name, url }: PokemonCardProps) {
-  const { isFavorite, addFavorite, removeFavorite } = usePokedexStore();
+export function PokemonCard({ name, url, filters }: PokemonCardProps) {
+  const { 
+    isFavorite, 
+    addFavorite, 
+    removeFavorite, 
+    addToCompare, 
+    removeFromCompare, 
+    isInCompare,
+    compareList,
+    addToTeam,
+    removeFromTeam,
+    isInTeam,
+    team
+  } = usePokedexStore();
 
-  const { data: pokemon, isLoading } = useQuery({
+  const { data: pokemon, isLoading: isLoadingDetail } = useQuery({
     queryKey: ['pokemon', name],
     queryFn: async () => {
       const { data } = await axios.get<PokemonDetail>(url);
@@ -26,7 +44,18 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
     staleTime: 10 * 60 * 1000,
   });
 
-  if (isLoading || !pokemon) {
+  const { data: species, isLoading: isLoadingSpecies } = useQuery({
+    queryKey: ['pokemon-species', name],
+    queryFn: async () => {
+      if (!pokemon) return null;
+      const { data } = await axios.get(pokemon.species.url);
+      return data;
+    },
+    enabled: !!pokemon && filters?.isLegendary !== null,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  if (isLoadingDetail || (filters?.isLegendary !== null && isLoadingSpecies)) {
     return (
       <div className="py-4 px-2 h-80">
         <div className="glass-panel w-full h-full rounded-[2rem] animate-pulse bg-white/5" />
@@ -34,7 +63,36 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
     );
   }
 
+  if (!pokemon) return null;
+
+  // Advanced Filtering Logic
+  if (filters) {
+    const { isLegendary, minBaseStats, heightRange, weightRange } = filters;
+
+    // Filter by Legendary status
+    if (isLegendary === true && species) {
+      const isLegendaryOrMythical = species.is_legendary || species.is_mythical;
+      if (!isLegendaryOrMythical) return null;
+    }
+
+    // Filter by Stats (BST)
+    if (minBaseStats > 0) {
+      const bst = pokemon.stats.reduce((acc, s) => acc + s.base_stat, 0);
+      if (bst < minBaseStats) return null;
+    }
+
+    // Filter by Height (m)
+    const heightInMeters = pokemon.height / 10;
+    if (heightInMeters < heightRange[0] || heightInMeters > heightRange[1]) return null;
+
+    // Filter by Weight (kg)
+    const weightInKg = pokemon.weight / 10;
+    if (weightInKg < weightRange[0] || weightInKg > weightRange[1]) return null;
+  }
+
   const isFav = isFavorite(pokemon.id);
+  const isComp = isInCompare(pokemon.id);
+  const isTeam = isInTeam(pokemon.id);
   const mainType = pokemon.types[0].type.name;
   const color = TYPE_COLORS[mainType] || '#A8A77A';
 
@@ -45,6 +103,26 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
       removeFavorite(pokemon.id);
     } else {
       addFavorite(pokemon.id);
+    }
+  };
+
+  const toggleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isComp) {
+      removeFromCompare(pokemon.id);
+    } else {
+      addToCompare(pokemon.id);
+    }
+  };
+
+  const toggleTeam = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isTeam) {
+      removeFromTeam(pokemon.id);
+    } else {
+      addToTeam(pokemon.id);
     }
   };
 
@@ -65,25 +143,61 @@ export function PokemonCard({ name, url }: PokemonCardProps) {
           style={{ backgroundColor: color }}
         />
 
-        {/* Top bar with ID and Favorite */}
+        {/* Top bar with ID and Actions */}
         <div className="flex justify-between items-center w-full z-10 mb-4">
           <span className="text-sm font-black text-foreground/40 drop-shadow-sm">
             {formatId(pokemon.id)}
           </span>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleFavorite}
-            className={cn(
-              "p-2 rounded-full backdrop-blur-md transition-all",
-              isFav 
-                ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" 
-                : "bg-secondary/30 text-foreground/40 hover:text-foreground/80 hover:bg-secondary/50"
-            )}
-            aria-label={isFav ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
-          >
-            <Heart className={cn("w-5 h-5 transition-transform", isFav && "fill-current scale-110")} />
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleTeam}
+              disabled={!isTeam && team.length >= 6}
+              className={cn(
+                "p-2 rounded-full backdrop-blur-md transition-all",
+                isTeam 
+                  ? "bg-green-500/20 text-green-500 hover:bg-green-500/30" 
+                  : "bg-secondary/30 text-foreground/40 hover:text-foreground/80 hover:bg-secondary/50",
+                !isTeam && team.length >= 6 && "opacity-20 cursor-not-allowed"
+              )}
+              title={isTeam ? "Remove from team" : "Add to team"}
+            >
+              {isTeam ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleCompare}
+              disabled={!isComp && compareList.length >= 3}
+              className={cn(
+                "p-2 rounded-full backdrop-blur-md transition-all",
+                isComp 
+                  ? "bg-primary/20 text-primary hover:bg-primary/30" 
+                  : "bg-secondary/30 text-foreground/40 hover:text-foreground/80 hover:bg-secondary/50",
+                !isComp && compareList.length >= 3 && "opacity-20 cursor-not-allowed"
+              )}
+              title={isComp ? "Remove from comparison" : "Add to comparison"}
+            >
+              <ArrowLeftRight className={cn("w-4 h-4 transition-transform", isComp && "scale-110")} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleFavorite}
+              className={cn(
+                "p-2 rounded-full backdrop-blur-md transition-all",
+                isFav 
+                  ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" 
+                  : "bg-secondary/30 text-foreground/40 hover:text-foreground/80 hover:bg-secondary/50"
+              )}
+              aria-label={isFav ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
+            >
+              <Heart className={cn("w-5 h-5 transition-transform", isFav && "fill-current scale-110")} />
+            </motion.button>
+          </div>
         </div>
 
         {/* Pokemon Image */}

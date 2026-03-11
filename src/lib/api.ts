@@ -76,3 +76,19 @@ export const getPokemonByGeneration = async (genId: string) => {
     url: species.url.replace('pokemon-species', 'pokemon'),
   }));
 };
+
+export interface TypeRelations {
+  damage_relations: {
+    double_damage_from: { name: string }[];
+    double_damage_to: { name: string }[];
+    half_damage_from: { name: string }[];
+    half_damage_to: { name: string }[];
+    no_damage_from: { name: string }[];
+    no_damage_to: { name: string }[];
+  };
+}
+
+export const getTypeRelations = async (typeName: string): Promise<TypeRelations> => {
+  const { data } = await api.get<TypeRelations>(`/type/${typeName}`);
+  return data;
+};
