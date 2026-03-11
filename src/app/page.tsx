@@ -10,13 +10,7 @@ import RecentlyViewed from '@/components/pokemon/RecentlyViewed';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { getPokemonList } from '@/lib/api';
 import { pokemonKeys } from '@/lib/api/keys';
-import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/skeleton';
-
-const AdvancedFilters = dynamic(() => import('@/components/pokemon/AdvancedFilters'), {
-  loading: () => <Skeleton className="h-12 w-32 rounded-2xl" />,
-  ssr: false
-});
+import AdvancedFiltersWrapper from '@/components/pokemon/AdvancedFiltersWrapper';
 
 export default async function Home() {
   const queryClient = new QueryClient();
@@ -32,7 +26,7 @@ export default async function Home() {
     <HydrationBoundary state={dehydrate(queryClient)}>
       <div className="min-h-screen bg-transparent relative">
         <Header />
-        
+
         <main className="container mx-auto px-4 py-8 relative z-10">
           <section className="text-center mb-12 pt-10">
             <div className="inline-block mb-6 relative group">
@@ -47,12 +41,12 @@ export default async function Home() {
 
             <div className="flex flex-col items-center mt-12 w-full max-w-5xl mx-auto space-y-8">
               <SearchBar />
-              
+
               <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 px-4">
                 <div className="flex items-center gap-3">
                   <FavoriteToggle />
                   <CaughtFilter />
-                  <AdvancedFilters />
+                  <AdvancedFiltersWrapper />
                 </div>
                 <div className="h-px flex-1 bg-border/50 hidden md:block" />
                 <SortSelector />
