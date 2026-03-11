@@ -9,6 +9,12 @@ interface PokedexStore {
   removeFavorite: (id: number) => void;
   isFavorite: (id: number) => boolean;
 
+  caughtPokemon: number[];
+  toggleCaught: (id: number) => void;
+  isCaught: (id: number) => boolean;
+  showCaughtOnly: 'all' | 'caught' | 'uncaught';
+  setShowCaughtOnly: (mode: 'all' | 'caught' | 'uncaught') => void;
+
   searchTerm: string;
   setSearchTerm: (term: string) => void;
 
@@ -65,8 +71,11 @@ interface PokedexStore {
   quizHighScores: {
     survival: number;
     marathon: number;
+    classic: number;
+    silhouette: number;
+    stats: number;
   };
-  updateQuizHighScore: (mode: 'survival' | 'marathon', score: number) => void;
+  updateQuizHighScore: (mode: 'survival' | 'marathon' | 'classic' | 'silhouette' | 'stats', score: number) => void;
 
   // Onboarding
   hasCompletedOnboarding: boolean;
@@ -97,6 +106,16 @@ export const usePokedexStore = create<PokedexStore>()(
       addFavorite: (id) => set((state) => ({ favorites: [...state.favorites, id] })),
       removeFavorite: (id) => set((state) => ({ favorites: state.favorites.filter((fid) => fid !== id) })),
       isFavorite: (id) => get().favorites.includes(id),
+
+      caughtPokemon: [],
+      toggleCaught: (id) => set((state) => ({
+        caughtPokemon: state.caughtPokemon.includes(id)
+          ? state.caughtPokemon.filter((cid) => cid !== id)
+          : [...state.caughtPokemon, id]
+      })),
+      isCaught: (id) => get().caughtPokemon.includes(id),
+      showCaughtOnly: 'all',
+      setShowCaughtOnly: (mode) => set({ showCaughtOnly: mode }),
 
       searchTerm: '',
       setSearchTerm: (term) => set({ searchTerm: term }),
@@ -177,12 +196,16 @@ export const usePokedexStore = create<PokedexStore>()(
         weightRange: [0, 1000],
         selectedRegion: null,
         showFavoritesOnly: false,
+        showCaughtOnly: 'all',
       }),
 
       // Quiz
       quizHighScores: {
         survival: 0,
         marathon: 0,
+        classic: 0,
+        silhouette: 0,
+        stats: 0,
       },
       updateQuizHighScore: (mode, score) => set((state) => ({
         quizHighScores: {

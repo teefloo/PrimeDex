@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { analyzeTeam } from '@/lib/team-analysis';
+import { analyzeTeam, calculateSynergyScore } from '@/lib/team-analysis';
 
 import Image from 'next/image';
 
@@ -71,6 +71,13 @@ export default function TeamPage() {
 
     return analyzeTeam(pokemonData, relationsMap);
   }, [pokemonData, typeRelationsQueries]);
+
+  const synergyScore = useMemo(() => {
+    if (!analysis || pokemonData.length === 0) return 0;
+    return calculateSynergyScore(pokemonData, analysis);
+  }, [analysis, pokemonData]);
+
+  const scoreColor = synergyScore > 70 ? 'bg-green-500' : synergyScore > 40 ? 'bg-orange-500' : 'bg-red-500';
 
   if (!mounted) return null;
 
@@ -181,6 +188,65 @@ export default function TeamPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
+                {/* Synergy Score */}
+                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("p-2 rounded-xl text-white shadow-lg shadow-black/20", scoreColor)}>
+                        <Zap className="w-5 h-5 fill-current" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black">Synergy Score</h3>
+                        <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mt-0.5">Team Cohesion & Coverage</p>
+                      </div>
+                    </div>
+                    <div className="text-4xl font-black tracking-tighter">
+                      <span className={cn("text-transparent bg-clip-text bg-gradient-to-br", 
+                        synergyScore > 70 ? 'from-green-400 to-green-600' : synergyScore > 40 ? 'from-orange-400 to-orange-600' : 'from-red-400 to-red-600'
+                      )}>
+                        {synergyScore}%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden mb-8 border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${synergyScore}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className={cn("h-full", scoreColor)}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">Analysis</p>
+                      <p className="text-xs text-foreground/60 leading-relaxed font-medium">
+                        {synergyScore > 80 ? 'Excellent synergy! Your team has great coverage and balanced types.' :
+                         synergyScore > 60 ? 'Good balance. You might have a few duplicate types or slight coverage gaps.' :
+                         synergyScore > 40 ? 'Average synergy. Consider swapping a few members to cover common weaknesses.' :
+                         'Low synergy. Your team might have many shared weaknesses or redundant types.'}
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-red-500/60 mb-3">Main Weaknesses</p>
+                      <div className="flex flex-wrap gap-2">
+                        {analysis.weaknesses.slice(0, 3).map(([type]) => (
+                          <div 
+                            key={type} 
+                            className="px-3 py-1.5 rounded-xl border border-white/5 shadow-sm text-white flex items-center gap-2"
+                            style={{ backgroundColor: TYPE_COLORS[type] }}
+                          >
+                            <span className="text-[10px] font-black uppercase">{type}</span>
+                          </div>
+                        ))}
+                        {analysis.weaknesses.length === 0 && <p className="text-[10px] italic text-foreground/30">No major weaknesses!</p>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Stats Averages */}
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
                   <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4 flex items-center gap-3">

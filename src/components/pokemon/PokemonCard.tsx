@@ -10,6 +10,9 @@ import { cn, formatId } from '@/lib/utils';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
+import { SVGProps } from 'react';
+
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PokemonCardProps {
   name: string;
@@ -18,6 +21,31 @@ interface PokemonCardProps {
     pokemon: Partial<PokemonDetail>;
     species?: Partial<PokemonSpecies>;
   };
+}
+
+export function PokemonCardSkeleton() {
+  return (
+    <div className="py-4 px-2 h-[26rem]">
+      <div className="glass-panel h-full p-6 flex flex-col items-center rounded-[2rem] bg-white/5 animate-pulse">
+        <div className="flex justify-between items-center w-full mb-4">
+          <Skeleton className="h-4 w-12 bg-white/10" />
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-9 rounded-full bg-white/10" />
+            <Skeleton className="h-9 w-9 rounded-full bg-white/10" />
+            <Skeleton className="h-9 w-9 rounded-full bg-white/10" />
+          </div>
+        </div>
+        <Skeleton className="w-40 h-40 rounded-full bg-white/10 my-2" />
+        <div className="mt-auto w-full flex flex-col items-center gap-4 pt-6">
+          <Skeleton className="h-8 w-32 bg-white/10" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-16 rounded-full bg-white/10" />
+            <Skeleton className="h-6 w-16 rounded-full bg-white/10" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
@@ -35,7 +63,9 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
     isInTeam,
     team,
     language,
-    systemLanguage
+    systemLanguage,
+    isCaught,
+    toggleCaught
   } = usePokedexStore();
 
   const { data, isLoading } = useQuery<{
@@ -62,11 +92,7 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
   const displayData = initialData || data;
 
   if (isLoading && !displayData) {
-    return (
-      <div className="py-4 px-2 min-h-[22rem]">
-        <div className="glass-panel w-full h-full rounded-[2rem] animate-pulse bg-white/5" />
-      </div>
-    );
+    return <PokemonCardSkeleton />;
   }
 
   if (!displayData || !displayData.pokemon) return null;
@@ -76,6 +102,7 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
   const isFav = isFavorite(pokemonId);
   const isComp = isInCompare(pokemonId);
   const isTeam = isInTeam(pokemonId);
+  const caught = isCaught(pokemonId);
   
   // Handle type data from both REST and GraphQL formats
   const gqlData = pokemon as unknown as { pokemon_v2_pokemontypes?: { pokemon_v2_type: { name: string } }[] };
@@ -113,6 +140,12 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
     }
   };
 
+  const handleToggleCaught = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCaught(pokemonId);
+  };
+
   // Find localized name based on user selected language, or fallback to english, then the default API name
   const resolvedLang = language === 'auto' ? systemLanguage : language;
   
@@ -137,11 +170,29 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
   return (
     <Link href={`/pokemon/${name}`} className="block h-full py-4 px-2">
       <motion.div
-        whileHover={{ y: -8, scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 17,
+          duration: 0.2
+        }}
         className="glass-panel type-glow relative h-full p-6 flex flex-col items-center group overflow-hidden rounded-[2rem]"
         style={{ '--type-color': `${color}40` } as React.CSSProperties}
       >
+        {/* Caught Badge */}
+        <button 
+          onClick={handleToggleCaught}
+          className={cn(
+            "absolute bottom-6 left-6 z-20 transition-all duration-500 hover:scale-110 active:scale-90",
+            caught ? "opacity-100 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "opacity-20 grayscale hover:opacity-50"
+          )}
+          title={caught ? "Caught!" : "Mark as caught"}
+        >
+          <PokeballIcon className={cn("w-6 h-6", caught ? "text-red-500" : "text-foreground")} />
+        </button>
+
         {/* Colorful background mesh */}
         <div 
           className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 ease-in-out"
@@ -207,7 +258,14 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
               title={isFav ? t('card.remove_favorite') : t('card.add_favorite')}
               aria-label={isFav ? t('card.remove_favorite') || 'Remove from favorites' : t('card.add_favorite') || 'Add to favorites'}
             >
-              <Heart className={cn("w-4 h-4 transition-transform", isFav && "fill-current scale-110")} />
+              <motion.div
+                animate={isFav ? {
+                  scale: [1, 1.4, 1],
+                  transition: { duration: 0.3 }
+                } : {}}
+              >
+                <Heart className={cn("w-4 h-4 transition-transform", isFav && "fill-current scale-110")} />
+              </motion.div>
             </motion.button>
           </div>
         </div>
@@ -251,5 +309,41 @@ export function PokemonCard({ name, url, initialData }: PokemonCardProps) {
         </div>
       </motion.div>
     </Link>
+  );
+}
+
+function PokeballIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2 12H22"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill={props.className?.includes('text-red-500') ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

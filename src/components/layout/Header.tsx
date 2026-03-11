@@ -43,7 +43,7 @@ function HeaderLink({ children, href, variant, size, className, ...props }: Head
 }
 
 export default function Header() {
-  const { toggleSettings, theme, setTheme } = usePokedexStore();
+  const { toggleSettings, theme, setTheme, caughtPokemon } = usePokedexStore();
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -89,12 +89,20 @@ export default function Header() {
           <div className="flex-1 flex items-center justify-start">
             <Link href="/" className="flex items-center gap-3 group" aria-label="Go to Pokédex Home">
               <PokedexLogo className="w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:scale-105" />
-              <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tighter flex items-center drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(227,53,13,0.4)] transition-all">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">
-                  Poké
-                </span>
-                dex
-              </h1>
+              <div className="flex flex-col">
+                <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tighter flex items-center drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(227,53,13,0.4)] transition-all leading-none">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">
+                    Poké
+                  </span>
+                  dex
+                </h1>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/40">
+                    {caughtPokemon.length} / 1025 CAUGHT
+                  </span>
+                </div>
+              </div>
             </Link>
           </div>
 
@@ -133,7 +141,9 @@ export default function Header() {
               ) : isDark ? (
                 <Moon className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
               ) : (
-                <Sun className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
+                <div className="w-4 h-4 md:w-5 md:h-5 text-amber-500 flex items-center justify-center">
+                  <Sun className="w-4 h-4 md:w-5 md:h-5" />
+                </div>
               )}
             </motion.button>
             

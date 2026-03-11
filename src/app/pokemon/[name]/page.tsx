@@ -26,6 +26,7 @@ import { cn, formatId } from '@/lib/utils';
 import React, { useState, useMemo, useEffect } from 'react';
 import { EvolutionChain } from '@/components/pokemon/EvolutionChain';
 import { AdvancedInfo } from '@/components/pokemon/AdvancedInfo';
+import { PokemonBuilds } from '@/components/pokemon/PokemonBuilds';
 import { Button } from '@/components/ui/button';
 import { HeightComparison } from '@/components/pokemon/HeightComparison';
 import { toast } from 'sonner';
@@ -383,10 +384,11 @@ export default function PokemonDetailPage() {
           className="max-w-4xl mx-auto"
         >
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8 h-14 rounded-2xl bg-secondary/30 p-1 border border-white/5">
+            <TabsList className="grid w-full grid-cols-5 mb-8 h-14 rounded-2xl bg-secondary/30 p-1 border border-white/5">
               <TabsTrigger value="about" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.about')}</TabsTrigger>
               <TabsTrigger value="stats" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.stats')}</TabsTrigger>
               <TabsTrigger value="evolution" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.evolution')}</TabsTrigger>
+              <TabsTrigger value="builds" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">Builds</TabsTrigger>
               <TabsTrigger value="infos" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.infos') || 'Infos'}</TabsTrigger>
             </TabsList>
             
@@ -571,6 +573,11 @@ export default function PokemonDetailPage() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Builds Tab */}
+            <TabsContent value="builds" className="space-y-6">
+              <PokemonBuilds pokemon={pokemon} />
             </TabsContent>
 
             {/* Infos Tab (Educational) */}

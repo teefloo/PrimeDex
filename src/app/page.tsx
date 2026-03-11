@@ -4,6 +4,7 @@ import SearchBar from '@/components/pokemon/SearchBar';
 import TypeFilter from '@/components/pokemon/TypeFilter';
 import RegionFilter from '@/components/pokemon/RegionFilter';
 import FavoriteToggle from '@/components/pokemon/FavoriteToggle';
+import CaughtFilter from '@/components/pokemon/CaughtFilter';
 import SortSelector from '@/components/pokemon/SortSelector';
 import AdvancedFilters from '@/components/pokemon/AdvancedFilters';
 import RecentlyViewed from '@/components/pokemon/RecentlyViewed';
@@ -31,6 +32,7 @@ export default function Home() {
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 px-4">
               <div className="flex items-center gap-3">
                 <FavoriteToggle />
+                <CaughtFilter />
                 <AdvancedFilters />
               </div>
               <div className="h-px flex-1 bg-border/50 hidden md:block" />

@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery, useQueries } from '@tanstack/react-query';
 import { usePokedexStore } from '@/store/pokedex';
 import { getPokemonList, getPokemonByType, getAllPokemonDetailed, getPokemonByGeneration } from '@/lib/api';
 import { PokemonBasicData, PokemonDetail, PokemonSpecies } from '@/types/pokemon';
-import { PokemonCard } from './PokemonCard';
+import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useInView } from 'framer-motion';
 import { useEffect, useRef, useMemo } from 'react';
 import { Loader2, SearchX } from 'lucide-react';
@@ -26,7 +26,9 @@ export default function PokemonList() {
     heightRange,
     weightRange,
     language,
-    systemLanguage
+    systemLanguage,
+    showCaughtOnly,
+    caughtPokemon
   } = usePokedexStore();
   
   const resolvedLang = language === 'auto' ? systemLanguage : language;
@@ -38,6 +40,7 @@ export default function PokemonList() {
     !searchTerm && 
     !selectedGeneration && 
     !showFavoritesOnly && 
+    showCaughtOnly === 'all' &&
     isLegendary === null && 
     minBaseStats === 0 && 
     heightRange[0] === 0 && 
@@ -151,6 +154,13 @@ export default function PokemonList() {
         results = results.filter(p => favorites.includes(p.id));
       }
 
+      // Application du filtre "Caught"
+      if (showCaughtOnly === 'caught') {
+        results = results.filter(p => caughtPokemon.includes(p.id));
+      } else if (showCaughtOnly === 'uncaught') {
+        results = results.filter(p => !caughtPokemon.includes(p.id));
+      }
+
       // Application des filtres avancés (si mode non basique)
       if (isLegendary === true) {
         results = results.filter(p => p.is_legendary || p.is_mythical);
@@ -215,7 +225,7 @@ export default function PokemonList() {
     }
 
     return sortedResults;
-  }, [infiniteData, allDetailed, genPokemon, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, minBaseStats, heightRange, weightRange, isBasicMode, resolvedLang]);
+  }, [infiniteData, allDetailed, genPokemon, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, minBaseStats, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon]);
 
   // Déclenchement automatique du chargement suivant
   useEffect(() => {
@@ -231,9 +241,10 @@ export default function PokemonList() {
 
   if (isLoading && displayedPokemon.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-64 gap-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary drop-shadow-[0_0_15px_rgba(255,100,100,0.5)]" />
-        <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm animate-pulse">{t('list.loading')}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <PokemonCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -260,7 +271,7 @@ export default function PokemonList() {
         <div className="text-xs font-bold text-foreground/40 uppercase tracking-widest">
           {searchTerm ? (
             <>{t('list.search_results')} <span className="text-primary">&quot;{searchTerm}&quot;</span></>
-          ) : (selectedTypes.length > 0 || selectedGeneration || showFavoritesOnly || isLegendary !== null || minBaseStats > 0) ? (
+          ) : (selectedTypes.length > 0 || selectedGeneration || showFavoritesOnly || isLegendary !== null || minBaseStats > 0 || showCaughtOnly !== 'all') ? (
             <div className="flex gap-2 items-center flex-wrap">
               {showFavoritesOnly && (
                 <span className="text-red-500 flex items-center gap-1">
@@ -269,6 +280,14 @@ export default function PokemonList() {
                 </span>
               )}
               {showFavoritesOnly && (selectedTypes.length > 0 || selectedGeneration) && <span className="opacity-30 mx-1">|</span>}
+              
+              {showCaughtOnly !== 'all' && (
+                <span className="text-primary flex items-center gap-1">
+                  {showCaughtOnly === 'caught' ? 'Caught' : 'Missing'}
+                </span>
+              )}
+              {showCaughtOnly !== 'all' && (selectedTypes.length > 0 || selectedGeneration) && <span className="opacity-30 mx-1">|</span>}
+
               {selectedGeneration && (
                 <>Gen: <span className="text-primary">{selectedGeneration}</span></>
               )}
@@ -313,7 +332,7 @@ export default function PokemonList() {
       </div>
 
       {/* Point d'ancrage pour l'Infinite Scroll */}
-      {selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && isLegendary === null && minBaseStats === 0 && hasNextPage && (
+      {selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && showCaughtOnly === 'all' && isLegendary === null && minBaseStats === 0 && hasNextPage && (
         <div ref={loadMoreRef} className="flex justify-center py-12">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary/50" />

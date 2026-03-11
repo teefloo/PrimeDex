@@ -15,10 +15,12 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2,
+  Filter,
+  BarChart3,
+  Calendar,
+  EyeOff,
   Heart,
-  Zap,
-  Flame,
-  Filter
+  Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -31,6 +33,7 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 
 type GameMode = 'time-attack' | 'survival' | 'marathon';
+type QuizChallenge = 'classic' | 'silhouette' | 'stats';
 type GameState = 'idle' | 'loading' | 'playing' | 'answered' | 'finished';
 
 const GENERATIONS = [
@@ -50,13 +53,26 @@ const TYPES = [
   'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'
 ];
 
+// Simple seeded random
+const seededRandom = (seed: string) => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+  }
+  return () => {
+    h = Math.imul(h ^ h >>> 16, 0x85ebca6b);
+    h = Math.imul(h ^ h >>> 13, 0xc2b2ae35);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+};
+
 export default function QuizPage() {
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [gameMode, setGameMode] = useState<GameMode>('time-attack');
+  const [gameMode, setGameMode] = useState<GameMode>('marathon');
+  const [quizChallenge, setQuizChallenge] = useState<QuizChallenge>('classic');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [lives, setLives] = useState(3);
-  const [streak, setStreak] = useState(0);
   const [currentPokemon, setCurrentPokemon] = useState<PokemonDetail | null>(null);
   const [options, setOptions] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -65,6 +81,8 @@ export default function QuizPage() {
   const [selectedGen, setSelectedGen] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [filteredPool, setFilteredPool] = useState<{ name: string; url: string }[]>([]);
+  const [isDaily, setIsDaily] = useState(false);
+  const [dailyIndex, setDailyIndex] = useState(0);
   
   const { t } = useTranslation();
   const { quizHighScores, updateQuizHighScore } = usePokedexStore();
@@ -80,36 +98,63 @@ export default function QuizPage() {
     staleTime: 30 * 60 * 1000,
   });
 
-  const startNewRound = useCallback(async () => {
+  const getNextPokemon = useCallback(() => {
     const pool = filteredPool.length > 0 ? filteredPool : (allNames || []);
-    if (pool.length === 0) return;
+    if (pool.length === 0) return null;
+
+    if (isDaily) {
+      const today = new Date().toISOString().split('T')[0];
+      const rng = seededRandom(`${today}-${dailyIndex}`);
+      const randomIndex = Math.floor(rng() * pool.length);
+      return pool[randomIndex];
+    } else {
+      const randomIndex = Math.floor(Math.random() * pool.length);
+      return pool[randomIndex];
+    }
+  }, [allNames, filteredPool, isDaily, dailyIndex]);
+
+  const startNewRound = useCallback(async () => {
+    if (isDaily && dailyIndex >= 9) {
+      setGameState('finished');
+      return;
+    }
+
+    const pokemon = getNextPokemon();
+    if (!pokemon) return;
     
     setGameState('loading');
     setSelectedOption(null);
     setIsCorrect(null);
-
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    const pokemon = pool[randomIndex];
     
     const detail = await getPokemonDetail(pokemon.name);
     setCurrentPokemon(detail);
 
     const otherOptions: string[] = [];
     const mainPool = allNames || [];
+    
+    // For Daily Challenge, seeded options too
+    const today = new Date().toISOString().split('T')[0];
+    const rngSeed = isDaily ? `${today}-${dailyIndex}` : Math.random().toString();
+    const rng = seededRandom(`options-${rngSeed}`);
+    
     while (otherOptions.length < 3) {
-      const idx = Math.floor(Math.random() * mainPool.length);
+      const idx = Math.floor(rng() * mainPool.length);
       const p = mainPool[idx];
       if (p.name !== pokemon.name && !otherOptions.includes(p.name)) {
         otherOptions.push(p.name);
       }
     }
 
-    setOptions([pokemon.name, ...otherOptions].sort(() => Math.random() - 0.5));
+    setOptions([pokemon.name, ...otherOptions].sort(() => rng() - 0.5));
     setGameState('playing');
-  }, [allNames, filteredPool]);
+  }, [allNames, getNextPokemon, isDaily, dailyIndex]);
 
-  const startGame = async (mode: GameMode) => {
+  const startGame = async (challenge: QuizChallenge, mode: GameMode = 'marathon', daily: boolean = false) => {
     setGameState('loading');
+    setIsDaily(daily);
+    setDailyIndex(0);
+    setQuizChallenge(challenge);
+    setGameMode(mode);
     
     let pool = allNames || [];
     
@@ -133,29 +178,30 @@ export default function QuizPage() {
     }
 
     setFilteredPool(pool);
-    setGameMode(mode);
     setScore(0);
-    setStreak(0);
     setLives(3);
     setTimeLeft(30);
     
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    const pokemon = pool[randomIndex];
+    const today = new Date().toISOString().split('T')[0];
+    const firstRng = daily ? seededRandom(`${today}-0`) : Math.random;
+    const firstPokemon = pool[Math.floor((typeof firstRng === 'function' ? firstRng() : Math.random()) * pool.length)];
     
-    const detail = await getPokemonDetail(pokemon.name);
+    const detail = await getPokemonDetail(firstPokemon.name);
     setCurrentPokemon(detail);
 
     const otherOptions: string[] = [];
     const mainPool = allNames || [];
+    const optionsRng = daily ? seededRandom(`options-${today}-0`) : Math.random;
+
     while (otherOptions.length < 3) {
-      const idx = Math.floor(Math.random() * mainPool.length);
+      const idx = Math.floor((typeof optionsRng === 'function' ? optionsRng() : Math.random()) * mainPool.length);
       const p = mainPool[idx];
-      if (p.name !== pokemon.name && !otherOptions.includes(p.name)) {
+      if (p.name !== firstPokemon.name && !otherOptions.includes(p.name)) {
         otherOptions.push(p.name);
       }
     }
 
-    setOptions([pokemon.name, ...otherOptions].sort(() => Math.random() - 0.5));
+    setOptions([firstPokemon.name, ...otherOptions].sort(() => (typeof optionsRng === 'function' ? optionsRng() : Math.random()) - 0.5));
     setGameState('playing');
   };
 
@@ -169,10 +215,14 @@ export default function QuizPage() {
 
     if (correct) {
       setScore(s => s + (gameMode === 'time-attack' ? 10 : 1));
-      setStreak(s => s + 1);
+      if (isDaily) {
+        setDailyIndex(i => i + 1);
+      }
       setTimeout(startNewRound, 1500);
     } else {
-      setStreak(0);
+      if (isDaily) {
+        setDailyIndex(i => i + 1);
+      }
       if (gameMode === 'survival') {
         setLives(l => {
           if (l <= 1) {
@@ -187,11 +237,10 @@ export default function QuizPage() {
   };
 
   useEffect(() => {
-    if (gameState === 'finished') {
-      const modeKey: 'survival' | 'marathon' = gameMode === 'time-attack' ? 'marathon' : gameMode; 
-      updateQuizHighScore(modeKey, score);
+    if (gameState === 'finished' && !isDaily) {
+      updateQuizHighScore(quizChallenge, score);
     }
-  }, [gameState, gameMode, score, updateQuizHighScore]);
+  }, [gameState, quizChallenge, score, updateQuizHighScore, isDaily]);
 
   useEffect(() => {
     if (gameMode === 'time-attack' && (gameState === 'playing' || gameState === 'answered')) {
@@ -240,11 +289,20 @@ export default function QuizPage() {
                   </div>
                   <h3 className="text-3xl font-black">{t('quiz.game_over')}</h3>
                   <p className="text-xl font-bold text-foreground/60">
-                    {gameMode === 'marathon' ? t('quiz.streak') : t('quiz.final_score')} 
+                    {isDaily ? 'Daily Challenge Score' : t('quiz.final_score')} 
                     <span className="text-primary text-2xl ml-2">{score}</span>
                   </p>
                 </div>
               )}
+
+              {/* Daily Challenge */}
+              <Button 
+                onClick={() => startGame('classic', 'marathon', true)}
+                className="w-full h-20 rounded-2xl font-black uppercase tracking-widest text-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 border-none shadow-xl shadow-orange-500/20 gap-3"
+              >
+                <Calendar className="w-6 h-6" />
+                Daily Challenge
+              </Button>
 
               {/* Filters */}
               <div className="space-y-6 bg-secondary/20 p-6 rounded-[2rem] border border-white/5 text-center">
@@ -284,54 +342,63 @@ export default function QuizPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { id: 'classic' as QuizChallenge, name: 'Classic', icon: <Gamepad2 className="w-5 h-5" />, desc: 'Show image' },
+                  { id: 'silhouette' as QuizChallenge, name: 'Silhouette', icon: <EyeOff className="w-5 h-5" />, desc: 'Who\'s that?' },
+                  { id: 'stats' as QuizChallenge, name: 'Stats', icon: <BarChart3 className="w-5 h-5" />, desc: 'Base stats' }
+                ].map((mode) => (
+                  <Button 
+                    key={mode.id}
+                    onClick={() => startGame(mode.id)} 
+                    className="h-24 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      {mode.icon}
+                      {mode.name}
+                    </div>
+                    <span className="text-[10px] opacity-50 font-bold">{mode.desc}</span>
+                  </Button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button 
-                  onClick={() => startGame('time-attack')} 
-                  className="h-20 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-1"
+                  variant="outline"
+                  onClick={() => startGame(quizChallenge, 'time-attack')} 
+                  className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-primary/10 flex flex-col items-center justify-center gap-1"
                 >
                   <div className="flex items-center gap-2">
-                    <Timer className="w-5 h-5" />
-                    {t('quiz.mode_time_attack')}
+                    <Timer className="w-4 h-4" />
+                    Time Attack (30s)
                   </div>
-                  <span className="text-[10px] opacity-50">30s {t('quiz.to_score')}</span>
                 </Button>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline"
-                    onClick={() => startGame('survival')} 
-                    className="h-20 rounded-2xl font-black uppercase tracking-widest text-sm border-white/10 hover:bg-red-500/10 hover:text-red-500 flex flex-col items-center justify-center gap-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Heart className="w-4 h-4" />
-                      {t('quiz.mode_survival')}
-                    </div>
-                    <span className="text-[10px] opacity-50 font-bold">3 {t('quiz.lives')}</span>
-                  </Button>
-
-                  <Button 
-                    variant="outline"
-                    onClick={() => startGame('marathon')} 
-                    className="h-20 rounded-2xl font-black uppercase tracking-widest text-sm border-white/10 hover:bg-yellow-500/10 hover:text-yellow-500 flex flex-col items-center justify-center gap-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Flame className="w-4 h-4" />
-                      {t('quiz.mode_marathon')}
-                    </div>
-                    <span className="text-[10px] opacity-50 font-bold">{t('quiz.endless_streak')}</span>
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => startGame(quizChallenge, 'survival')} 
+                  className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-red-500/10 flex flex-col items-center justify-center gap-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4" />
+                    Survival (3 Lives)
+                  </div>
+                </Button>
               </div>
 
               {quizHighScores && (
-                <div className="pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
+                <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">High Score Survival</p>
-                    <p className="text-xl font-black text-primary">{quizHighScores.survival}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Classic</p>
+                    <p className="text-xl font-black text-primary">{quizHighScores.classic}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">High Score Time Attack</p>
-                    <p className="text-xl font-black text-primary">{quizHighScores.marathon}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Silhouette</p>
+                    <p className="text-xl font-black text-primary">{quizHighScores.silhouette}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Stats</p>
+                    <p className="text-xl font-black text-primary">{quizHighScores.stats}</p>
                   </div>
                 </div>
               )}
@@ -341,7 +408,20 @@ export default function QuizPage() {
               <div className="flex justify-between items-center px-6">
                 <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-3">
                   {gameMode === 'marathon' ? <Flame className="w-5 h-5 text-orange-500" /> : <Trophy className="w-5 h-5 text-yellow-500" />}
-                  <span className="font-black text-xl tabular-nums">{score}</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[8px] font-black text-foreground/40 uppercase tracking-tighter">Current Score</span>
+                    <span className="font-black text-xl tabular-nums leading-none">{score}</span>
+                  </div>
+                </div>
+
+                <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-3">
+                  <Gamepad2 className="w-5 h-5 text-primary" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-[8px] font-black text-foreground/40 uppercase tracking-tighter">High Score</span>
+                    <span className="font-black text-xl tabular-nums leading-none">
+                      {isDaily ? '-' : quizHighScores[quizChallenge]}
+                    </span>
+                  </div>
                 </div>
                 
                 {gameMode === 'time-attack' && (
@@ -367,15 +447,17 @@ export default function QuizPage() {
                   </div>
                 )}
 
-                {gameMode === 'marathon' && streak > 0 && (
-                  <div className="px-6 py-3 flex items-center gap-2 text-orange-500 animate-bounce">
-                    <Zap className="w-5 h-5 fill-current" />
-                    <span className="font-black text-xl">x{streak}</span>
+                {isDaily && (
+                  <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-3 border-orange-500/30">
+                    <div className="flex flex-col items-start">
+                      <span className="text-[8px] font-black text-orange-500/60 uppercase tracking-tighter">Progress</span>
+                      <span className="font-black text-xl tabular-nums leading-none">{dailyIndex}/10</span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="relative h-80 flex items-center justify-center">
+              <div className="relative min-h-[20rem] flex items-center justify-center">
                 <div className="absolute inset-0 bg-primary/5 rounded-full blur-[100px] opacity-50" />
                 
                 <AnimatePresence mode="wait">
@@ -393,32 +475,63 @@ export default function QuizPage() {
                       key={currentPokemon.id}
                       initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
                       animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                      className="relative w-64 h-64"
+                      className="w-full flex flex-col items-center"
                     >
-                      <Image 
-                        src={currentPokemon.sprites.other['official-artwork'].front_default || currentPokemon.sprites.front_default} 
-                        alt="Mystery Pokemon"
-                        width={256}
-                        height={256}
-                        className={cn(
-                          "w-full h-full object-contain transition-all duration-700 drop-shadow-2xl",
-                          gameState === 'playing' ? "brightness-0 contrast-100 opacity-80" : "brightness-100"
-                        )}
-                      />
+                      {quizChallenge === 'stats' ? (
+                        <div className="glass-panel p-8 rounded-[2rem] w-full max-w-md space-y-4">
+                          <p className="text-xs font-black uppercase tracking-[0.2em] text-foreground/40 mb-4">Who has these stats?</p>
+                          {[
+                            { label: 'HP', val: currentPokemon.stats[0].base_stat, color: '#FF0000' },
+                            { label: 'ATK', val: currentPokemon.stats[1].base_stat, color: '#F08030' },
+                            { label: 'DEF', val: currentPokemon.stats[2].base_stat, color: '#F8D030' },
+                            { label: 'SPA', val: currentPokemon.stats[3].base_stat, color: '#6890F0' },
+                            { label: 'SPD', val: currentPokemon.stats[4].base_stat, color: '#78C850' },
+                            { label: 'SPE', val: currentPokemon.stats[5].base_stat, color: '#F85888' },
+                          ].map(s => (
+                            <div key={s.label} className="space-y-1">
+                              <div className="flex justify-between text-[10px] font-black">
+                                <span>{s.label}</span>
+                                <span>{gameState === 'answered' ? s.val : '???'}</span>
+                              </div>
+                              <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                                <motion.div 
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${(s.val / 255) * 100}%` }}
+                                  className="h-full"
+                                  style={{ backgroundColor: s.color }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="relative w-64 h-64">
+                          <Image 
+                            src={currentPokemon.sprites.other['official-artwork'].front_default || currentPokemon.sprites.front_default} 
+                            alt="Mystery Pokemon"
+                            width={256}
+                            height={256}
+                            className={cn(
+                              "w-full h-full object-contain transition-all duration-700 drop-shadow-2xl",
+                              gameState === 'playing' && quizChallenge === 'silhouette' ? "brightness-0 contrast-100 opacity-80" : "brightness-100"
+                            )}
+                          />
+                        </div>
+                      )}
                       
                       {gameState === 'answered' && (
                         <motion.div 
                           initial={{ scale: 0, rotate: -20 }}
                           animate={{ scale: 1, rotate: 0 }}
-                          className="absolute -top-4 -right-4 z-20"
+                          className="mt-4"
                         >
                           {isCorrect ? (
-                            <div className="bg-green-500 text-white p-3 rounded-full shadow-lg shadow-green-500/50">
-                              <CheckCircle2 className="w-8 h-8" />
+                            <div className="bg-green-500 text-white px-6 py-2 rounded-full shadow-lg shadow-green-500/50 flex items-center gap-2 font-black uppercase text-xs">
+                              <CheckCircle2 className="w-4 h-4" /> Correct
                             </div>
                           ) : (
-                            <div className="bg-red-500 text-white p-3 rounded-full shadow-lg shadow-red-500/50">
-                              <AlertCircle className="w-8 h-8" />
+                            <div className="bg-red-500 text-white px-6 py-2 rounded-full shadow-lg shadow-red-500/50 flex items-center gap-2 font-black uppercase text-xs">
+                              <AlertCircle className="w-4 h-4" /> Wrong
                             </div>
                           )}
                         </motion.div>

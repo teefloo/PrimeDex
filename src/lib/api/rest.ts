@@ -96,3 +96,21 @@ export const getTypeRelations = async (typeName: string): Promise<TypeRelations>
   await setCachedData(cacheKey, data);
   return data;
 };
+
+export interface MoveDetail {
+  name: string;
+  power: number | null;
+  accuracy: number | null;
+  type: { name: string };
+  damage_class: { name: string };
+}
+
+export const getMoveDetail = async (name: string): Promise<MoveDetail> => {
+  const cacheKey = `move-detail-${name}`;
+  const cached = await getCachedData<MoveDetail>(cacheKey);
+  if (cached) return cached;
+
+  const { data } = await apiClient.get<MoveDetail>(`/move/${name}`);
+  await setCachedData(cacheKey, data);
+  return data;
+};

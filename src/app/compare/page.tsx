@@ -14,7 +14,8 @@ import {
   Weight,
   Sparkles,
   X,
-  Trash2
+  Trash2,
+  Trophy
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -22,6 +23,14 @@ import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { 
+  Radar, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
 
 const STAT_LABELS: Record<string, string> = {
   'hp': 'HP',
@@ -55,6 +64,25 @@ export default function ComparePage() {
 
   const isLoading = pokemonQueries.some(q => q.isLoading);
   const pokemonData = pokemonQueries.map(q => q.data).filter(Boolean);
+
+  const chartData = useMemo(() => {
+    if (pokemonData.length === 0) return [];
+    
+    const stats = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'];
+    return stats.map((stat) => {
+      const data: Record<string, string | number> = { 
+        stat: STAT_LABELS[stat],
+        fullMark: 255 
+      };
+      pokemonData.forEach(p => {
+        if (p) {
+          const s = p.stats.find(st => st.stat.name === stat);
+          data[p.name] = s ? s.base_stat : 0;
+        }
+      });
+      return data;
+    });
+  }, [pokemonData]);
 
   const bestStats = useMemo(() => {
     if (pokemonData.length === 0) return {};
@@ -138,136 +166,214 @@ export default function ComparePage() {
             <Button onClick={() => router.push('/')} className="rounded-xl font-black uppercase px-8">Browse Pokédex</Button>
           </div>
         ) : (
-          <div className={cn(
-            "grid gap-6",
-            pokemonData.length === 1 ? "grid-cols-1 max-w-md mx-auto" : 
-            pokemonData.length === 2 ? "grid-cols-1 md:grid-cols-2" : 
-            "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          )}>
-            {pokemonData.map((p, idx) => {
-              if (!p) return null;
-              const color = TYPE_COLORS[p.types[0].type.name];
-              const totalStats = p.stats.reduce((acc, s) => acc + s.base_stat, 0);
-              const isOverallBest = bestStats.total?.index === idx;
-
-              return (
-                <motion.div 
-                  key={p.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="glass-panel p-6 rounded-[2.5rem] relative overflow-hidden flex flex-col group"
-                  style={{ '--type-color': `${color}20` } as React.CSSProperties}
-                >
-                  <button 
-                    onClick={() => removeFromCompare(p.id)}
-                    className="absolute top-4 right-4 z-20 p-2 rounded-full bg-secondary/50 hover:bg-destructive/20 hover:text-destructive transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-
-                  <div className="flex flex-col items-center text-center mb-8 relative z-10">
-                    <div className="text-xs font-black text-foreground/30 mb-2">{formatId(p.id)}</div>
-                    <div className="relative w-40 h-40 mb-4">
-                      <div className="absolute inset-0 bg-white/5 rounded-full blur-2xl group-hover:bg-primary/5 transition-colors" />
-                      <Image 
-                        src={p.sprites.other['official-artwork'].front_default || p.sprites.front_default} 
-                        alt={p.name} 
-                        width={160}
-                        height={160}
-                        className="w-full h-full object-contain relative z-10 drop-shadow-2xl group-hover:scale-110 transition-transform"
-                      />
-                    </div>
-                    <h3 className="text-2xl font-black capitalize mb-4">{p.name}</h3>
-                    <div className="flex gap-2 justify-center">
-                      {p.types.map(t => (
-                        <span 
-                          key={t.type.name} 
-                          className="glass-tag px-4 py-1 text-[10px]"
-                          style={{ backgroundColor: `${TYPE_COLORS[t.type.name]}cc`, borderColor: TYPE_COLORS[t.type.name] }}
-                        >
-                          {t.type.name}
-                        </span>
-                      ))}
-                    </div>
+          <div className="space-y-12">
+            {/* Radar Chart Section */}
+            {pokemonData.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-panel p-8 rounded-[3rem] overflow-hidden"
+              >
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                  <div className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                        <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                        <PolarAngleAxis 
+                          dataKey="stat" 
+                          tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 'bold' }} 
+                        />
+                        {pokemonData.map((p) => p && (
+                          <Radar
+                            key={p.id}
+                            name={p.name}
+                            dataKey={p.name}
+                            stroke={TYPE_COLORS[p.types[0].type.name]}
+                            fill={TYPE_COLORS[p.types[0].type.name]}
+                            fillOpacity={0.3}
+                          />
+                        ))}
+                        <Legend />
+                      </RadarChart>
+                    </ResponsiveContainer>
                   </div>
 
-                  <div className="space-y-8 flex-1">
-                    {/* Size & Weight */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
-                        <Ruler className="w-4 h-4 text-foreground/30 mb-1" />
-                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.height')}</span>
-                        <span className="font-black text-sm">{p.height / 10} m</span>
-                      </div>
-                      <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
-                        <Weight className="w-4 h-4 text-foreground/30 mb-1" />
-                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.weight')}</span>
-                        <span className="font-black text-sm">{p.weight / 10} kg</span>
-                      </div>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-2xl font-black mb-2 tracking-tight">Stat Winners</h3>
+                      <p className="text-sm text-foreground/40 font-bold uppercase tracking-widest mb-6">Top performers per category</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {Object.entries(bestStats).map(([key, info]) => {
+                        if (key === 'total') return null;
+                        const winner = pokemonData[info.index];
+                        if (!winner) return null;
+                        return (
+                          <div key={key} className="bg-secondary/20 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 hover:border-primary/30 transition-all">
+                            <span className="text-[10px] font-black uppercase text-foreground/40">{STAT_LABELS[key]}</span>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-black text-sm capitalize truncate">{winner.name}</span>
+                              <span className="font-black text-primary bg-primary/10 px-2 py-0.5 rounded-lg text-xs">{info.val}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Stats */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
-                          <Swords className="w-3 h-3" /> {t('compare.stats')}
-                        </h4>
-                        <div className={cn(
-                          "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
-                          isOverallBest ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" : "bg-secondary/50 text-foreground/40"
-                        )}>
-                          {t('compare.total')}: {totalStats} {isOverallBest && "★"}
+                    {bestStats.total && (
+                      <div className="bg-primary/10 p-6 rounded-3xl border border-primary/20 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
+                            <Trophy className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-primary tracking-widest">Overall Champion</p>
+                            <h4 className="text-xl font-black capitalize">{pokemonData[bestStats.total.index]?.name}</h4>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black uppercase text-foreground/40 mb-1">Total Stats</p>
+                          <p className="text-2xl font-black text-primary">{bestStats.total.val}</p>
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        {p.stats.map(s => {
-                          const isBest = bestStats[s.stat.name]?.index === idx;
-                          return (
-                            <div key={s.stat.name} className="space-y-1">
-                              <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
-                                <span className={cn(isBest ? "text-primary" : "text-foreground/40")}>
-                                  {STAT_LABELS[s.stat.name]}
-                                </span>
-                                <span className={cn(isBest ? "text-primary font-black" : "text-foreground/70")}>
-                                  {s.base_stat} {isBest && "🏆"}
-                                </span>
-                              </div>
-                              <div className="h-1.5 rounded-full bg-secondary/50 overflow-hidden">
-                                <motion.div 
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${(s.base_stat / 255) * 100}%` }}
-                                  className="h-full rounded-full"
-                                  style={{ backgroundColor: isBest ? 'rgb(255, 50, 50)' : color }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-                    {/* Abilities */}
-                    <div className="space-y-3">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
-                        <Sparkles className="w-3 h-3" /> {t('detail.abilities')}
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {p.abilities.map(a => (
-                          <div 
-                            key={a.ability.name} 
-                            className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
+            <div className={cn(
+              "grid gap-6",
+              pokemonData.length === 1 ? "grid-cols-1 max-w-md mx-auto" : 
+              pokemonData.length === 2 ? "grid-cols-1 md:grid-cols-2" : 
+              "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            )}>
+              {pokemonData.map((p, idx) => {
+                if (!p) return null;
+                const color = TYPE_COLORS[p.types[0].type.name];
+                const totalStats = p.stats.reduce((acc, s) => acc + s.base_stat, 0);
+                const isOverallBest = bestStats.total?.index === idx;
+
+                return (
+                  <motion.div 
+                    key={p.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="glass-panel p-6 rounded-[2.5rem] relative overflow-hidden flex flex-col group"
+                    style={{ '--type-color': `${color}20` } as React.CSSProperties}
+                  >
+                    <button 
+                      onClick={() => removeFromCompare(p.id)}
+                      className="absolute top-4 right-4 z-20 p-2 rounded-full bg-secondary/50 hover:bg-destructive/20 hover:text-destructive transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex flex-col items-center text-center mb-8 relative z-10">
+                      <div className="text-xs font-black text-foreground/30 mb-2">{formatId(p.id)}</div>
+                      <div className="relative w-40 h-40 mb-4">
+                        <div className="absolute inset-0 bg-white/5 rounded-full blur-2xl group-hover:bg-primary/5 transition-colors" />
+                        <Image 
+                          src={p.sprites.other['official-artwork'].front_default || p.sprites.front_default} 
+                          alt={p.name} 
+                          width={160}
+                          height={160}
+                          className="w-full h-full object-contain relative z-10 drop-shadow-2xl group-hover:scale-110 transition-transform"
+                        />
+                      </div>
+                      <h3 className="text-2xl font-black capitalize mb-4">{p.name}</h3>
+                      <div className="flex gap-2 justify-center">
+                        {p.types.map(t => (
+                          <span 
+                            key={t.type.name} 
+                            className="glass-tag px-4 py-1 text-[10px]"
+                            style={{ backgroundColor: `${TYPE_COLORS[t.type.name]}cc`, borderColor: TYPE_COLORS[t.type.name] }}
                           >
-                            {a.ability.name.replace('-', ' ')}
-                            {a.is_hidden && <span className="ml-1 opacity-40 text-[8px]">{t('detail.hidden')}</span>}
-                          </div>
+                            {t.type.name}
+                          </span>
                         ))}
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+
+                    <div className="space-y-8 flex-1">
+                      {/* Size & Weight */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
+                          <Ruler className="w-4 h-4 text-foreground/30 mb-1" />
+                          <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.height')}</span>
+                          <span className="font-black text-sm">{p.height / 10} m</span>
+                        </div>
+                        <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
+                          <Weight className="w-4 h-4 text-foreground/30 mb-1" />
+                          <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.weight')}</span>
+                          <span className="font-black text-sm">{p.weight / 10} kg</span>
+                        </div>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
+                            <Swords className="w-3 h-3" /> {t('compare.stats')}
+                          </h4>
+                          <div className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
+                            isOverallBest ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" : "bg-secondary/50 text-foreground/40"
+                          )}>
+                            {t('compare.total')}: {totalStats} {isOverallBest && "★"}
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {p.stats.map(s => {
+                            const isBest = bestStats[s.stat.name]?.index === idx;
+                            return (
+                              <div key={s.stat.name} className="space-y-1">
+                                <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
+                                  <span className={cn(isBest ? "text-primary" : "text-foreground/40")}>
+                                    {STAT_LABELS[s.stat.name]}
+                                  </span>
+                                  <span className={cn(isBest ? "text-primary font-black" : "text-foreground/70")}>
+                                    {s.base_stat} {isBest && "🏆"}
+                                  </span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-secondary/50 overflow-hidden">
+                                  <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${(s.base_stat / 255) * 100}%` }}
+                                    className="h-full rounded-full"
+                                    style={{ backgroundColor: isBest ? 'rgb(255, 50, 50)' : color }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Abilities */}
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
+                          <Sparkles className="w-3 h-3" /> {t('detail.abilities')}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {p.abilities.map(a => (
+                            <div 
+                              key={a.ability.name} 
+                              className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
+                            >
+                              {a.ability.name.replace('-', ' ')}
+                              {a.is_hidden && <span className="ml-1 opacity-40 text-[8px]">{t('detail.hidden')}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>

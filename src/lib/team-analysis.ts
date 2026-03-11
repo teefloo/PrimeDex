@@ -23,6 +23,33 @@ export interface TeamAnalysisResult {
     statFocus: string[];
   };
 }
+export function calculateSynergyScore(
+  teamData: PokemonDetail[],
+  analysis: TeamAnalysisResult
+): number {
+  if (teamData.length === 0) return 0;
+
+  let score = 100;
+
+  // 1. Subtract for duplicate types
+  const typeCounts: Record<string, number> = {};
+  teamData.forEach(p => {
+    p.types.forEach(t => {
+      typeCounts[t.type.name] = (typeCounts[t.type.name] || 0) + 1;
+    });
+  });
+
+  Object.values(typeCounts).forEach(count => {
+    if (count > 1) {
+      score -= (count - 1) * 10;
+    }
+  });
+
+  // 2. Add for unique type coverage (offensive)
+  score += analysis.coverage.length * 5;
+
+  return Math.min(100, Math.max(0, score));
+}
 
 export function analyzeTeam(
   teamData: PokemonDetail[],
