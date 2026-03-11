@@ -25,10 +25,10 @@ export default function RegionFilter() {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.1, duration: 0.5 }}
-      className="w-full overflow-x-auto pb-4 pt-2 scrollbar-hide"
+      className="w-full pb-4 pt-2"
     >
-      <div className="flex flex-nowrap md:flex-wrap gap-3 justify-start md:justify-center px-4 min-w-max md:min-w-0 mx-auto max-w-6xl">
-        <div className="flex items-center gap-2 mr-2 px-3 py-2 bg-primary/10 rounded-full border border-primary/20">
+      <div className="flex flex-wrap gap-2 md:gap-3 justify-center px-4 mx-auto max-w-6xl">
+        <div className="hidden sm:flex items-center gap-2 mr-2 px-3 py-2 bg-primary/10 rounded-full border border-primary/20">
           <Map className="w-4 h-4 text-primary" />
           <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">Regions</span>
         </div>

@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Agentation } from "agentation";
 import CompareBar from "@/components/pokemon/CompareBar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -44,6 +45,7 @@ export default function RootLayout({
           {children}
           <CompareBar />
           {process.env.NODE_ENV === "development" && <Agentation />}
+          <Toaster />
         </Providers>
       </body>
     </html>

@@ -15,6 +15,7 @@ import SettingsModal from './SettingsModal';
 import { useEffect, useState, ButtonHTMLAttributes } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'ghost' | 'default' | 'outline' | 'destructive';
@@ -39,6 +40,7 @@ function HeaderButton({ children, variant, size, className, ...props }: HeaderBu
 
 export default function Header() {
   const { toggleSettings, theme, setTheme } = usePokedexStore();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -92,12 +94,12 @@ export default function Header() {
           <nav className="hidden lg:flex items-center gap-1 bg-secondary/30 backdrop-blur-md border border-white/5 p-1 rounded-2xl">
             <Link href="/team">
               <HeaderButton variant="ghost" size="sm" className="rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 hover:text-primary transition-colors">
-                <Users className="w-3.5 h-3.5" /> Team
+                <Users className="w-3.5 h-3.5" /> {t('nav.team')}
               </HeaderButton>
             </Link>
             <Link href="/quiz">
               <HeaderButton variant="ghost" size="sm" className="rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 hover:text-primary transition-colors">
-                <BrainCircuit className="w-3.5 h-3.5" /> Quiz
+                <BrainCircuit className="w-3.5 h-3.5" /> {t('nav.quiz')}
               </HeaderButton>
             </Link>
           </nav>
@@ -108,10 +110,10 @@ export default function Header() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors flex items-center gap-2"
-                title="View Favorites"
+                title={t('nav.favorites')}
               >
                 <Heart className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="hidden xl:inline text-xs font-black uppercase tracking-widest px-1">Favorites</span>
+                <span className="hidden xl:inline text-xs font-black uppercase tracking-widest px-1">{t('nav.favorites')}</span>
               </motion.button>
             </Link>
 
@@ -120,7 +122,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               onClick={cycleTheme}
               className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-accent transition-colors"
-              title={`Theme: ${theme}`}
+              title={`${t('settings.theme')}: ${theme}`}
             >
               {mounted && isDark ? (
                 <Moon className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
@@ -134,7 +136,7 @@ export default function Header() {
               whileTap={{ scale: 0.95 }}
               onClick={toggleSettings}
               className="p-2.5 rounded-full bg-secondary/50 backdrop-blur-sm border border-border text-foreground hover:bg-accent transition-colors"
-              title="Settings"
+              title={t('settings.title')}
             >
               <Settings className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>

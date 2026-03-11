@@ -37,8 +37,8 @@ interface PokedexStore {
   showFavoritesOnly: boolean;
   setShowFavoritesOnly: (show: boolean) => void;
 
-  sortBy: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc';
-  setSortBy: (sort: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc') => void;
+  sortBy: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc' | 'height-asc' | 'height-desc' | 'weight-asc' | 'weight-desc';
+  setSortBy: (sort: 'id-asc' | 'id-desc' | 'name-asc' | 'name-desc' | 'height-asc' | 'height-desc' | 'weight-asc' | 'weight-desc') => void;
 
   // Comparison
   compareList: number[];
@@ -70,6 +70,12 @@ interface PokedexStore {
   // Theme
   theme: Theme;
   setTheme: (theme: Theme) => void;
+
+  // Language
+  language: string;
+  setLanguage: (lang: string) => void;
+  systemLanguage: string;
+  setSystemLanguage: (lang: string) => void;
 }
 
 export const usePokedexStore = create<PokedexStore>()(
@@ -168,12 +174,17 @@ export const usePokedexStore = create<PokedexStore>()(
 
       theme: 'system',
       setTheme: (theme) => set({ theme }),
+
+      language: 'auto',
+      setLanguage: (lang) => set({ language: lang }),
+      systemLanguage: 'en',
+      setSystemLanguage: (lang) => set({ systemLanguage: lang }),
     }),
     {
       name: 'pokedex-storage',
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { searchTerm, ...rest } = state;
+        const { searchTerm, systemLanguage, ...rest } = state;
         return rest;
       },
     }

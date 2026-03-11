@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback } from 'react';
 import { PokemonDetail } from '@/types/pokemon';
+import { useTranslation } from 'react-i18next';
 
 type GameState = 'idle' | 'loading' | 'playing' | 'answered' | 'finished';
 
@@ -28,6 +29,7 @@ export default function QuizPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -53,7 +55,7 @@ export default function QuizPage() {
     const detail = await getPokemonDetail(pokemon.name);
     setCurrentPokemon(detail);
 
-    const otherOptions = [];
+    const otherOptions: string[] = [];
     while (otherOptions.length < 3) {
       const idx = Math.floor(Math.random() * Math.min(allNames.length, 1025));
       const p = allNames[idx];
@@ -115,8 +117,8 @@ export default function QuizPage() {
           <div className="inline-block p-4 bg-primary/10 rounded-3xl border border-primary/20 mb-6">
             <Gamepad2 className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-5xl font-black tracking-tight mb-2 uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Who&apos;s That Pokémon?</h2>
-          <p className="text-foreground/40 font-bold uppercase tracking-widest text-sm">Test your knowledge and beat your highscore</p>
+          <h2 className="text-5xl font-black tracking-tight mb-2 uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">{t('quiz.title')}</h2>
+          <p className="text-foreground/40 font-bold uppercase tracking-widest text-sm">{t('quiz.subtitle')}</p>
         </section>
 
         <div className="max-w-2xl mx-auto">
@@ -133,8 +135,8 @@ export default function QuizPage() {
                       <Trophy className="w-16 h-16 text-yellow-500" />
                     </div>
                   </div>
-                  <h3 className="text-3xl font-black">Game Over!</h3>
-                  <p className="text-xl font-bold text-foreground/60">Your Final Score: <span className="text-primary text-2xl">{score}</span></p>
+                  <h3 className="text-3xl font-black">{t('quiz.game_over')}</h3>
+                  <p className="text-xl font-bold text-foreground/60">{t('quiz.final_score')} <span className="text-primary text-2xl">{score}</span></p>
                 </div>
               )}
               
@@ -143,10 +145,10 @@ export default function QuizPage() {
                   onClick={startGame} 
                   className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
-                  {gameState === 'idle' ? 'Start Quiz' : 'Try Again'}
+                  {gameState === 'idle' ? t('quiz.start') : t('quiz.try_again')}
                 </Button>
                 <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                  <Timer className="w-3 h-3" /> 30 Seconds to guess as many as you can
+                  <Timer className="w-3 h-3" /> {t('quiz.instructions')}
                 </p>
               </div>
             </motion.div>

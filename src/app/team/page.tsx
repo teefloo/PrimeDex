@@ -18,10 +18,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState, SVGProps } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function TeamPage() {
   const { team, removeFromTeam, clearTeam } = usePokedexStore();
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -61,10 +63,12 @@ export default function TeamPage() {
       teamResistances[t] = 0;
     });
 
+    let queryIndex = 0;
+
     pokemonData.forEach(p => {
       if (!p) return;
       p.types.forEach(t => typeCoverage.add(t.type.name));
-      
+
       // Calculate weaknesses for this specific pokemon
       const pokemonEffectiveness: Record<string, number> = {};
       Object.keys(TYPE_COLORS).forEach(t => {
@@ -72,7 +76,8 @@ export default function TeamPage() {
       });
 
       p.types.forEach(pt => {
-        const relations = typeRelationsQueries.find(q => q.data && q.queryKey[1] === pt.type.name)?.data?.damage_relations;
+        const relations = typeRelationsQueries[queryIndex]?.data?.damage_relations;
+        queryIndex++;
         if (relations) {
           relations.double_damage_from.forEach(t => { pokemonEffectiveness[t.name] *= 2; });
           relations.half_damage_from.forEach(t => { pokemonEffectiveness[t.name] *= 0.5; });
@@ -109,10 +114,10 @@ export default function TeamPage() {
               </div>
               <div>
                 <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
-                  Team Builder
+                  {t('team.title')}
                 </h2>
                 <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs mt-1">
-                  Assemble your ultimate squad ({pokemonData.length}/6)
+                  {t('team.subtitle')} ({pokemonData.length}/6)
                 </p>
               </div>
             </div>
@@ -124,7 +129,7 @@ export default function TeamPage() {
                 className="rounded-xl font-black uppercase tracking-widest gap-2"
               >
                 <Trash2CustomIcon className="w-4 h-4" />
-                Disband Team
+                {t('team.disband')}
               </Button>
             )}
           </div>
@@ -177,7 +182,7 @@ export default function TeamPage() {
                         
                         <Link href={`/pokemon/${p.name}`} className="mt-auto w-full">
                           <Button variant="ghost" className="w-full h-8 text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors">
-                            Details
+                            {t('team.details')}
                           </Button>
                         </Link>
                       </motion.div>
@@ -187,7 +192,7 @@ export default function TeamPage() {
                           <div className="p-4 rounded-full bg-secondary/30 mb-3 group-hover:scale-110 transition-transform">
                             <Plus className="w-8 h-8" />
                           </div>
-                          <span className="text-xs font-black uppercase tracking-widest">Add Pokémon</span>
+                          <span className="text-xs font-black uppercase tracking-widest">{t('team.add')}</span>
                         </div>
                       </Link>
                     )}
@@ -204,14 +209,14 @@ export default function TeamPage() {
               >
                 <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4 flex items-center gap-3">
                   <Sword className="w-6 h-6 text-primary" />
-                  Team Analysis
+                  {t('team.analysis')}
                 </h3>
 
                 <div className="grid md:grid-cols-2 gap-8">
                   {/* Weakness Alert */}
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-red-500/60 flex items-center gap-2">
-                      <ShieldAlert className="w-3 h-3" /> Shared Weaknesses
+                      <ShieldAlert className="w-3 h-3" /> {t('team.shared_weaknesses')}
                     </h4>
                     {analysis.majorWeaknesses.length > 0 ? (
                       <div className="space-y-3">
@@ -222,17 +227,17 @@ export default function TeamPage() {
                               {Array.from({ length: count }).map((_, i) => (
                                 <div key={i} className="w-2 h-2 rounded-full bg-red-500" />
                               ))}
-                              <span className="text-[10px] font-bold text-foreground/40 ml-2">{count} Pokémon</span>
+                              <span className="text-[10px] font-bold text-foreground/40 ml-2">{count} {t('list.pokemon')}</span>
                             </div>
                           </div>
                         ))}
                         <p className="text-[10px] text-foreground/40 italic mt-2">
-                          Your team is highly vulnerable to these types. Consider adding a resistance.
+                          {t('team.weakness_desc')}
                         </p>
                       </div>
                     ) : (
                       <div className="p-4 bg-green-500/5 rounded-xl border border-green-500/10 text-green-500/60 text-xs font-bold">
-                        Excellent! No major shared weaknesses detected.
+                        {t('team.no_weakness')}
                       </div>
                     )}
                   </div>
@@ -240,7 +245,7 @@ export default function TeamPage() {
                   {/* Coverage Strength */}
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-green-500/60 flex items-center gap-2">
-                      <ShieldCheck className="w-3 h-3" /> Defensive Strengths
+                      <ShieldCheck className="w-3 h-3" /> {t('team.defensive_strengths')}
                     </h4>
                     {analysis.strongCoverage.length > 0 ? (
                       <div className="space-y-3">
@@ -257,7 +262,7 @@ export default function TeamPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-xs text-foreground/30 italic">No type is resisted by more than 3 members.</div>
+                      <div className="text-xs text-foreground/30 italic">{t('team.no_strengths')}</div>
                     )}
                   </div>
                 </div>
@@ -270,24 +275,24 @@ export default function TeamPage() {
             <div className="glass-panel p-6 rounded-[2.5rem]">
               <h3 className="text-lg font-black mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" />
-                Type Coverage
+                {t('team.type_coverage')}
               </h3>
               
               <div className="space-y-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">Types Present</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">{t('team.types_present')}</p>
                   <div className="flex flex-wrap gap-2">
                     {Array.from(analysis?.typeCoverage || []).map(t => (
                       <span key={t} className="px-3 py-1 rounded-lg text-[9px] font-black uppercase text-white shadow-sm" style={{ backgroundColor: TYPE_COLORS[t] }}>
                         {t}
                       </span>
                     ))}
-                    {(analysis?.typeCoverage.size || 0) === 0 && <span className="text-[10px] text-foreground/20 italic">No Pokémon in team</span>}
+                    {(analysis?.typeCoverage.size || 0) === 0 && <span className="text-[10px] text-foreground/20 italic">{t('team.no_pokemon')}</span>}
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">Missing Types</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">{t('team.missing_types')}</p>
                   <div className="flex flex-wrap gap-2 opacity-40">
                     {analysis?.missingTypes.slice(0, 12).map(t => (
                       <span key={t} className="px-2 py-1 rounded-lg border border-white/10 text-[8px] font-bold uppercase">
@@ -302,15 +307,15 @@ export default function TeamPage() {
 
             <div className="bg-primary/5 border border-primary/10 p-6 rounded-[2.5rem] relative overflow-hidden">
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-              <h3 className="text-lg font-black mb-4 relative z-10">Export Team</h3>
+              <h3 className="text-lg font-black mb-4 relative z-10">{t('team.export_title')}</h3>
               <p className="text-xs text-foreground/50 mb-6 leading-relaxed relative z-10">
-                Ready to share your team? Copy this code to share with friends or import it later.
+                {t('team.export_desc')}
               </p>
               <div className="bg-background/50 p-3 rounded-xl border border-white/5 font-mono text-[10px] text-foreground/60 break-all mb-4 relative z-10">
-                {team.length > 0 ? team.join('-') : 'Empty team'}
+                {team.length > 0 ? team.join('-') : t('team.empty_team')}
               </div>
               <Button disabled={team.length === 0} className="w-full rounded-xl font-black uppercase tracking-widest h-12 shadow-lg shadow-primary/20">
-                Copy Team Code
+                {t('team.copy_code')}
               </Button>
             </div>
           </div>

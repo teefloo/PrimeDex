@@ -1,16 +1,30 @@
 'use client';
 
 import { usePokedexStore } from '@/store/pokedex';
-import { X, Volume2, VolumeX, Sun, Moon, Monitor } from 'lucide-react';
+import { X, Volume2, VolumeX, Sun, Moon, Monitor, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useTranslation } from 'react-i18next';
+
+const LANGUAGES = [
+  { code: 'auto', name: 'Auto', flag: '🌐' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+];
+
 export default function SettingsModal() {
-  const { isSettingsOpen, toggleSettings, soundEnabled, toggleSound, theme, setTheme } = usePokedexStore();
+  const { isSettingsOpen, toggleSettings, soundEnabled, toggleSound, theme, setTheme, language, setLanguage } = usePokedexStore();
+  const { t } = useTranslation();
 
   const themeOptions = [
-    { value: 'light' as const, label: 'Light', icon: Sun },
-    { value: 'dark' as const, label: 'Dark', icon: Moon },
-    { value: 'system' as const, label: 'System', icon: Monitor },
+    { value: 'light' as const, label: t('settings.light'), icon: Sun },
+    { value: 'dark' as const, label: t('settings.dark'), icon: Moon },
+    { value: 'system' as const, label: t('settings.system'), icon: Monitor },
   ];
 
   return (
@@ -20,7 +34,7 @@ export default function SettingsModal() {
           className="fixed inset-0 z-[100] flex items-center justify-center px-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Settings"
+          aria-label={t('settings.title')}
         >
           <motion.div 
             initial={{ opacity: 0 }}
@@ -42,7 +56,7 @@ export default function SettingsModal() {
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/20 blur-[50px] rounded-full" />
 
             <div className="relative z-10 flex justify-between items-center mb-8 pb-4 border-b border-white/10">
-              <h2 className="text-2xl font-black text-foreground tracking-tight">Settings</h2>
+              <h2 className="text-2xl font-black text-foreground tracking-tight">{t('settings.title')}</h2>
               <button
                 onClick={toggleSettings}
                 className="p-2 rounded-full text-foreground/50 hover:bg-white/10 hover:text-foreground transition-colors"
@@ -59,7 +73,7 @@ export default function SettingsModal() {
                   <div className={`p-2.5 rounded-xl transition-colors ${soundEnabled ? 'text-primary bg-primary/20' : 'text-foreground/50 bg-white/5'}`}>
                     {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
                   </div>
-                  <span className="font-bold text-foreground/80">Sound Effects</span>
+                  <span className="font-bold text-foreground/80">{t('settings.sound')}</span>
                 </div>
                 <button
                   onClick={toggleSound}
@@ -78,7 +92,7 @@ export default function SettingsModal() {
                   <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-white/5">
                     <Monitor className="w-5 h-5" />
                   </div>
-                  <span className="font-bold text-foreground/80">Theme</span>
+                  <span className="font-bold text-foreground/80">{t('settings.theme')}</span>
                 </div>
                 <div className="flex gap-3 bg-secondary/20 p-2 rounded-2xl border border-white/5">
                   {themeOptions.map(({ value, label, icon: Icon }) => (
@@ -93,6 +107,31 @@ export default function SettingsModal() {
                     >
                       <Icon className="w-5 h-5" />
                       {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Language Selector */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-white/5">
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-foreground/80">{t('settings.language')}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 bg-secondary/20 p-2 rounded-2xl border border-white/5">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setLanguage(lang.code)}
+                      className={`flex items-center justify-center gap-2 py-2 px-2 rounded-xl text-xs font-bold transition-all duration-300 ${language === lang.code
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                          : 'text-foreground/50 hover:bg-white/5 hover:text-foreground/80'
+                        }`}
+                    >
+                      <span className="text-base leading-none">{lang.flag}</span>
+                      <span className="uppercase">{lang.code === 'auto' ? t('settings.auto') : lang.code}</span>
                     </button>
                   ))}
                 </div>

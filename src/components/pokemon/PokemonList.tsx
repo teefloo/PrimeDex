@@ -2,14 +2,18 @@
 
 import { useInfiniteQuery, useQuery, useQueries } from '@tanstack/react-query';
 import { usePokedexStore } from '@/store/pokedex';
-import { getPokemonList, getPokemonByType, getAllPokemonNames, getPokemonByGeneration } from '@/lib/api';
+import { getPokemonList, getPokemonByType, getAllPokemonDetailed, getPokemonByGeneration } from '@/lib/api';
+import { PokemonBasicData } from '@/types/pokemon';
 import { PokemonCard } from './PokemonCard';
 import { useInView } from 'framer-motion';
 import { useEffect, useRef, useMemo } from 'react';
 import { Loader2, SearchX } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useTranslation } from 'react-i18next';
+
 export default function PokemonList() {
+  const { t } = useTranslation();
   const { 
     searchTerm, 
     selectedTypes, 
@@ -26,6 +30,8 @@ export default function PokemonList() {
   const loadMoreRef = useRef(null);
   const isInView = useInView(loadMoreRef, { margin: '200px' });
 
+  const isBasicMode = selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && isLegendary === null && minBaseStats === 0 && heightRange[0] === 0 && heightRange[1] === 20 && weightRange[0] === 0 && weightRange[1] === 1000 && (sortBy === 'id-asc' || sortBy === 'id-desc' || sortBy === 'name-asc' || sortBy === 'name-desc');
+
   // 1. Mode normal : Infinite Scroll pour tous les Pokémon
   const {
     data: infiniteData,
@@ -38,7 +44,7 @@ export default function PokemonList() {
     queryFn: getPokemonList,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextParam,
-    enabled: selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && isLegendary === null && minBaseStats === 0,
+    enabled: isBasicMode,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -55,7 +61,6 @@ export default function PokemonList() {
     if (selectedTypes.length === 0) return null;
     if (typeQueries.some(q => q.isLoading)) return [];
     
-    // Intersection des listes de Pokémon pour chaque type
     const lists = typeQueries.map(q => q.data || []);
     if (lists.length === 0) return [];
     
@@ -73,103 +78,135 @@ export default function PokemonList() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // 4. Mode Recherche ou Favoris : On récupère les noms pour filtrer localement
-  const { data: allNames } = useQuery({
-    queryKey: ['allPokemonNames'],
-    queryFn: getAllPokemonNames,
-    enabled: !!searchTerm || showFavoritesOnly || isLegendary !== null || minBaseStats > 0 || heightRange[0] > 0 || heightRange[1] < 20 || weightRange[0] > 0 || weightRange[1] < 1000,
+  // 4. Mode Recherche ou Filtres Avancés : On récupère toutes les données de base pour filtrer/trier
+  const { data: allDetailed, isLoading: isLoadingAll } = useQuery({
+    queryKey: ['allPokemonDetailed'],
+    queryFn: getAllPokemonDetailed,
+    enabled: !isBasicMode,
     staleTime: 30 * 60 * 1000,
   });
 
   // Logique de fusion des résultats
   const displayedPokemon = useMemo(() => {
-    let results: { name: string; url: string }[] = [];
+    let results: { name: string; url: string; height?: number; weight?: number; base_stat_total?: number; is_legendary?: boolean; is_mythical?: boolean; id: number; types?: string[] }[] = [];
 
-    // Base de données source
-    if (searchTerm) {
-      results = allNames || [];
-      results = results.filter((p) => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    } else if (selectedTypes.length > 0 && selectedGeneration) {
-      if (!typePokemon || !genPokemon) return [];
-      const genNames = new Set(genPokemon.map(p => p.name));
-      results = typePokemon.filter(p => genNames.has(p.name));
-    } else if (selectedTypes.length > 0) {
-      results = typePokemon || [];
-    } else if (selectedGeneration) {
-      results = genPokemon || [];
-    } else if (showFavoritesOnly || isLegendary !== null || minBaseStats > 0) {
-      results = allNames || [];
+    if (isBasicMode) {
+      results = infiniteData?.pages.flatMap((page) => page.results).map(p => ({
+        ...p,
+        id: parseInt(p.url.split('/').filter(Boolean).pop() || '0')
+      })) || [];
     } else {
-      results = infiniteData?.pages.flatMap((page) => page.results) || [];
-    }
+      if (!allDetailed) return [];
 
-    // Application du filtre favoris
-    if (showFavoritesOnly) {
-      results = results.filter(p => {
-        const id = parseInt(p.url.split('/').filter(Boolean).pop() || '0');
-        return favorites.includes(id);
-      });
-    }
+      results = allDetailed.map((p: PokemonBasicData) => ({
+        name: p.name,
+        url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
+        id: p.id,
+        height: p.height,
+        weight: p.weight,
+        base_stat_total: p.pokemon_v2_pokemonstats.reduce((acc, curr) => acc + curr.base_stat, 0),
+        is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
+        is_mythical: p.pokemon_v2_pokemonspecy?.is_mythical || false,
+        types: p.pokemon_v2_pokemontypes.map(t => t.pokemon_v2_type.name)
+      }));
 
-    // Limiter les résultats si on a trop de données et qu'on doit charger les détails
-    // Pour les filtres avancés (stats, weight, etc.), on ne peut filtrer que ce qui est affiché 
-    // OU on doit tout charger. Pour cette implémentation, on va limiter à 100 Pokémon max 
-    // pour éviter d'exploser l'API si on utilise les filtres avancés sans type/gen.
-    const isAdvancedFilterActive = isLegendary !== null || minBaseStats > 0 || heightRange[0] > 0 || heightRange[1] < 20 || weightRange[0] > 0 || weightRange[1] < 1000;
-    
-    if (isAdvancedFilterActive && !searchTerm && selectedTypes.length === 0 && !selectedGeneration && !showFavoritesOnly) {
-      results = results.slice(0, 100);
+      // Base de données source: Type & Gen
+      if (selectedTypes.length > 0) {
+        results = results.filter(p => selectedTypes.every(t => p.types?.includes(t)));
+      }
+      
+      if (selectedGeneration) {
+        if (!genPokemon) return [];
+        const genNames = new Set(genPokemon.map(g => g.name));
+        results = results.filter(p => genNames.has(p.name));
+      }
+
+      if (searchTerm) {
+        results = results.filter((p) => 
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.toString().includes(searchTerm)
+        );
+      }
+
+      // Application du filtre favoris
+      if (showFavoritesOnly) {
+        results = results.filter(p => favorites.includes(p.id));
+      }
+
+      // Application des filtres avancés (si mode non basique)
+      if (isLegendary === true) {
+        results = results.filter(p => p.is_legendary || p.is_mythical);
+      }
+
+      if (minBaseStats > 0) {
+        results = results.filter(p => (p.base_stat_total || 0) >= minBaseStats);
+      }
+
+      if (heightRange[0] > 0 || heightRange[1] < 20) {
+        results = results.filter(p => {
+          const h = (p.height || 0) / 10;
+          return h >= heightRange[0] && h <= heightRange[1];
+        });
+      }
+
+      if (weightRange[0] > 0 || weightRange[1] < 1000) {
+        results = results.filter(p => {
+          const w = (p.weight || 0) / 10;
+          return w >= weightRange[0] && w <= weightRange[1];
+        });
+      }
     }
 
     // Application du tri
     const sortedResults = [...results];
     
     if (sortBy === 'id-asc') {
-      sortedResults.sort((a, b) => {
-        const idA = parseInt(a.url.split('/').filter(Boolean).pop() || '0');
-        const idB = parseInt(b.url.split('/').filter(Boolean).pop() || '0');
-        return idA - idB;
-      });
+      sortedResults.sort((a, b) => a.id - b.id);
     } else if (sortBy === 'id-desc') {
-      sortedResults.sort((a, b) => {
-        const idA = parseInt(a.url.split('/').filter(Boolean).pop() || '0');
-        const idB = parseInt(b.url.split('/').filter(Boolean).pop() || '0');
-        return idB - idA;
-      });
+      sortedResults.sort((a, b) => b.id - a.id);
     } else if (sortBy === 'name-asc') {
       sortedResults.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'name-desc') {
       sortedResults.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sortBy === 'height-asc' && !isBasicMode) {
+      sortedResults.sort((a, b) => (a.height || 0) - (b.height || 0));
+    } else if (sortBy === 'height-desc' && !isBasicMode) {
+      sortedResults.sort((a, b) => (b.height || 0) - (a.height || 0));
+    } else if (sortBy === 'weight-asc' && !isBasicMode) {
+      sortedResults.sort((a, b) => (a.weight || 0) - (b.weight || 0));
+    } else if (sortBy === 'weight-desc' && !isBasicMode) {
+      sortedResults.sort((a, b) => (b.weight || 0) - (a.weight || 0));
     }
 
     // On limite à 50 par défaut si on cherche par nom
     if (searchTerm) {
       return sortedResults.slice(0, 50);
     }
+    
+    // Si on a appliqué un filtre (type, gen, search, favoris, advanced), on affiche tout ce qui matche (avec une limite max pour pas exploser)
+    if (!isBasicMode) {
+      return sortedResults.slice(0, 200); // 200 results max for filtered view
+    }
 
     return sortedResults;
-  }, [infiniteData, typePokemon, genPokemon, searchTerm, allNames, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, minBaseStats, heightRange, weightRange]);
+  }, [infiniteData, allDetailed, typePokemon, genPokemon, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, minBaseStats, heightRange, weightRange, isBasicMode]);
 
   // Déclenchement automatique du chargement suivant
   useEffect(() => {
-    const isBasicMode = selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && isLegendary === null && minBaseStats === 0;
     if (isInView && hasNextPage && !isFetchingNextPage && isBasicMode) {
       fetchNextPage();
     }
-  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, isLegendary, minBaseStats]);
+  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage, isBasicMode]);
 
   const isLoading = isLoadingInfinite || 
     (selectedTypes.length > 0 && typeQueries.some(q => q.isLoading)) || 
     (selectedGeneration && isLoadingGen) ||
-    ((showFavoritesOnly || isLegendary !== null || minBaseStats > 0) && !allNames);
+    (!isBasicMode && isLoadingAll);
 
   if (isLoading && displayedPokemon.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center h-64 gap-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary drop-shadow-[0_0_15px_rgba(255,100,100,0.5)]" />
-        <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm animate-pulse">Loading Pokédex...</p>
+        <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm animate-pulse">{t('list.loading')}</p>
       </div>
     );
   }
@@ -184,8 +221,8 @@ export default function PokemonList() {
         <div className="p-6 bg-secondary/30 rounded-full mb-6">
           <SearchX className="w-16 h-16 text-foreground/30" />
         </div>
-        <h3 className="text-2xl font-black mb-2 text-foreground/80 tracking-tight">No Pokémon found</h3>
-        <p className="text-base text-foreground/50 font-medium">Try adjusting your search or filters</p>
+        <h3 className="text-2xl font-black mb-2 text-foreground/80 tracking-tight">{t('list.no_results')}</h3>
+        <p className="text-base text-foreground/50 font-medium">{t('list.no_results_desc')}</p>
       </motion.div>
     );
   }
@@ -195,13 +232,13 @@ export default function PokemonList() {
       <div className="flex items-center justify-between px-4">
         <div className="text-xs font-bold text-foreground/40 uppercase tracking-widest">
           {searchTerm ? (
-            <>Search results for <span className="text-primary">&quot;{searchTerm}&quot;</span></>
+            <>{t('list.search_results')} <span className="text-primary">&quot;{searchTerm}&quot;</span></>
           ) : (selectedTypes.length > 0 || selectedGeneration || showFavoritesOnly || isLegendary !== null || minBaseStats > 0) ? (
             <div className="flex gap-2 items-center flex-wrap">
               {showFavoritesOnly && (
                 <span className="text-red-500 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  Favorites
+                  {t('nav.favorites')}
                 </span>
               )}
               {showFavoritesOnly && (selectedTypes.length > 0 || selectedGeneration) && <span className="opacity-30 mx-1">|</span>}
@@ -213,7 +250,7 @@ export default function PokemonList() {
                 <>Types: <span className="text-primary capitalize">{selectedTypes.join(', ')}</span></>
               )}
               {isLegendary && (
-                <><span className="opacity-30 mx-1">|</span> <span className="text-yellow-500">Legendary</span></>
+                <><span className="opacity-30 mx-1">|</span> <span className="text-yellow-500">{t('list.legendary')}</span></>
               )}
               {minBaseStats > 0 && (
                 <><span className="opacity-30 mx-1">|</span> <span className="text-blue-500">BST {minBaseStats}+</span></>
@@ -221,7 +258,7 @@ export default function PokemonList() {
               <span className="ml-2 opacity-50">({displayedPokemon.length})</span>
             </div>
           ) : (
-            <>Showing <span className="text-primary">{displayedPokemon.length}</span> Pokémon</>
+            <>{t('list.showing')} <span className="text-primary">{displayedPokemon.length}</span> {t('list.pokemon')}</>
           )}
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent ml-4" />
@@ -233,12 +270,6 @@ export default function PokemonList() {
             key={p.name} 
             name={p.name} 
             url={p.url} 
-            filters={{
-              isLegendary,
-              minBaseStats,
-              heightRange,
-              weightRange
-            }}
           />
         ))}
       </div>
@@ -248,7 +279,7 @@ export default function PokemonList() {
         <div ref={loadMoreRef} className="flex justify-center py-12">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-            <span className="text-[10px] font-bold text-foreground/20 uppercase tracking-[0.3em]">Loading more...</span>
+            <span className="text-[10px] font-bold text-foreground/20 uppercase tracking-[0.3em]">{t('list.loading_more')}</span>
           </div>
         </div>
       )}

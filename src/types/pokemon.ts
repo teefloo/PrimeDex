@@ -65,6 +65,10 @@ export interface PokemonDetail {
       url: string;
     };
   }[];
+  cries: {
+    latest: string;
+    legacy: string;
+  };
 }
 
 export interface PokemonSpecies {
@@ -80,12 +84,30 @@ export interface PokemonSpecies {
       name: string;
     };
   }[];
+  names: {
+    name: string;
+    language: {
+      name: string;
+    };
+  }[];
   color: {
     name: string;
   };
   habitat: {
     name: string;
   } | null;
+  is_legendary?: boolean;
+  is_mythical?: boolean;
+}
+
+export interface PokemonBasicData {
+  id: number;
+  name: string;
+  height: number;
+  weight: number;
+  pokemon_v2_pokemonstats: { base_stat: number }[];
+  pokemon_v2_pokemonspecy: { is_legendary: boolean; is_mythical: boolean } | null;
+  pokemon_v2_pokemontypes: { pokemon_v2_type: { name: string } }[];
 }
 
 export const TYPE_COLORS: Record<string, string> = {

@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const STAT_LABELS: Record<string, string> = {
   'hp': 'HP',
@@ -35,6 +36,7 @@ export default function ComparePage() {
   const { compareList, removeFromCompare, clearCompare } = usePokedexStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -101,7 +103,7 @@ export default function ComparePage() {
               <div>
                 <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight flex items-center gap-3">
                   <Scale className="w-8 h-8 text-primary" />
-                  Compare
+                  {t('compare.title')}
                 </h2>
                 <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs mt-1">
                   Comparing {pokemonData.length} Pokémon
@@ -115,7 +117,7 @@ export default function ComparePage() {
               className="rounded-xl font-black uppercase tracking-widest gap-2"
             >
               <Trash2 className="w-4 h-4" />
-              Clear All
+              {t('compare.clear')}
             </Button>
           </div>
           <div className="h-px w-full bg-gradient-to-r from-border via-border to-transparent" />
@@ -124,7 +126,7 @@ export default function ComparePage() {
         {isLoading ? (
           <div className="flex flex-col justify-center items-center h-96 gap-4">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm">Preparing comparison...</p>
+            <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm">{t('list.loading')}</p>
           </div>
         ) : pokemonData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-[3rem] border-dashed border-2 border-white/10">
@@ -192,12 +194,12 @@ export default function ComparePage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
                         <Ruler className="w-4 h-4 text-foreground/30 mb-1" />
-                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">Height</span>
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.height')}</span>
                         <span className="font-black text-sm">{p.height / 10} m</span>
                       </div>
                       <div className="bg-secondary/20 p-3 rounded-2xl flex flex-col items-center">
                         <Weight className="w-4 h-4 text-foreground/30 mb-1" />
-                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">Weight</span>
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase mb-1">{t('compare.weight')}</span>
                         <span className="font-black text-sm">{p.weight / 10} kg</span>
                       </div>
                     </div>
@@ -206,13 +208,13 @@ export default function ComparePage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
-                          <Swords className="w-3 h-3" /> Base Stats
+                          <Swords className="w-3 h-3" /> {t('compare.stats')}
                         </h4>
                         <div className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
                           isOverallBest ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" : "bg-secondary/50 text-foreground/40"
                         )}>
-                          Total: {totalStats} {isOverallBest && "★"}
+                          {t('compare.total')}: {totalStats} {isOverallBest && "★"}
                         </div>
                       </div>
                       <div className="space-y-3">
@@ -245,7 +247,7 @@ export default function ComparePage() {
                     {/* Abilities */}
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 flex items-center gap-2">
-                        <Sparkles className="w-3 h-3" /> Abilities
+                        <Sparkles className="w-3 h-3" /> {t('detail.abilities')}
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {p.abilities.map(a => (
@@ -254,7 +256,7 @@ export default function ComparePage() {
                             className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
                           >
                             {a.ability.name.replace('-', ' ')}
-                            {a.is_hidden && <span className="ml-1 opacity-40 text-[8px]">H</span>}
+                            {a.is_hidden && <span className="ml-1 opacity-40 text-[8px]">{t('detail.hidden')}</span>}
                           </div>
                         ))}
                       </div>

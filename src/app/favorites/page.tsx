@@ -9,6 +9,7 @@ import { Heart, Home, Loader2, Ghost } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useMemo, useEffect, useState, ButtonHTMLAttributes } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface FavoriteButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ function FavoriteButton({ children, className, ...props }: FavoriteButtonProps) 
 export default function FavoritesPage() {
   const { favorites } = usePokedexStore();
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -59,10 +61,10 @@ export default function FavoritesPage() {
             </div>
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
-                My Favorites
+                {t('favorites.title')}
               </h2>
               <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs mt-1">
-                Your personal collection ({favoritePokemon.length} Pokémon)
+                {t('favorites.subtitle')} ({favoritePokemon.length} Pokémon)
               </p>
             </div>
           </div>
@@ -73,7 +75,7 @@ export default function FavoritesPage() {
         {isLoading ? (
           <div className="flex flex-col justify-center items-center h-64 gap-4">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm">Loading your collection...</p>
+            <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm">{t('favorites.loading')}</p>
           </div>
         ) : favoritePokemon.length === 0 ? (
           <motion.div 
@@ -84,14 +86,14 @@ export default function FavoritesPage() {
             <div className="p-6 bg-secondary/30 rounded-full mb-6">
               <Ghost className="w-16 h-16 text-foreground/30" />
             </div>
-            <h3 className="text-2xl font-black mb-2 text-foreground/80 tracking-tight">Your collection is empty</h3>
+            <h3 className="text-2xl font-black mb-2 text-foreground/80 tracking-tight">{t('favorites.empty_title')}</h3>
             <p className="text-base text-foreground/50 font-medium mb-8 text-center px-6">
-              Start adding your favorite Pokémon by clicking the heart icon on their cards!
+              {t('favorites.empty_desc')}
             </p>
             <Link href="/">
               <FavoriteButton className="glass-btn px-8 py-4 flex items-center gap-2 hover:scale-105 transition-all">
                 <Home className="w-5 h-5" />
-                <span className="font-black uppercase tracking-widest text-sm">Back to Pokédex</span>
+                <span className="font-black uppercase tracking-widest text-sm">{t('favorites.back')}</span>
               </FavoriteButton>
             </Link>
           </motion.div>

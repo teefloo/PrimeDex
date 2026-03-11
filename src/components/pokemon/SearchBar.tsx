@@ -5,10 +5,12 @@ import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 
 export default function SearchBar() {
   const { searchTerm, setSearchTerm } = usePokedexStore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,19 +39,13 @@ export default function SearchBar() {
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Search Pokémon or press / to focus..."
+          placeholder={t('search.placeholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-12 pr-12 py-7 rounded-full bg-secondary/30 backdrop-blur-xl border border-white/20 dark:border-white/10 text-foreground placeholder:text-foreground/40 text-lg font-medium shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary/50"
-          aria-label="Search for a Pokémon by name"
+          aria-label={t('search.placeholder')}
           id="pokemon-search"
         />
-      </div>
-
-      <div className="absolute right-14 pointer-events-none hidden md:flex items-center gap-1">
-        <kbd className="px-2 py-1 text-[10px] font-bold text-foreground/40 bg-background/50 backdrop-blur-sm rounded-md border border-border uppercase shadow-sm">
-          /
-        </kbd>
       </div>
 
       <AnimatePresence>

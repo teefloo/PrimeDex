@@ -25,6 +25,34 @@ export const getAllPokemonNames = async () => {
   return data.results;
 };
 
+export const getAllPokemonDetailed = async () => {
+  const query = `
+    query {
+      pokemon_v2_pokemon(limit: 1500, order_by: {id: asc}) {
+        id
+        name
+        height
+        weight
+        pokemon_v2_pokemonstats {
+          base_stat
+        }
+        pokemon_v2_pokemonspecy {
+          is_legendary
+          is_mythical
+        }
+        pokemon_v2_pokemontypes {
+          pokemon_v2_type {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const { data } = await axios.post('https://beta.pokeapi.co/graphql/v1beta', { query });
+  return data.data.pokemon_v2_pokemon;
+};
+
 export const getPokemonDetail = async (name: string): Promise<PokemonDetail> => {
   const { data } = await api.get<PokemonDetail>(`/pokemon/${name}`);
   return data;
