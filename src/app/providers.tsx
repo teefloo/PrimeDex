@@ -5,6 +5,16 @@ import { useState, useEffect } from 'react';
 import { usePokedexStore } from '@/store/pokedex';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
+import { getAllPokemonDetailed } from '@/lib/api';
+
+function CacheInitializer() {
+  useEffect(() => {
+    // Preload all pokemon data for offline use and fast filtering
+    getAllPokemonDetailed().catch(console.error);
+  }, []);
+
+  return null;
+}
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme, setSystemLanguage, language, systemLanguage } = usePokedexStore();
@@ -55,7 +65,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        <CacheInitializer />
+        {children}
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

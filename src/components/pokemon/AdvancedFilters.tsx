@@ -36,16 +36,46 @@ const GENERATIONS = [
   { name: 'Gen 9', id: 9, region: 'Paldea' },
 ];
 
+const EGG_GROUPS = [
+  'monster', 'bug', 'flying', 'field', 'fairy', 'grass', 'human-like', 
+  'water1', 'water2', 'water3', 'mineral', 'amorphous', 'dragon', 'no-eggs'
+];
+
+const COLORS = [
+  'red', 'blue', 'yellow', 'green', 'black', 'brown', 'purple', 'gray', 'white', 'pink'
+];
+
+const SHAPES = [
+  'ball', 'squiggle', 'fish', 'arms', 'blob', 'upright', 'legs', 
+  'wings', 'tentacles', 'heads', 'humanoid', 'bug-wings', 'armor'
+];
+
 export default function AdvancedFilters() {
   const { 
     selectedTypes, 
     toggleType, 
     selectedGeneration, 
     setSelectedGeneration,
+    selectedEggGroups,
+    toggleEggGroup,
+    selectedColors,
+    toggleColor,
+    selectedShapes,
+    toggleShape,
     isLegendary,
     setIsLegendary,
+    isMythical,
+    setIsMythical,
     minBaseStats,
     setMinBaseStats,
+    minAttack,
+    setMinAttack,
+    minDefense,
+    setMinDefense,
+    minSpeed,
+    setMinSpeed,
+    minHp,
+    setMinHp,
     heightRange,
     setHeightRange,
     weightRange,
@@ -57,8 +87,16 @@ export default function AdvancedFilters() {
   const activeFiltersCount = [
     selectedTypes.length > 0,
     selectedGeneration !== null,
+    selectedEggGroups.length > 0,
+    selectedColors.length > 0,
+    selectedShapes.length > 0,
     isLegendary !== null,
+    isMythical !== null,
     minBaseStats > 0,
+    minAttack > 0,
+    minDefense > 0,
+    minSpeed > 0,
+    minHp > 0,
     heightRange[0] > 0 || heightRange[1] < 20,
     weightRange[0] > 0 || weightRange[1] < 1000
   ].filter(Boolean).length;
@@ -161,20 +199,110 @@ export default function AdvancedFilters() {
               </div>
             </div>
 
-            {/* Legendary Status */}
+            {/* Legendary & Mythical Status */}
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
                 {t('filters.special')}
               </h4>
-              <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">{t('filters.legendary')}</span>
-                  <span className="text-[10px] text-foreground/40 font-medium">{t('filters.legendary_desc')}</span>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">{t('filters.legendary')}</span>
+                    <span className="text-[10px] text-foreground/40 font-medium">{t('filters.legendary_desc')}</span>
+                  </div>
+                  <Switch 
+                    checked={isLegendary === true}
+                    onCheckedChange={(checked) => setIsLegendary(checked ? true : null)}
+                  />
                 </div>
-                <Switch 
-                  checked={isLegendary === true}
-                  onCheckedChange={(checked) => setIsLegendary(checked ? true : null)}
-                />
+                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Mythical</span>
+                    <span className="text-[10px] text-foreground/40 font-medium">Show only Mythical Pokémon</span>
+                  </div>
+                  <Switch 
+                    checked={isMythical === true}
+                    onCheckedChange={(checked) => setIsMythical(checked ? true : null)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Egg Groups Filter */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
+                Egg Groups
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {EGG_GROUPS.map((group) => {
+                  const isActive = selectedEggGroups.includes(group);
+                  return (
+                    <button
+                      key={group}
+                      onClick={() => toggleEggGroup(group)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
+                        isActive 
+                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
+                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                      )}
+                    >
+                      {group}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Colors Filter */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
+                Colors
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {COLORS.map((color) => {
+                  const isActive = selectedColors.includes(color);
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => toggleColor(color)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
+                        isActive 
+                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
+                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                      )}
+                    >
+                      {color}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Shapes Filter */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
+                Shapes
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {SHAPES.map((shape) => {
+                  const isActive = selectedShapes.includes(shape);
+                  return (
+                    <button
+                      key={shape}
+                      onClick={() => toggleShape(shape)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
+                        isActive 
+                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
+                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                      )}
+                    >
+                      {shape}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -199,6 +327,73 @@ export default function AdvancedFilters() {
                 <span>0</span>
                 <span>400 ({t('filters.avg')})</span>
                 <span>800</span>
+              </div>
+            </div>
+
+            {/* Individual Stats Sliders */}
+            <div className="space-y-8">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
+                Minimum Base Stats
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase">HP</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                    {minHp}+
+                  </Badge>
+                </div>
+                <Slider
+                  value={[minHp]}
+                  onValueChange={(val) => setMinHp(Array.isArray(val) ? val[0] : val as number)}
+                  max={255}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase">Attack</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                    {minAttack}+
+                  </Badge>
+                </div>
+                <Slider
+                  value={[minAttack]}
+                  onValueChange={(val) => setMinAttack(Array.isArray(val) ? val[0] : val as number)}
+                  max={255}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase">Defense</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                    {minDefense}+
+                  </Badge>
+                </div>
+                <Slider
+                  value={[minDefense]}
+                  onValueChange={(val) => setMinDefense(Array.isArray(val) ? val[0] : val as number)}
+                  max={255}
+                  step={5}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase">Speed</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                    {minSpeed}+
+                  </Badge>
+                </div>
+                <Slider
+                  value={[minSpeed]}
+                  onValueChange={(val) => setMinSpeed(Array.isArray(val) ? val[0] : val as number)}
+                  max={255}
+                  step={5}
+                />
               </div>
             </div>
 

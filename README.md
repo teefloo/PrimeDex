@@ -1,189 +1,131 @@
-# Pokédex
+# 🎮 Ultra Pokédex
 
-A modern, beautifully crafted Pokédex application built with **Next.js 16**, **React 19**, and the **PokéAPI**. Browse, search, and explore all Pokémon from Generation 1 through 9 with a smooth, animated interface.
+A cutting-edge, high-performance Pokédex application built with the latest **Next.js 16** and **React 19** features. Explore the world of Pokémon with advanced analytics, team building tools, and interactive challenges.
 
-<p align="center">
-  <a href="https://poke-nextjs.vercel.app">
-    <img src="https://img.shields.io/badge/Live_Demo-Click_Here-FF6B6B?style=for-the-badge" alt="Live Demo" />
-  </a>
-</p>
+![Pokédex Preview](public/vercel.svg) <!-- Replace with a real screenshot if available -->
 
-![Pokédex Preview](./public/preview.png)
+## ✨ Key Features
 
-## ✨ Features
+- **🛡️ Team Builder**: Assemble your ultimate squad of 6. Get deep insights into shared weaknesses, defensive coverage, and offensive potential.
+- **📊 Stats Comparison**: Side-by-side analysis of up to 3 Pokémon. Compare base stats, physical dimensions, and type advantages with interactive charts.
+- **🔍 Advanced Discovery**: Filter through all 9 generations by type, region, Base Stat Total (BST), height, weight, and legendary status.
+- **🏆 Interactive Quizzes**: Test your knowledge in three modes: Time Attack, Survival, and Marathon. Compete for high scores!
+- **📦 Living Pokédex Tracker**: Mark your captures and track your progress toward completing your personal collection.
+- **🌍 Global Localization**: Fully translated into 7 languages: English, French, Spanish, German, Italian, Japanese, and Korean.
+- **✨ Premium UI/UX**: Built with Tailwind CSS 4 and Framer Motion for buttery-smooth animations and a modern, glassmorphic aesthetic.
+- **💾 Persistent State**: Your favorites, caught Pokémon, and teams are automatically saved to your browser using IndexedDB.
 
-| Feature | Description |
-|---------|-------------|
-| **🗃️ Comprehensive Database** | Explore all 9 generations of Pokémon |
-| **⚡ Real-time Search** | Find any Pokémon instantly by name |
-| **🎯 Type Filtering** | Filter by type (Fire, Water, Electric, etc.) |
-| **🔄 Evolution Chains** | View complete evolution chains |
-| **📊 Detailed Stats** | Stats, abilities, types, and more |
-| **✨ Beautiful Animations** | Smooth transitions with Framer Motion |
-| **📱 Responsive Design** | Works on desktop, tablet, and mobile |
-| **🌙 Dark/Light Mode** | Toggle between themes |
+## 🛠 Tech Stack
 
-## 🛠️ Tech Stack
-
-<div align="center">
-
-![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React_19-61DAFB?style=flat&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat&logo=tailwind-css&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand-3E3E3E?style=flat&logo=zustand)
-![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat&logo=tanstack)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat&logo=framer)
-
-</div>
-
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **UI**: React 19 + Tailwind CSS 4
-- **State**: Zustand + TanStack Query
-- **Animations**: Framer Motion
-- **API**: PokéAPI + Axios
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Library**: [React 19](https://react.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **State Management**:
+  - **Server State**: [TanStack Query v5](https://tanstack.com/query/latest)
+  - **Global State**: [Zustand](https://docs.pmnd.rs/zustand/) with [idb-keyval](https://github.com/jakearchibald/idb-keyval)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **API**: [PokéAPI](https://pokeapi.co/) via [Axios](https://axios-http.com/)
+- **Testing**: [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- npm or pnpm
+- **Node.js**: 20.x or higher
+- **Package Manager**: `npm` (included with Node.js) or `pnpm`
 
 ### Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/Teeflo/Poke.git
-cd poke
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/user/pokedex.git
+   cd pokedex
+   ```
 
-# Install dependencies
-npm install
-# or
-pnpm install
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### Development
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm run dev
-```
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the Ultra Pokédex in action!
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+## 📂 Project Structure
 
-### Production Build
-
-```bash
-npm run build
-npm start
-```
-
-## 📁 Project Structure
-
-```
+```text
 src/
-├── app/                    # Next.js App Router
-│   ├── pokemon/[name]/     # Pokemon detail page
-│   ├── globals.css         # Global styles
-│   ├── layout.tsx          # Root layout
-│   ├── page.tsx            # Home page
-│   └── providers.tsx       # Context providers
-├── components/
-│   ├── layout/             # Header, Settings
-│   └── pokemon/            # Pokemon components
-├── lib/
-│   ├── api.ts              # PokéAPI integration
-│   └── utils.ts            # Helpers
-├── store/
-│   └── pokedex.ts          # Zustand store
-└── types/
-    └── pokemon.ts           # TypeScript types
+├── app/              # Next.js App Router routes & layouts
+│   ├── compare/      # Pokémon comparison tool
+│   ├── favorites/    # User collection
+│   ├── pokemon/      # Detail pages ([name])
+│   ├── quiz/         # Quiz game modes
+│   └── team/         # Team builder & analysis
+├── components/       # Reusable React components
+│   ├── layout/       # Header, Onboarding, Modals
+│   ├── pokemon/      # Feature-specific Pokémon components
+│   └── ui/           # Base UI primitives (shadcn/ui)
+├── hooks/            # Custom React hooks (shortcuts, etc.)
+├── lib/              # Core logic, API clients, and utilities
+│   ├── api/          # PokéAPI integration (REST/GraphQL)
+│   └── i18n.ts       # Internationalization setup
+├── store/            # Zustand store definitions (persistence)
+├── types/            # TypeScript interfaces for PokéAPI data
+└── test/             # Vitest configuration and global setup
 ```
 
-## 🏗️ Architecture
+## 🧪 Testing & Quality
 
-```
-User → Next.js Page → Component → TanStack Query → PokéAPI
-                                        ↓
-                                   Zustand Store
-```
-
-### State Management
-
-- **Zustand**: Global state (search, filters, theme)
-- **TanStack Query**: Server state with caching & deduplication
-
-### API Functions
-
-| Function | Description |
-|----------|-------------|
-| `getPokemonList` | Paginated list of Pokémon |
-| `getAllPokemon` | All Pokémon for search |
-| `getPokemonDetail` | Detailed Pokémon info |
-| `getPokemonSpecies` | Species + evolution chain |
-| `getEvolutionChain` | Evolution chain data |
-| `getPokemonByType` | Pokémon filtered by type |
-
-## 📜 Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-
-## 🌐 Deployment
-
-Deploy to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Teeflo/Poke)
-
-Or build manually:
+We prioritize stability. Run the test suite using Vitest:
 
 ```bash
+# Run all tests
+npx vitest
+
+# Run tests in watch mode
+npx vitest watch
+
+# Run tests with UI
+npx vitest --ui
+
+# Check code quality (ESLint)
+npm run lint
+```
+
+## 📦 Deployment
+
+This project is optimized for deployment on **Vercel**.
+
+1. Push your code to a GitHub repository.
+2. Connect the repository to Vercel.
+3. Vercel will automatically detect Next.js and deploy your application.
+
+For manual builds:
+```bash
 npm run build
-# Deploy the .next folder to your hosting provider
+npm run start
 ```
-
-## ⚠️ Troubleshooting
-
-### Images Not Loading
-
-Ensure `next.config.ts` has the correct remote patterns:
-
-```typescript
-images: {
-  remotePatterns: [
-    { protocol: 'https', hostname: 'raw.githubusercontent.com' },
-    { protocol: 'https', hostname: 'pokeapi.co' },
-  ],
-},
-```
-
-### API Rate Limits
-
-PokéAPI is free but has rate limits. Wait a moment and refresh if you encounter errors.
 
 ## 🤝 Contributing
 
-Contributions are welcome!
+Contributions are welcome! If you'd like to improve the Ultra Pokédex:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes
-4. Push to the branch
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## 📄 License
 
-This project is for educational purposes. Pokémon and Pokémon character names are trademarks of Nintendo.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-<div align="center">
-
-Built with ❤️ using [Next.js](https://nextjs.org) and [PokéAPI](https://pokeapi.co/)
-
-</div>
+Built with ❤️ for Pokémon fans worldwide.

@@ -14,7 +14,9 @@ import {
   X,
   Plus,
   Zap,
-  BarChart3
+  BarChart3,
+  Loader2,
+  Share
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -23,18 +25,46 @@ import { useMemo, useEffect, useState, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { analyzeTeam, calculateSynergyScore } from '@/lib/team-analysis';
+import { 
+  ResponsiveContainer, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  Radar,
+  Tooltip as RechartsTooltip
+} from 'recharts';
+import { getAllPokemonDetailed } from '@/lib/api';
 
 import Image from 'next/image';
 
 export default function TeamPage() {
-  const { team, removeFromTeam, clearTeam } = usePokedexStore();
+  const { team, addToTeam, removeFromTeam, clearTeam } = usePokedexStore();
   const [mounted, setMounted] = useState(false);
+  const [isAutoCompleting, setIsAutoCompleting] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
+
+  // Team sharing logic: Check for team code in URL
+  useEffect(() => {
+    if (mounted) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const teamCode = urlParams.get('code');
+      if (teamCode && team.length === 0) {
+        const ids = teamCode.split('-').map(Number).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          ids.forEach(id => addToTeam(id));
+          toast.success('Team loaded from URL!');
+          // Clear URL param without reloading
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+    }
+  }, [mounted, addToTeam, team.length]);
 
   const pokemonQueries = useQueries({
     queries: team.map(id => ({
@@ -61,16 +91,78 @@ export default function TeamPage() {
     if (pokemonData.length === 0 || typeRelationsQueries.some(q => q.isLoading)) return null;
 
     const relationsMap: Record<string, TypeRelations> = {};
+    const allTypes = pokemonData.flatMap(p => p.types.map(t => t.type.name));
+    
     typeRelationsQueries.forEach((q, i) => {
       if (q.data) {
-        // Find which type this query was for
-        const typeName = pokemonData.flatMap(p => p.types)[i]?.type.name;
+        const typeName = allTypes[i];
         if (typeName) relationsMap[typeName] = q.data;
       }
     });
 
     return analyzeTeam(pokemonData, relationsMap);
   }, [pokemonData, typeRelationsQueries]);
+
+  const radarData = useMemo(() => {
+    if (!analysis) return [];
+    return [
+      { subject: 'HP', A: analysis.stats.avgHp, fullMark: 255 },
+      { subject: 'Attack', A: analysis.stats.avgAtk, fullMark: 255 },
+      { subject: 'Defense', A: analysis.stats.avgDef, fullMark: 255 },
+      { subject: 'Sp. Atk', A: analysis.stats.avgSpAtk, fullMark: 255 },
+      { subject: 'Sp. Def', A: analysis.stats.avgSpDef, fullMark: 255 },
+      { subject: 'Speed', A: analysis.stats.avgSpe, fullMark: 255 },
+    ];
+  }, [analysis]);
+
+  const handleAutoComplete = async () => {
+    if (!analysis || team.length >= 6) return;
+    
+    setIsAutoCompleting(true);
+    try {
+      const allPokemon = await getAllPokemonDetailed();
+      const currentTeamIds = new Set(team);
+      
+      // Filter for pokemon that match suggested types and have good stats
+      const candidates = allPokemon.filter(p => 
+        !currentTeamIds.has(p.id) &&
+        p.pokemon_v2_pokemontypes.some(t => analysis.suggestions.types.includes(t.pokemon_v2_type.name))
+      ).sort((a, b) => {
+        const totalA = a.pokemon_v2_pokemonstats.reduce((sum, s) => sum + s.base_stat, 0);
+        const totalB = b.pokemon_v2_pokemonstats.reduce((sum, s) => sum + s.base_stat, 0);
+        return totalB - totalA;
+      });
+
+      const toAdd = candidates.slice(0, 6 - team.length);
+      if (toAdd.length > 0) {
+        toAdd.forEach(p => addToTeam(p.id));
+        toast.success(`Added ${toAdd.length} Pokémon to cover your team's weaknesses!`);
+      } else {
+        toast.info("Couldn't find perfect matches, but try adding some diverse types!");
+      }
+    } catch {
+      toast.error("Failed to fetch suggestions");
+    } finally {
+      setIsAutoCompleting(false);
+    }
+  };
+
+  const handleShareTeam = () => {
+    if (team.length === 0) return;
+    const teamCode = team.join('-');
+    const shareUrl = `${window.location.origin}${window.location.pathname}?code=${teamCode}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Ultra Pokédex Team',
+        text: 'Check out my Pokémon team!',
+        url: shareUrl
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success('Share link copied to clipboard!');
+    }
+  };
 
   const synergyScore = useMemo(() => {
     if (!analysis || pokemonData.length === 0) return 0;
@@ -96,22 +188,48 @@ export default function TeamPage() {
                 <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
                   {t('team.title')}
                 </h2>
-                <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs mt-1">
-                  {t('team.subtitle')} ({pokemonData.length}/6)
-                </p>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs">
+                    {t('team.subtitle')} ({pokemonData.length}/6)
+                  </p>
+                  {team.length > 0 && team.length < 6 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAutoComplete}
+                      disabled={isAutoCompleting}
+                      className="h-6 px-3 rounded-full text-[9px] font-black uppercase border-primary/20 text-primary hover:bg-primary/10"
+                    >
+                      {isAutoCompleting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5" />}
+                      Auto-Complete
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
             
-            {pokemonData.length > 0 && (
-              <Button 
-                variant="destructive" 
-                onClick={clearTeam}
-                className="rounded-xl font-black uppercase tracking-widest gap-2"
-              >
-                <Trash2CustomIcon className="w-4 h-4" />
-                {t('team.disband')}
-              </Button>
-            )}
+            <div className="flex gap-3">
+              {pokemonData.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleShareTeam}
+                  className="rounded-xl font-black uppercase tracking-widest gap-2 bg-secondary/30 border-white/10"
+                >
+                  <Share className="w-4 h-4" />
+                  {t('detail.share')}
+                </Button>
+              )}
+              {pokemonData.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={clearTeam}
+                  className="rounded-xl font-black uppercase tracking-widest gap-2"
+                >
+                  <Trash2CustomIcon className="w-4 h-4" />
+                  {t('team.disband')}
+                </Button>
+              )}
+            </div>
           </div>
           <div className="h-px w-full bg-gradient-to-r from-border via-border to-transparent" />
         </section>
@@ -188,91 +306,104 @@ export default function TeamPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
-                {/* Synergy Score */}
-                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("p-2 rounded-xl text-white shadow-lg shadow-black/20", scoreColor)}>
-                        <Zap className="w-5 h-5 fill-current" />
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* Synergy Score */}
+                  <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] flex flex-col h-full">
+                    <div className="flex items-center justify-between gap-6 mb-8">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-2 rounded-xl text-white shadow-lg shadow-black/20", scoreColor)}>
+                          <Zap className="w-5 h-5 fill-current" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black">Synergy</h3>
+                          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Team Cohesion</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-black">Synergy Score</h3>
-                        <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mt-0.5">Team Cohesion & Coverage</p>
+                      <div className="text-3xl font-black tracking-tighter">
+                        <span className={cn("text-transparent bg-clip-text bg-gradient-to-br", 
+                          synergyScore > 70 ? 'from-green-400 to-green-600' : synergyScore > 40 ? 'from-orange-400 to-orange-600' : 'from-red-400 to-red-600'
+                        )}>
+                          {synergyScore}%
+                        </span>
                       </div>
-                    </div>
-                    <div className="text-4xl font-black tracking-tighter">
-                      <span className={cn("text-transparent bg-clip-text bg-gradient-to-br", 
-                        synergyScore > 70 ? 'from-green-400 to-green-600' : synergyScore > 40 ? 'from-orange-400 to-orange-600' : 'from-red-400 to-red-600'
-                      )}>
-                        {synergyScore}%
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden mb-8 border border-white/5">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${synergyScore}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className={cn("h-full", scoreColor)}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">Analysis</p>
-                      <p className="text-xs text-foreground/60 leading-relaxed font-medium">
-                        {synergyScore > 80 ? 'Excellent synergy! Your team has great coverage and balanced types.' :
-                         synergyScore > 60 ? 'Good balance. You might have a few duplicate types or slight coverage gaps.' :
-                         synergyScore > 40 ? 'Average synergy. Consider swapping a few members to cover common weaknesses.' :
-                         'Low synergy. Your team might have many shared weaknesses or redundant types.'}
-                      </p>
                     </div>
                     
-                    <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-red-500/60 mb-3">Main Weaknesses</p>
-                      <div className="flex flex-wrap gap-2">
-                        {analysis.weaknesses.slice(0, 3).map(([type]) => (
-                          <div 
-                            key={type} 
-                            className="px-3 py-1.5 rounded-xl border border-white/5 shadow-sm text-white flex items-center gap-2"
-                            style={{ backgroundColor: TYPE_COLORS[type] }}
-                          >
-                            <span className="text-[10px] font-black uppercase">{type}</span>
-                          </div>
-                        ))}
-                        {analysis.weaknesses.length === 0 && <p className="text-[10px] italic text-foreground/30">No major weaknesses!</p>}
+                    <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-8 border border-white/5">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${synergyScore}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className={cn("h-full", scoreColor)}
+                      />
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                      <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
+                        <p className="text-xs text-foreground/60 leading-relaxed font-medium">
+                          {synergyScore > 80 ? 'Excellent synergy! Your team has great coverage and balanced types.' :
+                          synergyScore > 60 ? 'Good balance. You might have a few duplicate types or slight coverage gaps.' :
+                          synergyScore > 40 ? 'Average synergy. Consider swapping a few members to cover common weaknesses.' :
+                          'Low synergy. Your team might have many shared weaknesses or redundant types.'}
+                        </p>
                       </div>
+                      
+                      <div className="p-4 rounded-2xl bg-secondary/20 border border-white/5">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-500/60 mb-3">Main Weaknesses</p>
+                        <div className="flex flex-wrap gap-2">
+                          {analysis.weaknesses.slice(0, 3).map(([type]) => (
+                            <div 
+                              key={type} 
+                              className="px-3 py-1.5 rounded-xl border border-white/5 shadow-sm text-white flex items-center gap-2"
+                              style={{ backgroundColor: TYPE_COLORS[type] }}
+                            >
+                              <span className="text-[10px] font-black uppercase">{type}</span>
+                            </div>
+                          ))}
+                          {analysis.weaknesses.length === 0 && <p className="text-[10px] italic text-foreground/30">No major weaknesses!</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Radar Chart */}
+                  <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] h-full flex flex-col">
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-xl">
+                        <BarChart3 className="w-5 h-5 text-primary" />
+                      </div>
+                      Stat Balance
+                    </h3>
+                    <div className="flex-1 min-h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                          <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                          <PolarAngleAxis 
+                            dataKey="subject" 
+                            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} 
+                          />
+                          <Radar
+                            name="Team"
+                            dataKey="A"
+                            stroke="#FF3E3E"
+                            fill="#FF3E3E"
+                            fillOpacity={0.5}
+                          />
+                          <RechartsTooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(0,0,0,0.8)', 
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '12px',
+                              fontSize: '12px'
+                            }}
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
 
                 {/* Stats Averages */}
-                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
-                  <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4 flex items-center gap-3">
-                    <BarChart3 className="w-6 h-6 text-primary" />
-                    {t('team.stats_averages')}
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                    {[
-                      { label: 'HP', val: analysis.stats.avgHp, color: '#FF0000' },
-                      { label: 'ATK', val: analysis.stats.avgAtk, color: '#F08030' },
-                      { label: 'DEF', val: analysis.stats.avgDef, color: '#F8D030' },
-                      { label: 'SPA', val: analysis.stats.avgSpAtk, color: '#6890F0' },
-                      { label: 'SPD', val: analysis.stats.avgSpDef, color: '#78C850' },
-                      { label: 'SPE', val: analysis.stats.avgSpe, color: '#F85888' },
-                    ].map(s => (
-                      <div key={s.label} className="bg-secondary/20 p-4 rounded-2xl border border-white/5 text-center">
-                        <p className="text-[10px] font-black text-foreground/40 mb-1">{s.label}</p>
-                        <p className="text-xl font-black">{s.val}</p>
-                        <div className="w-full h-1 bg-white/5 rounded-full mt-2 overflow-hidden">
-                          <div className="h-full" style={{ backgroundColor: s.color, width: `${(s.val / 255) * 100}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+...
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
                   <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4 flex items-center gap-3">
                     <Sword className="w-6 h-6 text-primary" />

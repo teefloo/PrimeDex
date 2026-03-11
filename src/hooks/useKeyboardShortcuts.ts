@@ -6,17 +6,28 @@ import { usePokedexStore } from '@/store/pokedex';
 
 export function useKeyboardShortcuts() {
   const router = useRouter();
-  const { toggleSettings, setShowFavoritesOnly, showFavoritesOnly, compareList, team } = usePokedexStore();
+  const { toggleSettings, setShowFavoritesOnly, showFavoritesOnly, compareList, team, theme, setTheme } = usePokedexStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger shortcuts if user is typing in an input
       if (
         document.activeElement?.tagName === 'INPUT' ||
-        document.activeElement?.tagName === 'TEXTAREA'
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        (document.activeElement as HTMLElement)?.isContentEditable
       ) {
         if (e.key === 'Escape') {
           (document.activeElement as HTMLElement).blur();
+        }
+        return;
+      }
+
+      // Meta key shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'k') {
+          e.preventDefault();
+          const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+          searchInput?.focus();
         }
         return;
       }
@@ -31,9 +42,7 @@ export function useKeyboardShortcuts() {
           setShowFavoritesOnly(!showFavoritesOnly);
           break;
         case 'c':
-          if (compareList.length > 0) {
-            router.push('/compare');
-          }
+          router.push('/compare');
           break;
         case 't':
           router.push('/team');
@@ -47,10 +56,13 @@ export function useKeyboardShortcuts() {
         case 'h':
           router.push('/');
           break;
+        case 'd':
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [router, toggleSettings, setShowFavoritesOnly, showFavoritesOnly, compareList, team]);
+  }, [router, toggleSettings, setShowFavoritesOnly, showFavoritesOnly, compareList, team, theme, setTheme]);
 }

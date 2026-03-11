@@ -20,7 +20,9 @@ import {
   Calendar,
   EyeOff,
   Heart,
-  Flame
+  Flame,
+  BrainCircuit,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -30,6 +32,7 @@ import { PokemonDetail } from '@/types/pokemon';
 import { useTranslation } from 'react-i18next';
 import { usePokedexStore } from '@/store/pokedex';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 type GameMode = 'time-attack' | 'survival' | 'marathon';
@@ -67,6 +70,9 @@ const seededRandom = (seed: string) => {
 };
 
 export default function QuizPage() {
+  const searchParams = useSearchParams();
+  const targetPokemon = searchParams?.get('pokemon');
+
   const [gameState, setGameState] = useState<GameState>('idle');
   const [gameMode, setGameMode] = useState<GameMode>('marathon');
   const [quizChallenge, setQuizChallenge] = useState<QuizChallenge>('classic');
@@ -85,7 +91,7 @@ export default function QuizPage() {
   const [dailyIndex, setDailyIndex] = useState(0);
   
   const { t } = useTranslation();
-  const { quizHighScores, updateQuizHighScore } = usePokedexStore();
+  const { quizHighScores, updateQuizHighScore, addBadge, badges } = usePokedexStore();
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -97,6 +103,37 @@ export default function QuizPage() {
     queryFn: getAllPokemonNames,
     staleTime: 30 * 60 * 1000,
   });
+
+  // Handle target pokemon from query params
+  useEffect(() => {
+    if (mounted && targetPokemon && gameState === 'idle' && allNames) {
+      const startTargetQuiz = async () => {
+        setGameState('loading');
+        setQuizChallenge('classic');
+        setGameMode('marathon');
+        
+        try {
+          const detail = await getPokemonDetail(targetPokemon);
+          setCurrentPokemon(detail);
+          
+          const otherOptions: string[] = [];
+          while (otherOptions.length < 3) {
+            const idx = Math.floor(Math.random() * allNames.length);
+            const p = allNames[idx];
+            if (p.name !== targetPokemon && !otherOptions.includes(p.name)) {
+              otherOptions.push(p.name);
+            }
+          }
+          setOptions([targetPokemon, ...otherOptions].sort(() => Math.random() - 0.5));
+          setGameState('playing');
+        } catch {
+          toast.error("Failed to load targeted quiz");
+          setGameState('idle');
+        }
+      };
+      startTargetQuiz();
+    }
+  }, [mounted, targetPokemon, allNames, gameState]);
 
   const getNextPokemon = useCallback(() => {
     const pool = filteredPool.length > 0 ? filteredPool : (allNames || []);
@@ -214,11 +251,31 @@ export default function QuizPage() {
     setGameState('answered');
 
     if (correct) {
-      setScore(s => s + (gameMode === 'time-attack' ? 10 : 1));
+      setScore(s => {
+        const newScore = s + (gameMode === 'time-attack' ? 10 : 1);
+        
+        // Badge logic
+        if (newScore >= 10 && gameMode === 'marathon') addBadge('quiz-novice');
+        if (newScore >= 50 && gameMode === 'marathon') addBadge('quiz-master');
+        if (newScore >= 100 && gameMode === 'time-attack') addBadge('speed-demon');
+        if (quizChallenge === 'silhouette' && newScore >= 20) addBadge('eagle-eye');
+        if (quizChallenge === 'stats' && newScore >= 20) addBadge('professor');
+        
+        return newScore;
+      });
+      
       if (isDaily) {
         setDailyIndex(i => i + 1);
       }
-      setTimeout(startNewRound, 1500);
+      
+      if (targetPokemon) {
+        setTimeout(() => {
+          setGameState('finished');
+          toast.success('Knowledge verified!');
+        }, 1500);
+      } else {
+        setTimeout(startNewRound, 1500);
+      }
     } else {
       if (isDaily) {
         setDailyIndex(i => i + 1);
@@ -275,134 +332,177 @@ export default function QuizPage() {
 
         <div className="max-w-2xl mx-auto">
           {gameState === 'idle' || gameState === 'finished' ? (
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="glass-panel p-8 md:p-12 rounded-[3rem] space-y-8"
-            >
-              {gameState === 'finished' && (
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <div className="p-6 bg-yellow-500/10 rounded-full border border-yellow-500/20 animate-bounce">
-                      <Trophy className="w-16 h-16 text-yellow-500" />
+            <div className="space-y-8">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="glass-panel p-8 md:p-12 rounded-[3rem] space-y-8"
+              >
+                {gameState === 'finished' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-6 bg-yellow-500/10 rounded-full border border-yellow-500/20 animate-bounce">
+                        <Trophy className="w-16 h-16 text-yellow-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-3xl font-black">{t('quiz.game_over')}</h3>
+                    <p className="text-xl font-bold text-foreground/60">
+                      {isDaily ? 'Daily Challenge Score' : t('quiz.final_score')} 
+                      <span className="text-primary text-2xl ml-2">{score}</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Daily Challenge */}
+                <Button 
+                  onClick={() => startGame('classic', 'marathon', true)}
+                  className="w-full h-20 rounded-2xl font-black uppercase tracking-widest text-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 border-none shadow-xl shadow-orange-500/20 gap-3"
+                >
+                  <Calendar className="w-6 h-6" />
+                  Daily Challenge
+                </Button>
+
+                {/* Filters */}
+                <div className="space-y-6 bg-secondary/20 p-6 rounded-[2rem] border border-white/5 text-center">
+                  <div className="flex items-center gap-2 mb-4 justify-center">
+                    <Filter className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-black uppercase tracking-widest text-foreground/60">Customize your challenge</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2 text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">Generation</p>
+                      <select 
+                        value={selectedGen || ''} 
+                        onChange={(e) => setSelectedGen(e.target.value || null)}
+                        className="w-full h-12 rounded-xl bg-background/50 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 transition-colors"
+                      >
+                        <option value="">All Generations</option>
+                        {GENERATIONS.map(gen => (
+                          <option key={gen.id} value={gen.id}>{gen.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2 text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">Type</p>
+                      <select 
+                        value={selectedType || ''} 
+                        onChange={(e) => setSelectedType(e.target.value || null)}
+                        className="w-full h-12 rounded-xl bg-background/50 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 transition-colors"
+                      >
+                        <option value="">All Types</option>
+                        {TYPES.map(type => (
+                          <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
-                  <h3 className="text-3xl font-black">{t('quiz.game_over')}</h3>
-                  <p className="text-xl font-bold text-foreground/60">
-                    {isDaily ? 'Daily Challenge Score' : t('quiz.final_score')} 
-                    <span className="text-primary text-2xl ml-2">{score}</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Daily Challenge */}
-              <Button 
-                onClick={() => startGame('classic', 'marathon', true)}
-                className="w-full h-20 rounded-2xl font-black uppercase tracking-widest text-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 border-none shadow-xl shadow-orange-500/20 gap-3"
-              >
-                <Calendar className="w-6 h-6" />
-                Daily Challenge
-              </Button>
-
-              {/* Filters */}
-              <div className="space-y-6 bg-secondary/20 p-6 rounded-[2rem] border border-white/5 text-center">
-                <div className="flex items-center gap-2 mb-4 justify-center">
-                  <Filter className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-black uppercase tracking-widest text-foreground/60">Customize your challenge</span>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2 text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">Generation</p>
-                    <select 
-                      value={selectedGen || ''} 
-                      onChange={(e) => setSelectedGen(e.target.value || null)}
-                      className="w-full h-12 rounded-xl bg-background/50 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 transition-colors"
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { id: 'classic' as QuizChallenge, name: 'Classic', icon: <Gamepad2 className="w-5 h-5" />, desc: 'Show image' },
+                    { id: 'silhouette' as QuizChallenge, name: 'Silhouette', icon: <EyeOff className="w-5 h-5" />, desc: 'Who\'s that?' },
+                    { id: 'stats' as QuizChallenge, name: 'Stats', icon: <BarChart3 className="w-5 h-5" />, desc: 'Base stats' }
+                  ].map((mode) => (
+                    <Button 
+                      key={mode.id}
+                      onClick={() => startGame(mode.id)} 
+                      className="h-24 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-1"
                     >
-                      <option value="">All Generations</option>
-                      {GENERATIONS.map(gen => (
-                        <option key={gen.id} value={gen.id}>{gen.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2 text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">Type</p>
-                    <select 
-                      value={selectedType || ''} 
-                      onChange={(e) => setSelectedType(e.target.value || null)}
-                      className="w-full h-12 rounded-xl bg-background/50 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 transition-colors"
-                    >
-                      <option value="">All Types</option>
-                      {TYPES.map(type => (
-                        <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
+                      <div className="flex items-center gap-2">
+                        {mode.icon}
+                        {mode.name}
+                      </div>
+                      <span className="text-[10px] opacity-50 font-bold">{mode.desc}</span>
+                    </Button>
+                  ))}
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  { id: 'classic' as QuizChallenge, name: 'Classic', icon: <Gamepad2 className="w-5 h-5" />, desc: 'Show image' },
-                  { id: 'silhouette' as QuizChallenge, name: 'Silhouette', icon: <EyeOff className="w-5 h-5" />, desc: 'Who\'s that?' },
-                  { id: 'stats' as QuizChallenge, name: 'Stats', icon: <BarChart3 className="w-5 h-5" />, desc: 'Base stats' }
-                ].map((mode) => (
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Button 
-                    key={mode.id}
-                    onClick={() => startGame(mode.id)} 
-                    className="h-24 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-1"
+                    variant="outline"
+                    onClick={() => startGame(quizChallenge, 'time-attack')} 
+                    className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-primary/10 flex flex-col items-center justify-center gap-1"
                   >
                     <div className="flex items-center gap-2">
-                      {mode.icon}
-                      {mode.name}
+                      <Timer className="w-4 h-4" />
+                      Time Attack (30s)
                     </div>
-                    <span className="text-[10px] opacity-50 font-bold">{mode.desc}</span>
                   </Button>
-                ))}
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button 
-                  variant="outline"
-                  onClick={() => startGame(quizChallenge, 'time-attack')} 
-                  className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-primary/10 flex flex-col items-center justify-center gap-1"
-                >
-                  <div className="flex items-center gap-2">
-                    <Timer className="w-4 h-4" />
-                    Time Attack (30s)
-                  </div>
-                </Button>
-
-                <Button 
-                  variant="outline"
-                  onClick={() => startGame(quizChallenge, 'survival')} 
-                  className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-red-500/10 flex flex-col items-center justify-center gap-1"
-                >
-                  <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4" />
-                    Survival (3 Lives)
-                  </div>
-                </Button>
-              </div>
-
-              {quizHighScores && (
-                <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Classic</p>
-                    <p className="text-xl font-black text-primary">{quizHighScores.classic}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Silhouette</p>
-                    <p className="text-xl font-black text-primary">{quizHighScores.silhouette}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Stats</p>
-                    <p className="text-xl font-black text-primary">{quizHighScores.stats}</p>
-                  </div>
+                  <Button 
+                    variant="outline"
+                    onClick={() => startGame(quizChallenge, 'survival')} 
+                    className="h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-white/10 hover:bg-red-500/10 flex flex-col items-center justify-center gap-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-4 h-4" />
+                      Survival (3 Lives)
+                    </div>
+                  </Button>
                 </div>
-              )}
-            </motion.div>
+
+                {quizHighScores && (
+                  <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Classic</p>
+                      <p className="text-xl font-black text-primary">{quizHighScores.classic}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Silhouette</p>
+                      <p className="text-xl font-black text-primary">{quizHighScores.silhouette}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">Stats</p>
+                      <p className="text-xl font-black text-primary">{quizHighScores.stats}</p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Badges Section */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-panel p-8 rounded-[3rem] space-y-6"
+              >
+                <h3 className="text-xl font-black flex items-center justify-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  Your Achievements
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { id: 'quiz-novice', name: 'Novice', icon: <Gamepad2 />, desc: 'Score 10 in Marathon' },
+                    { id: 'quiz-master', name: 'Master', icon: <Trophy />, desc: 'Score 50 in Marathon' },
+                    { id: 'speed-demon', name: 'Speed Demon', icon: <Zap />, desc: 'Score 100 in Time Attack' },
+                    { id: 'eagle-eye', name: 'Eagle Eye', icon: <EyeOff />, desc: 'Score 20 in Silhouette' },
+                    { id: 'professor', name: 'Professor', icon: <BrainCircuit />, desc: 'Score 20 in Stats Quiz' },
+                  ].map(badge => {
+                    const isUnlocked = badges.includes(badge.id);
+                    return (
+                      <div 
+                        key={badge.id}
+                        className={cn(
+                          "p-4 rounded-2xl border transition-all flex flex-col items-center gap-2",
+                          isUnlocked 
+                            ? "bg-primary/10 border-primary/20 text-primary" 
+                            : "bg-secondary/10 border-white/5 text-foreground/20"
+                        )}
+                      >
+                        <div className={cn("p-2 rounded-xl", isUnlocked ? "bg-primary/20" : "bg-secondary/20")}>
+                          {badge.icon}
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-tighter">{badge.name}</span>
+                        {isUnlocked && <span className="text-[8px] font-medium opacity-60 text-center leading-tight">{badge.desc}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
           ) : (
             <div className="space-y-8">
               <div className="flex justify-between items-center px-6">

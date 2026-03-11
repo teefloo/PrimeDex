@@ -37,4 +37,12 @@ describe('usePokedexStore', () => {
     updateQuizHighScore('survival', 30); // Should keep the highest
     expect(usePokedexStore.getState().quizHighScores.survival).toBe(50);
   });
+
+  it('should add badges and check for them', () => {
+    const { addBadge, hasBadge } = usePokedexStore.getState();
+    
+    addBadge('quiz-master');
+    expect(hasBadge('quiz-master')).toBe(true);
+    expect(hasBadge('non-existent')).toBe(false);
+  });
 });

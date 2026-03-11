@@ -3,13 +3,14 @@
 import { useInfiniteQuery, useQuery, useQueries } from '@tanstack/react-query';
 import { usePokedexStore } from '@/store/pokedex';
 import { getPokemonList, getPokemonByType, getAllPokemonDetailed, getPokemonByGeneration } from '@/lib/api';
-import { PokemonBasicData, PokemonDetail, PokemonSpecies } from '@/types/pokemon';
+import { pokemonKeys } from '@/lib/api/keys';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
-import { useInView } from 'framer-motion';
 import { useEffect, useRef, useMemo } from 'react';
-import { Loader2, SearchX } from 'lucide-react';
-import { motion } from 'framer-motion';
-
+import { useInView } from 'framer-motion';
+import { Loader2, RotateCcw } from 'lucide-react';
+import { PokemonBasicData } from '@/types/pokemon';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 
 export default function PokemonList() {
@@ -22,13 +23,22 @@ export default function PokemonList() {
     favorites, 
     sortBy,
     isLegendary,
+    isMythical,
+    selectedEggGroups,
+    selectedColors,
+    selectedShapes,
     minBaseStats,
+    minAttack,
+    minDefense,
+    minSpeed,
+    minHp,
     heightRange,
     weightRange,
     language,
     systemLanguage,
     showCaughtOnly,
-    caughtPokemon
+    caughtPokemon,
+    resetFilters
   } = usePokedexStore();
   
   const resolvedLang = language === 'auto' ? systemLanguage : language;
@@ -42,7 +52,15 @@ export default function PokemonList() {
     !showFavoritesOnly && 
     showCaughtOnly === 'all' &&
     isLegendary === null && 
+    isMythical === null &&
+    selectedEggGroups.length === 0 &&
+    selectedColors.length === 0 &&
+    selectedShapes.length === 0 &&
     minBaseStats === 0 && 
+    minAttack === 0 &&
+    minDefense === 0 &&
+    minSpeed === 0 &&
+    minHp === 0 &&
     heightRange[0] === 0 && 
     heightRange[1] === 20 && 
     weightRange[0] === 0 && 
@@ -57,7 +75,7 @@ export default function PokemonList() {
     isFetchingNextPage,
     isLoading: isLoadingInfinite,
   } = useInfiniteQuery({
-    queryKey: ['pokemon-list'],
+    queryKey: pokemonKeys.lists(),
     queryFn: getPokemonList,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextParam,
@@ -66,16 +84,16 @@ export default function PokemonList() {
   });
 
   // 2. Mode Filtre par Type : Support multi-types (intersection)
-  const typeQueries = useQueries({
+  useQueries({
     queries: selectedTypes.map(type => ({
-      queryKey: ['typePokemon', type],
+      queryKey: pokemonKeys.type(type),
       queryFn: () => getPokemonByType(type),
       staleTime: 10 * 60 * 1000,
     }))
   });
 
   // 3. Mode Filtre par Génération
-  const { data: genPokemon, isLoading: isLoadingGen } = useQuery({
+  const { data: genPokemon } = useQuery({
     queryKey: ['genPokemon', selectedGeneration],
     queryFn: () => (selectedGeneration ? getPokemonByGeneration(selectedGeneration.toString()) : Promise.resolve([])),
     enabled: !!selectedGeneration,
@@ -83,8 +101,8 @@ export default function PokemonList() {
   });
 
   // 4. Mode Recherche ou Filtres Avancés : On récupère toutes les données de base pour filtrer/trier
-  const { data: allDetailed, isLoading: isLoadingAll } = useQuery({
-    queryKey: ['allPokemonDetailed'],
+  const { data: allDetailed } = useQuery({
+    queryKey: pokemonKeys.allDetailed(),
     queryFn: getAllPokemonDetailed,
     enabled: !isBasicMode,
     staleTime: 30 * 60 * 1000,
@@ -98,10 +116,14 @@ export default function PokemonList() {
       height?: number; 
       weight?: number; 
       base_stat_total?: number; 
+      stats?: number[];
       is_legendary?: boolean; 
       is_mythical?: boolean; 
       id: number; 
       types?: string[];
+      egg_groups?: string[];
+      color?: string;
+      shape?: string;
       localizedNames?: { language: string; name: string }[];
     }[] = [];
 
@@ -119,14 +141,18 @@ export default function PokemonList() {
         id: p.id,
         height: p.height,
         weight: p.weight,
-        base_stat_total: p.pokemon_v2_pokemonstats.reduce((acc, curr) => acc + curr.base_stat, 0),
+        stats: p.pokemon_v2_pokemonstats?.map(s => s.base_stat) || [],
+        base_stat_total: p.pokemon_v2_pokemonstats?.reduce((acc, curr) => acc + curr.base_stat, 0) || 0,
         is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
         is_mythical: p.pokemon_v2_pokemonspecy?.is_mythical || false,
-        types: p.pokemon_v2_pokemontypes.map(t => t.pokemon_v2_type.name),
-        localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames.map(n => ({
+        types: p.pokemon_v2_pokemontypes?.map(t => t.pokemon_v2_type.name) || [],
+        egg_groups: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonespeciesegggroups?.map(eg => eg.pokemon_v2_egggroup.name) || [],
+        color: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemoncolor?.name,
+        shape: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonshape?.name,
+        localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map(n => ({
           language: n.pokemon_v2_language.name,
           name: n.name
-        }))
+        })) || []
       }));
 
       // Base de données source: Type & Gen
@@ -161,14 +187,36 @@ export default function PokemonList() {
         results = results.filter(p => !caughtPokemon.includes(p.id));
       }
 
-      // Application des filtres avancés (si mode non basique)
+      // Application des filtres avancés
       if (isLegendary === true) {
-        results = results.filter(p => p.is_legendary || p.is_mythical);
+        results = results.filter(p => p.is_legendary);
+      }
+
+      if (isMythical === true) {
+        results = results.filter(p => p.is_mythical);
+      }
+
+      if (selectedEggGroups.length > 0) {
+        results = results.filter(p => selectedEggGroups.some(eg => p.egg_groups?.includes(eg)));
+      }
+
+      if (selectedColors.length > 0) {
+        results = results.filter(p => p.color && selectedColors.includes(p.color));
+      }
+
+      if (selectedShapes.length > 0) {
+        results = results.filter(p => p.shape && selectedShapes.includes(p.shape));
       }
 
       if (minBaseStats > 0) {
         results = results.filter(p => (p.base_stat_total || 0) >= minBaseStats);
       }
+
+      // Stats individuelles
+      if (minHp > 0) results = results.filter(p => p.stats && p.stats[0] >= minHp);
+      if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
+      if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
+      if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
 
       if (heightRange[0] > 0 || heightRange[1] < 20) {
         results = results.filter(p => {
@@ -204,140 +252,141 @@ export default function PokemonList() {
         const nameB = b.localizedNames?.find(n => n.language === resolvedLang)?.name || b.name;
         return nameB.localeCompare(nameA);
       });
-    } else if (sortBy === 'height-asc' && !isBasicMode) {
-      sortedResults.sort((a, b) => (a.height || 0) - (b.height || 0));
-    } else if (sortBy === 'height-desc' && !isBasicMode) {
-      sortedResults.sort((a, b) => (b.height || 0) - (a.height || 0));
-    } else if (sortBy === 'weight-asc' && !isBasicMode) {
-      sortedResults.sort((a, b) => (a.weight || 0) - (b.weight || 0));
-    } else if (sortBy === 'weight-desc' && !isBasicMode) {
-      sortedResults.sort((a, b) => (b.weight || 0) - (a.weight || 0));
     }
 
-    // On limite à 50 par défaut si on cherche par nom
     if (searchTerm) {
       return sortedResults.slice(0, 100);
     }
     
-    // Si on a appliqué un filtre (type, gen, search, favoris, advanced), on affiche tout ce qui matche
     if (!isBasicMode) {
-      return sortedResults.slice(0, 500); // Increased limit for filtered/sorted views to show more results across the base
+      return sortedResults.slice(0, 500);
     }
 
     return sortedResults;
-  }, [infiniteData, allDetailed, genPokemon, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, minBaseStats, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon]);
+  }, [infiniteData, allDetailed, genPokemon, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon]);
 
-  // Déclenchement automatique du chargement suivant
   useEffect(() => {
-    if (isInView && hasNextPage && !isFetchingNextPage && isBasicMode) {
+    if (isInView && hasNextPage && isBasicMode) {
       fetchNextPage();
     }
-  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage, isBasicMode]);
+  }, [isInView, fetchNextPage, hasNextPage, isBasicMode]);
 
-  const isLoading = isLoadingInfinite || 
-    (selectedTypes.length > 0 && typeQueries.some(q => q.isLoading)) || 
-    (selectedGeneration && isLoadingGen) ||
-    (!isBasicMode && isLoadingAll);
+  const handleGridKeyDown = (e: React.KeyboardEvent) => {
+    const active = document.activeElement as HTMLElement;
+    if (!active || !active.parentElement?.classList.contains('pokemon-grid-item')) return;
 
-  if (isLoading && displayedPokemon.length === 0) {
+    const items = Array.from(document.querySelectorAll('.pokemon-grid-item a'));
+    const index = items.indexOf(active);
+    if (index === -1) return;
+
+    let columns = 1;
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1280) columns = 5;
+      else if (window.innerWidth >= 1024) columns = 4;
+      else if (window.innerWidth >= 768) columns = 3;
+      else if (window.innerWidth >= 640) columns = 2;
+    }
+
+    let nextIndex = index;
+
+    switch (e.key) {
+      case 'ArrowRight':
+        nextIndex = Math.min(index + 1, items.length - 1);
+        break;
+      case 'ArrowLeft':
+        nextIndex = Math.max(index - 1, 0);
+        break;
+      case 'ArrowDown':
+        nextIndex = Math.min(index + columns, items.length - 1);
+        break;
+      case 'ArrowUp':
+        nextIndex = Math.max(index - columns, 0);
+        break;
+      default:
+        return;
+    }
+
+    if (nextIndex !== index) {
+      e.preventDefault();
+      (items[nextIndex] as HTMLElement).focus();
+    }
+  };
+
+  if (isLoadingInfinite && isBasicMode) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {Array.from({ length: 20 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2 mt-8">
+        {Array.from({ length: 10 }).map((_, i) => (
           <PokemonCardSkeleton key={i} />
         ))}
       </div>
     );
   }
 
-  if (!isLoading && displayedPokemon.length === 0) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-[3rem] max-w-2xl mx-auto border-dashed border-2 border-white/10"
-      >
-        <div className="p-6 bg-secondary/30 rounded-full mb-6">
-          <SearchX className="w-16 h-16 text-foreground/30" />
-        </div>
-        <h3 className="text-2xl font-black mb-2 text-foreground/80 tracking-tight">{t('list.no_results')}</h3>
-        <p className="text-base text-foreground/50 font-medium">{t('list.no_results_desc')}</p>
-      </motion.div>
-    );
-  }
-
   return (
-    <div className="space-y-12">
-      <div className="flex items-center justify-between px-4">
-        <div className="text-xs font-bold text-foreground/40 uppercase tracking-widest">
-          {searchTerm ? (
-            <>{t('list.search_results')} <span className="text-primary">&quot;{searchTerm}&quot;</span></>
-          ) : (selectedTypes.length > 0 || selectedGeneration || showFavoritesOnly || isLegendary !== null || minBaseStats > 0 || showCaughtOnly !== 'all') ? (
-            <div className="flex gap-2 items-center flex-wrap">
-              {showFavoritesOnly && (
-                <span className="text-red-500 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  {t('nav.favorites')}
-                </span>
-              )}
-              {showFavoritesOnly && (selectedTypes.length > 0 || selectedGeneration) && <span className="opacity-30 mx-1">|</span>}
-              
-              {showCaughtOnly !== 'all' && (
-                <span className="text-primary flex items-center gap-1">
-                  {showCaughtOnly === 'caught' ? 'Caught' : 'Missing'}
-                </span>
-              )}
-              {showCaughtOnly !== 'all' && (selectedTypes.length > 0 || selectedGeneration) && <span className="opacity-30 mx-1">|</span>}
-
-              {selectedGeneration && (
-                <>Gen: <span className="text-primary">{selectedGeneration}</span></>
-              )}
-              {selectedGeneration && selectedTypes.length > 0 && <span className="opacity-30 mx-1">|</span>}
-              {selectedTypes.length > 0 && (
-                <>Types: <span className="text-primary capitalize">{selectedTypes.join(', ')}</span></>
-              )}
-              {isLegendary && (
-                <><span className="opacity-30 mx-1">|</span> <span className="text-yellow-500">{t('list.legendary')}</span></>
-              )}
-              {minBaseStats > 0 && (
-                <><span className="opacity-30 mx-1">|</span> <span className="text-blue-500">BST {minBaseStats}+</span></>
-              )}
-              <span className="ml-2 opacity-50">({displayedPokemon.length})</span>
-            </div>
-          ) : (
-            <>{t('list.showing')} <span className="text-primary">{displayedPokemon.length}</span> {t('list.pokemon')}</>
-          )}
+    <div className="space-y-8 pb-20">
+      {!isBasicMode && (
+        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-white/5 mx-2 mt-8">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Results:</span>
+            <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+              {displayedPokemon.length}
+            </Badge>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={resetFilters}
+            className="h-7 text-[9px] font-black uppercase tracking-widest hover:bg-red-500/10 hover:text-red-500 gap-1.5"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Clear All
+          </Button>
         </div>
-        <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent ml-4" />
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {displayedPokemon.map((p) => (
-          <PokemonCard 
-            key={p.name} 
-            name={p.name} 
-            url={p.url}
-            initialData={{
-              pokemon: {
-                id: p.id,
-                name: p.name,
-                types: p.types?.map((t, i) => ({ slot: i + 1, type: { name: t, url: '' } })),
-                localizedNames: p.localizedNames
-              } as Partial<PokemonDetail>,
-              species: {
-                names: p.localizedNames?.map(ln => ({ name: ln.name, language: { name: ln.language } }))
-              } as Partial<PokemonSpecies>
-            }}
-          />
+      <div 
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2"
+        onKeyDown={handleGridKeyDown}
+      >
+        {displayedPokemon.map((p, idx) => (
+          <div key={`${p.id}-${idx}`} className="pokemon-grid-item">
+            <PokemonCard 
+              name={p.name} 
+              url={p.url} 
+              initialData={{
+                pokemon: {
+                  id: p.id,
+                  name: p.name,
+                  height: p.height,
+                  weight: p.weight,
+                  types: p.types?.map((t, i) => ({ slot: i + 1, type: { name: t, url: '' } })),
+                  stats: p.stats?.map((s, i) => ({ 
+                    base_stat: s, 
+                    effort: 0, 
+                    stat: { name: ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'][i], url: '' } 
+                  }))
+                },
+                species: {
+                  is_legendary: p.is_legendary,
+                  is_mythical: p.is_mythical,
+                  color: { name: p.color || '' },
+                  shape: { name: p.shape || '' },
+                  egg_groups: p.egg_groups?.map(eg => ({ name: eg, url: '' })) || []
+                }
+              }}
+            />
+          </div>
         ))}
       </div>
 
-      {/* Point d'ancrage pour l'Infinite Scroll */}
-      {selectedTypes.length === 0 && !searchTerm && !selectedGeneration && !showFavoritesOnly && showCaughtOnly === 'all' && isLegendary === null && minBaseStats === 0 && hasNextPage && (
-        <div ref={loadMoreRef} className="flex justify-center py-12">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-            <span className="text-[10px] font-bold text-foreground/20 uppercase tracking-[0.3em]">{t('list.loading_more')}</span>
-          </div>
+      {isBasicMode && (
+        <div ref={loadMoreRef} className="flex justify-center p-8">
+          {isFetchingNextPage && (
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
+              <span className="text-[10px] font-bold text-foreground/20 uppercase tracking-[0.3em]">{t('list.loading_more')}</span>
+            </div>
+          )}
         </div>
       )}
     </div>

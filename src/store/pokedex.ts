@@ -25,11 +25,35 @@ interface PokedexStore {
   selectedGeneration: number | null;
   setSelectedGeneration: (gen: number | null) => void;
 
+  selectedEggGroups: string[];
+  setSelectedEggGroups: (groups: string[]) => void;
+  toggleEggGroup: (group: string) => void;
+
+  selectedColors: string[];
+  setSelectedColors: (colors: string[]) => void;
+  toggleColor: (color: string) => void;
+
+  selectedShapes: string[];
+  setSelectedShapes: (shapes: string[]) => void;
+  toggleShape: (shape: string) => void;
+
   isLegendary: boolean | null;
   setIsLegendary: (isLegendary: boolean | null) => void;
 
+  isMythical: boolean | null;
+  setIsMythical: (isMythical: boolean | null) => void;
+
   minBaseStats: number;
   setMinBaseStats: (min: number) => void;
+
+  minAttack: number;
+  setMinAttack: (min: number) => void;
+  minDefense: number;
+  setMinDefense: (min: number) => void;
+  minSpeed: number;
+  setMinSpeed: (min: number) => void;
+  minHp: number;
+  setMinHp: (min: number) => void;
 
   heightRange: [number, number];
   setHeightRange: (range: [number, number]) => void;
@@ -64,6 +88,11 @@ interface PokedexStore {
   history: { id: number, name: string }[];
   addToHistory: (pokemon: { id: number, name: string }) => void;
   clearHistory: () => void;
+
+  // Badges
+  badges: string[];
+  addBadge: (badgeId: string) => void;
+  hasBadge: (badgeId: string) => boolean;
 
   resetFilters: () => void;
 
@@ -131,11 +160,47 @@ export const usePokedexStore = create<PokedexStore>()(
       selectedGeneration: null,
       setSelectedGeneration: (gen) => set({ selectedGeneration: gen }),
 
+      selectedEggGroups: [],
+      setSelectedEggGroups: (groups) => set({ selectedEggGroups: groups }),
+      toggleEggGroup: (group) => set((state) => ({
+        selectedEggGroups: state.selectedEggGroups.includes(group)
+          ? state.selectedEggGroups.filter((g) => g !== group)
+          : [...state.selectedEggGroups, group]
+      })),
+
+      selectedColors: [],
+      setSelectedColors: (colors) => set({ selectedColors: colors }),
+      toggleColor: (color) => set((state) => ({
+        selectedColors: state.selectedColors.includes(color)
+          ? state.selectedColors.filter((c) => c !== color)
+          : [...state.selectedColors, color]
+      })),
+
+      selectedShapes: [],
+      setSelectedShapes: (shapes) => set({ selectedShapes: shapes }),
+      toggleShape: (shape) => set((state) => ({
+        selectedShapes: state.selectedShapes.includes(shape)
+          ? state.selectedShapes.filter((s) => s !== shape)
+          : [...state.selectedShapes, shape]
+      })),
+
       isLegendary: null,
       setIsLegendary: (isLegendary) => set({ isLegendary }),
 
+      isMythical: null,
+      setIsMythical: (isMythical) => set({ isMythical }),
+
       minBaseStats: 0,
       setMinBaseStats: (min) => set({ minBaseStats: min }),
+
+      minAttack: 0,
+      setMinAttack: (minAttack) => set({ minAttack }),
+      minDefense: 0,
+      setMinDefense: (minDefense) => set({ minDefense }),
+      minSpeed: 0,
+      setMinSpeed: (minSpeed) => set({ minSpeed }),
+      minHp: 0,
+      setMinHp: (minHp) => set({ minHp }),
 
       heightRange: [0, 20],
       setHeightRange: (range) => set({ heightRange: range }),
@@ -186,12 +251,26 @@ export const usePokedexStore = create<PokedexStore>()(
       }),
       clearHistory: () => set({ history: [] }),
 
+      badges: [],
+      addBadge: (badgeId) => set((state) => ({
+        badges: state.badges.includes(badgeId) ? state.badges : [...state.badges, badgeId]
+      })),
+      hasBadge: (badgeId) => get().badges.includes(badgeId),
+
       resetFilters: () => set({
         searchTerm: '',
         selectedTypes: [],
         selectedGeneration: null,
+        selectedEggGroups: [],
+        selectedColors: [],
+        selectedShapes: [],
         isLegendary: null,
+        isMythical: null,
         minBaseStats: 0,
+        minAttack: 0,
+        minDefense: 0,
+        minSpeed: 0,
+        minHp: 0,
         heightRange: [0, 20],
         weightRange: [0, 1000],
         selectedRegion: null,

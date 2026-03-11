@@ -8,13 +8,13 @@ interface CacheItem<T> {
   timestamp: number;
 }
 
-export async function getCachedData<T>(key: string): Promise<T | null> {
+export async function getCachedData<T>(key: string, allowExpired = false): Promise<T | null> {
   try {
     const item = await get<CacheItem<T>>(`${CACHE_PREFIX}${key}`);
     if (!item) return null;
 
     const isExpired = Date.now() - item.timestamp > CACHE_EXPIRATION;
-    if (isExpired) {
+    if (isExpired && !allowExpired) {
       return null;
     }
 

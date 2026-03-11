@@ -7,7 +7,8 @@ import {
   Moon, 
   Heart, 
   Users, 
-  BrainCircuit 
+  BrainCircuit,
+  Languages
 } from 'lucide-react';
 import { usePokedexStore } from '@/store/pokedex';
 import SettingsModal from './SettingsModal';
@@ -43,8 +44,8 @@ function HeaderLink({ children, href, variant, size, className, ...props }: Head
 }
 
 export default function Header() {
-  const { toggleSettings, theme, setTheme, caughtPokemon } = usePokedexStore();
-  const { t } = useTranslation();
+  const { toggleSettings, theme, setTheme, caughtPokemon, language, setLanguage } = usePokedexStore();
+  const { t, i18n } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -68,6 +69,14 @@ export default function Header() {
     if (theme === 'light') setTheme('dark');
     else if (theme === 'dark') setTheme('system');
     else setTheme('light');
+  };
+
+  const cycleLanguage = () => {
+    const langs: ('en' | 'fr' | 'es' | 'de' | 'it' | 'ja' | 'ko')[] = ['en', 'fr', 'es', 'de', 'it', 'ja', 'ko'];
+    const currentIdx = langs.indexOf(language === 'auto' ? 'en' : language as 'en' | 'fr' | 'es' | 'de' | 'it' | 'ja' | 'ko');
+    const nextLang = langs[(currentIdx + 1) % langs.length];
+    setLanguage(nextLang);
+    i18n.changeLanguage(nextLang);
   };
 
   return (
@@ -99,7 +108,7 @@ export default function Header() {
                 <div className="flex items-center gap-1 mt-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/40">
-                    {caughtPokemon.length} / 1025 CAUGHT
+                    {caughtPokemon.length} / 1025 {t('detail.caught_status') || 'CAUGHT'}
                   </span>
                 </div>
               </div>
@@ -127,6 +136,17 @@ export default function Header() {
                 <span className="hidden xl:inline text-xs font-black uppercase tracking-widest px-1">{t('nav.favorites')}</span>
               </motion.div>
             </Link>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={cycleLanguage}
+              className="p-2 md:p-2.5 rounded-full bg-secondary/50 backdrop-blur-md border border-border text-foreground hover:bg-accent transition-colors shadow-sm min-w-[40px] md:min-w-[48px] flex items-center justify-center gap-1.5"
+              title={`${t('settings.language')}: ${language}`}
+            >
+              <Languages className="w-4 h-4 text-foreground/40" />
+              <span className="text-[10px] font-black uppercase">{language === 'auto' ? 'EN' : language}</span>
+            </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}

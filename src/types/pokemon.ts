@@ -64,6 +64,17 @@ export interface PokemonDetail {
       name: string;
       url: string;
     };
+    version_group_details: {
+      level_learned_at: number;
+      move_learn_method: {
+        name: string;
+        url: string;
+      };
+      version_group: {
+        name: string;
+        url: string;
+      };
+    }[];
   }[];
   cries: {
     latest: string;
@@ -114,6 +125,24 @@ export interface PokemonSpecies {
   };
 }
 
+export interface PokemonEncounter {
+  location_area: {
+    name: string;
+    url: string;
+  };
+  version_details: {
+    max_chance: number;
+    encounter_details: {
+      chance: number;
+      condition_values: { name: string; url: string }[];
+      method: { name: string; url: string };
+      min_level: number;
+      max_level: number;
+    }[];
+    version: { name: string; url: string };
+  }[];
+}
+
 export interface PokemonBasicData {
   id: number;
   name: string;
@@ -123,6 +152,12 @@ export interface PokemonBasicData {
   pokemon_v2_pokemonspecy: { 
     is_legendary: boolean; 
     is_mythical: boolean;
+    generation_id: number;
+    pokemon_v2_pokemoncolor: { name: string } | null;
+    pokemon_v2_pokemonshape: { name: string } | null;
+    pokemon_v2_pokemonespeciesegggroups: {
+      pokemon_v2_egggroup: { name: string };
+    }[];
     pokemon_v2_pokemonspeciesnames: {
       name: string;
       pokemon_v2_language: {

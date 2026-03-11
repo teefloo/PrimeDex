@@ -4,6 +4,9 @@ import { TypeRelations } from './api';
 export interface TeamAnalysisResult {
   defensive: Record<string, number>;
   offensive: Record<string, number>;
+  resistancesCount: Record<string, number>;
+  weaknessesCount: Record<string, number>;
+  immunitiesCount: Record<string, number>;
   stats: {
     avgHp: number;
     avgAtk: number;
@@ -23,6 +26,7 @@ export interface TeamAnalysisResult {
     statFocus: string[];
   };
 }
+
 export function calculateSynergyScore(
   teamData: PokemonDetail[],
   analysis: TeamAnalysisResult
@@ -48,6 +52,13 @@ export function calculateSynergyScore(
   // 2. Add for unique type coverage (offensive)
   score += analysis.coverage.length * 5;
 
+  // 3. Subtract for major weaknesses (types where we have > 2 weaknesses and no resistances)
+  Object.entries(analysis.weaknessesCount).forEach(([type, count]) => {
+    if (count >= 3 && analysis.resistancesCount[type] === 0 && analysis.immunitiesCount[type] === 0) {
+      score -= 15;
+    }
+  });
+
   return Math.min(100, Math.max(0, score));
 }
 
@@ -57,6 +68,9 @@ export function analyzeTeam(
 ): TeamAnalysisResult {
   const defensive: Record<string, number> = {};
   const offensive: Record<string, number> = {};
+  const resistancesCount: Record<string, number> = {};
+  const weaknessesCount: Record<string, number> = {};
+  const immunitiesCount: Record<string, number> = {};
   const typeCoverage = new Set<string>();
   
   const stats = {
@@ -66,6 +80,9 @@ export function analyzeTeam(
   Object.keys(TYPE_COLORS).forEach(t => {
     defensive[t] = 0;
     offensive[t] = 0;
+    resistancesCount[t] = 0;
+    weaknessesCount[t] = 0;
+    immunitiesCount[t] = 0;
   });
 
   teamData.forEach(p => {
@@ -97,8 +114,18 @@ export function analyzeTeam(
     });
 
     Object.entries(pokemonEffectiveness).forEach(([type, mult]) => {
-      if (mult > 1) defensive[type]--;
-      if (mult < 1) defensive[type]++;
+      if (mult > 1) {
+        defensive[type]--;
+        weaknessesCount[type]++;
+      }
+      if (mult < 1 && mult > 0) {
+        defensive[type]++;
+        resistancesCount[type]++;
+      }
+      if (mult === 0) {
+        defensive[type] += 2; // Immunities are highly valued
+        immunitiesCount[type]++;
+      }
     });
 
     // Offensive analysis
@@ -136,15 +163,28 @@ export function analyzeTeam(
   if (avgStats.avgDef < 80 && avgStats.avgSpDef < 80) statFocus.push('defensive');
 
   // Suggest types that resist the team's biggest weaknesses
-  const suggestionTypes = weaknesses.slice(0, 3).map(([type]) => {
-    // Find a type that is strong against or resists this weakness
-    // (Simplified: for now just return the type that could cover it)
-    return type; 
-  });
+  const topWeaknesses = weaknesses.slice(0, 3).map(([type]) => type);
+  const suggestionTypes = new Set<string>();
+  
+  if (topWeaknesses.length > 0) {
+    Object.entries(typeRelations).forEach(([type, rels]) => {
+      const dr = rels.damage_relations;
+      const resistsWeakness = topWeaknesses.some(w => 
+        dr.half_damage_from.some(hw => hw.name === w) || 
+        dr.no_damage_from.some(nw => nw.name === w)
+      );
+      if (resistsWeakness && !typeCoverage.has(type)) {
+        suggestionTypes.add(type);
+      }
+    });
+  }
 
   return {
     defensive,
     offensive,
+    resistancesCount,
+    weaknessesCount,
+    immunitiesCount,
     stats: avgStats,
     weaknesses,
     resistances,
@@ -152,9 +192,8 @@ export function analyzeTeam(
     typeCoverage,
     missingTypes,
     suggestions: {
-      types: suggestionTypes,
+      types: Array.from(suggestionTypes).slice(0, 4),
       statFocus
     }
   };
 }
-

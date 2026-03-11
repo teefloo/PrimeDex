@@ -1,64 +1,43 @@
-# Pokédex Project Overview
+# 📔 Ultra Pokédex: Foundational Mandates
 
-A modern Pokédex application built with the latest React and Next.js features, providing a rich user interface to explore Pokémon data from the PokéAPI.
+This document serves as the absolute authority for development within this workspace. Its instructions take precedence over any global defaults.
 
-## 🛠 Tech Stack
+## 🚀 Vision & Quality Bar
+The Ultra Pokédex is a high-performance **Gaming Dashboard**. Every interaction must be responsive, visual fidelity must be high (glassmorphism, Framer Motion), and the architecture strictly type-safe.
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **Library**: [React 19](https://react.dev/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **State Management**:
-  - **Server State**: [TanStack Query v5](https://tanstack.com/query/latest) (fetching, caching, and synchronization)
-  - **Global/Client State**: [Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction) (favorites, search terms, UI settings)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **API Client**: [Axios](https://axios-http.com/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (accessible, reusable components)
+## 🛠 Core Tech Stack
+- **Framework**: Next.js 16 (App Router)
+- **Engine**: React 19 + TypeScript
+- **Styling**: Tailwind CSS 4 (Theme-first configuration)
+- **State**: TanStack Query v5 + Zustand (Persistence via idb-keyval)
+- **API**: PokéAPI (Multi-client: REST + GraphQL)
 
-## 📁 Project Structure
+## 📁 System Architecture
 
-- `src/app/`: Next.js App Router pages, layouts, and providers.
-  - `pokemon/[name]/page.tsx`: Detailed view for a specific Pokémon.
-- `src/components/`: Reusable UI components.
-  - `layout/`: Global layout elements like `Header` and `SettingsModal`.
-  - `pokemon/`: Domain-specific components like `PokemonCard`, `EvolutionChain`, and `SearchBar`.
-  - `ui/`: Base UI primitives (buttons, inputs, cards, etc.) managed via shadcn/ui.
-- `src/lib/`: Core logic and utilities.
-  - `api.ts`: PokéAPI integration using Axios.
-  - `utils.ts`: Helper functions (e.g., tailwind-merge).
-- `src/store/`: Zustand store definitions for global state persistence.
-- `src/types/`: TypeScript interfaces and types for Pokémon data.
-- `public/`: Static assets (SVG icons, etc.).
+### 1. The Store (`src/store/`)
+Manages persistence (Favorites, Team, Caught status, Highscores) and UI State. Large blobs are forbidden; store only IDs and primitives.
 
-## 🚀 Building and Running
+### 2. Data Layer (`src/lib/api/`)
+Aggressive caching and centralized client logic. Axios with retry support. All UI strings must be localized via `react-i18next`.
 
-### Development
-```bash
-npm run dev
-```
-Starts the development server at `http://localhost:3000`.
+### 3. Component Hierarchy
+- `src/components/ui/`: Base shadcn/ui primitives.
+- `src/components/pokemon/`: Domain logic (TeamAnalysis, EvolutionChain, etc.).
+- `src/components/layout/`: Global Shell, Header, and Settings.
 
-### Production
-```bash
-npm run build
-npm run start
-```
-Builds the application for production and starts the server.
+## 📐 Engineering Standards
 
-### Linting
-```bash
-npm run lint
-```
-Runs ESLint to check for code quality and style issues.
+### Foundational Principles
+1. **Performance First**: Use RSC for data-heavy sections. Client components (`'use client'`) are for leaf nodes only.
+2. **Image Optimization**: All images MUST use `next/image`. Standard `<img>` tags are prohibited.
+3. **Type Rigor**: `src/types/pokemon.ts` is the Source of Truth. No `any` or `Record<string, unknown>`.
+4. **Accessibility (A11y)**: WCAG 2.2 AA compliance is mandatory. Every interactive element needs an `aria-label`; every image needs an `alt`.
+5. **Visual Polish**: Page transitions and hover states must use `framer-motion`. Dark-mode-first aesthetic.
 
-## 💡 Development Conventions
+## 🛡️ Operational Safeguards
+- **Testing**: Run `npx vitest` before any major refactor. Tests live alongside implementation.
+- **Environment**: Protect all keys using `.env` patterns.
+- **Git**: Follow conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`).
 
-- **Next.js App Router**: Use Server Components where possible for data fetching, and Client Components (`'use client'`) for interactive elements.
-- **Styling**: Adhere to Tailwind CSS 4 patterns. Use the `cn` utility from `src/lib/utils.ts` for conditional class merging.
-- **State Management**:
-  - Use **TanStack Query** for any data originating from the PokéAPI to benefit from built-in caching.
-  - Use the **Zustand** store (`src/store/pokedex.ts`) for cross-component UI state and data that needs to persist across sessions (like favorites).
-- **Types**: Always define and use TypeScript interfaces in `src/types/` for PokéAPI responses to ensure type safety across the application.
-- **Components**: Follow the existing structure by placing new UI primitives in `src/components/ui` and feature-specific components in their respective subdirectories.
-- **Images**: All Pokémon images are fetched from `raw.githubusercontent.com` or `pokeapi.co`. Ensure `next.config.ts` remote patterns are updated if adding new image sources.
+---
+*This file is a living document. Update it as the architecture evolves.*

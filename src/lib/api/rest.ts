@@ -1,6 +1,6 @@
 import apiClient from './client';
 import { getCachedData, setCachedData } from './cache';
-import { PokemonDetail, PokemonListResponse, PokemonSpecies } from '@/types/pokemon';
+import { PokemonDetail, PokemonListResponse, PokemonSpecies, PokemonEncounter } from '@/types/pokemon';
 
 export const getPokemonList = async ({ pageParam = 0 }) => {
   const cacheKey = `pokemon-list-${pageParam}`;
@@ -23,22 +23,41 @@ export const getPokemonList = async ({ pageParam = 0 }) => {
 
 export const getPokemonDetail = async (name: string): Promise<PokemonDetail> => {
   const cacheKey = `pokemon-detail-${name}`;
-  const cached = await getCachedData<PokemonDetail>(cacheKey);
-  if (cached) return cached;
-
-  const { data } = await apiClient.get<PokemonDetail>(`/pokemon/${name}`);
-  await setCachedData(cacheKey, data);
-  return data;
+  try {
+    const { data } = await apiClient.get<PokemonDetail>(`/pokemon/${name}`);
+    await setCachedData(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = await getCachedData<PokemonDetail>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
 };
 
 export const getPokemonSpecies = async (name: string): Promise<PokemonSpecies> => {
   const cacheKey = `pokemon-species-${name}`;
-  const cached = await getCachedData<PokemonSpecies>(cacheKey);
-  if (cached) return cached;
+  try {
+    const { data } = await apiClient.get<PokemonSpecies>(`/pokemon-species/${name}`);
+    await setCachedData(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = await getCachedData<PokemonSpecies>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
+};
 
-  const { data } = await apiClient.get<PokemonSpecies>(`/pokemon-species/${name}`);
-  await setCachedData(cacheKey, data);
-  return data;
+export const getPokemonEncounters = async (id: number): Promise<PokemonEncounter[]> => {
+  const cacheKey = `pokemon-encounters-${id}`;
+  try {
+    const { data } = await apiClient.get<PokemonEncounter[]>(`/pokemon/${id}/encounters`);
+    await setCachedData(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = await getCachedData<PokemonEncounter[]>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
 };
 
 export const getAllPokemonNames = async (): Promise<{ name: string; url: string }[]> => {
@@ -46,63 +65,64 @@ export const getAllPokemonNames = async (): Promise<{ name: string; url: string 
   const cached = await getCachedData<{ name: string; url: string }[]>(cacheKey);
   if (cached) return cached;
 
-  const { data } = await apiClient.get<{ results: { name: string; url: string }[] }>('/pokemon?limit=1025');
+  const { data } = await apiClient.get<PokemonListResponse>('/pokemon?limit=2000');
   await setCachedData(cacheKey, data.results);
   return data.results;
 };
 
 export const getPokemonByGeneration = async (id: string): Promise<{ name: string; url: string }[]> => {
-  const cacheKey = `generation-${id}`;
+  const cacheKey = `gen-pokemon-${id}`;
   const cached = await getCachedData<{ name: string; url: string }[]>(cacheKey);
   if (cached) return cached;
 
   const { data } = await apiClient.get<{ pokemon_species: { name: string; url: string }[] }>(`/generation/${id}`);
-  const results = data.pokemon_species.map(p => ({
-    name: p.name,
-    url: p.url.replace('-species', '')
-  }));
+  const results = data.pokemon_species;
   await setCachedData(cacheKey, results);
   return results;
 };
 
 export const getPokemonByType = async (type: string): Promise<{ name: string; url: string }[]> => {
-  const cacheKey = `type-${type}`;
+  const cacheKey = `type-pokemon-${type}`;
   const cached = await getCachedData<{ name: string; url: string }[]>(cacheKey);
   if (cached) return cached;
 
   const { data } = await apiClient.get<{ pokemon: { pokemon: { name: string; url: string } }[] }>(`/type/${type}`);
-  const results = data.pokemon.map(p => p.pokemon);
+  const results = data.pokemon.map((p) => p.pokemon);
   await setCachedData(cacheKey, results);
   return results;
 };
 
 export interface TypeRelations {
   damage_relations: {
-    double_damage_from: { name: string }[];
-    double_damage_to: { name: string }[];
-    half_damage_from: { name: string }[];
-    half_damage_to: { name: string }[];
-    no_damage_from: { name: string }[];
-    no_damage_to: { name: string }[];
+    double_damage_from: { name: string; url: string }[];
+    double_damage_to: { name: string; url: string }[];
+    half_damage_from: { name: string; url: string }[];
+    half_damage_to: { name: string; url: string }[];
+    no_damage_from: { name: string; url: string }[];
+    no_damage_to: { name: string; url: string }[];
   };
 }
 
-export const getTypeRelations = async (typeName: string): Promise<TypeRelations> => {
-  const cacheKey = `type-relations-${typeName}`;
+export const getTypeRelations = async (type: string): Promise<TypeRelations> => {
+  const cacheKey = `type-relations-${type}`;
   const cached = await getCachedData<TypeRelations>(cacheKey);
   if (cached) return cached;
 
-  const { data } = await apiClient.get<TypeRelations>(`/type/${typeName}`);
+  const { data } = await apiClient.get<TypeRelations>(`/type/${type}`);
   await setCachedData(cacheKey, data);
   return data;
 };
 
 export interface MoveDetail {
+  id: number;
   name: string;
-  power: number | null;
-  accuracy: number | null;
-  type: { name: string };
-  damage_class: { name: string };
+  accuracy: number;
+  pp: number;
+  priority: number;
+  power: number;
+  type: { name: string; url: string };
+  damage_class: { name: string; url: string };
+  effect_entries: { effect: string; short_effect: string; language: { name: string } }[];
 }
 
 export const getMoveDetail = async (name: string): Promise<MoveDetail> => {

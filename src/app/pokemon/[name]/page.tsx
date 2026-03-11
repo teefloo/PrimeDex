@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { getPokemonDetail, getPokemonSpecies, getTypeRelations } from '@/lib/api';
+import { getPokemonDetail, getPokemonSpecies, getTypeRelations, getPokemonEncounters } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Loader2, 
@@ -17,9 +17,12 @@ import {
   Share,
   Volume2,
   Play,
-  BrainCircuit
+  BrainCircuit,
+  MapPin,
+  Target,
+  SearchX
 } from 'lucide-react';
-import { TYPE_COLORS } from '@/types/pokemon';
+import { PokemonEncounter, TYPE_COLORS } from '@/types/pokemon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePokedexStore } from '@/store/pokedex';
 import { cn, formatId } from '@/lib/utils';
@@ -79,7 +82,10 @@ export default function PokemonDetailPage() {
         getPokemonSpecies(name).catch(() => null),
         getLocalizedPokemonData(name, langId).catch(() => null)
       ]);
-      return { pokemon, species, localized: localized as LocalizedGqlData | null };
+      
+      const encounters = await getPokemonEncounters(pokemon.id).catch(() => []);
+      
+      return { pokemon, species, localized: localized as LocalizedGqlData | null, encounters };
     },
     enabled: !!name,
   });
@@ -87,6 +93,7 @@ export default function PokemonDetailPage() {
   const pokemon = data?.pokemon;
   const species = data?.species;
   const localized = data?.localized;
+  const encounters = data?.encounters;
 
   // Add to history when pokemon data is loaded
   useEffect(() => {
@@ -215,6 +222,17 @@ export default function PokemonDetailPage() {
         </button>
 
         <div className="absolute top-8 right-6 md:right-12 z-30 flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.push(`/quiz?pokemon=${pokemon.name}`)}
+            className="rounded-full transition-all h-12 w-12 bg-secondary/30 border-white/10 text-foreground/80 hover:bg-purple-500/20 hover:text-purple-500 hover:border-purple-500/50"
+            title="Test my knowledge"
+            aria-label="Test my knowledge about this Pokémon"
+          >
+            <BrainCircuit className="w-5 h-5" />
+          </Button>
+
           <Button
             variant="outline"
             size="icon"
@@ -384,12 +402,14 @@ export default function PokemonDetailPage() {
           className="max-w-4xl mx-auto"
         >
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-8 h-14 rounded-2xl bg-secondary/30 p-1 border border-white/5">
-              <TabsTrigger value="about" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.about')}</TabsTrigger>
-              <TabsTrigger value="stats" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.stats')}</TabsTrigger>
-              <TabsTrigger value="evolution" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.evolution')}</TabsTrigger>
-              <TabsTrigger value="builds" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">Builds</TabsTrigger>
-              <TabsTrigger value="infos" className="rounded-xl font-bold uppercase tracking-wider text-[10px] md:text-xs">{t('detail.infos') || 'Infos'}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 mb-8 h-auto md:h-14 rounded-2xl bg-secondary/30 p-1 border border-white/5 gap-1">
+              <TabsTrigger value="about" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.about')}</TabsTrigger>
+              <TabsTrigger value="stats" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.stats')}</TabsTrigger>
+              <TabsTrigger value="moves" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.moveset') || 'Moves'}</TabsTrigger>
+              <TabsTrigger value="evolution" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.evolution')}</TabsTrigger>
+              <TabsTrigger value="locations" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.where_to_find') || 'Locations'}</TabsTrigger>
+              <TabsTrigger value="builds" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">Builds</TabsTrigger>
+              <TabsTrigger value="infos" className="rounded-xl font-bold uppercase tracking-wider text-[9px] md:text-xs py-2 md:py-0">{t('detail.infos') || 'Infos'}</TabsTrigger>
             </TabsList>
             
             {/* About Tab */}
@@ -622,6 +642,50 @@ export default function PokemonDetailPage() {
                   </div>
 
                   <div className="bg-secondary/20 p-6 rounded-3xl border border-white/5">
+                    <h4 className="text-sm font-black uppercase tracking-widest text-foreground/60 mb-6 flex items-center gap-2">
+                      <Target className="w-4 h-4 text-orange-500" /> Type Matchups
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Weaknesses */}
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500/60 flex items-center gap-2">
+                          <ShieldAlert className="w-3 h-3" /> Receives double damage from:
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {effectiveness?.weaknesses.map(([type, mult]) => (
+                            <div key={type} className="flex items-center justify-between p-2 rounded-xl bg-background/40 border border-white/5">
+                              <span className="text-[10px] font-bold uppercase truncate" style={{ color: TYPE_COLORS[type] }}>{type}</span>
+                              <span className="text-[9px] font-black opacity-40">x{mult}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Resistances */}
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500/60 flex items-center gap-2">
+                          <ShieldCheck className="w-3 h-3" /> Resists damage from:
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {effectiveness?.resistances.map(([type, mult]) => (
+                            <div key={type} className="flex items-center justify-between p-2 rounded-xl bg-background/40 border border-white/5">
+                              <span className="text-[10px] font-bold uppercase truncate" style={{ color: TYPE_COLORS[type] }}>{type}</span>
+                              <span className="text-[9px] font-black opacity-40">x{mult}</span>
+                            </div>
+                          ))}
+                          {effectiveness?.immunities.map(([type]) => (
+                            <div key={type} className="flex items-center justify-between p-2 rounded-xl bg-background/40 border border-blue-500/20">
+                              <span className="text-[10px] font-bold uppercase truncate" style={{ color: TYPE_COLORS[type] }}>{type}</span>
+                              <span className="text-[9px] font-black text-blue-400">Immune</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-secondary/20 p-6 rounded-3xl border border-white/5">
                     <h4 className="text-sm font-black uppercase tracking-widest text-foreground/60 mb-4 flex items-center gap-2">
                       <Zap className="w-4 h-4 text-yellow-500" /> {t('detail.type_synergy') || 'Type Synergy'}
                     </h4>
@@ -659,6 +723,109 @@ export default function PokemonDetailPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </TabsContent>
+
+            {/* Moves Tab */}
+            <TabsContent value="moves" className="space-y-6">
+              <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
+                <h3 className="text-2xl font-black text-foreground/90 flex items-center gap-3 mb-8 pb-4 border-b border-white/10">
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <Zap className="w-6 h-6 text-primary" />
+                  </div>
+                  {t('detail.moveset') || 'Moveset'}
+                </h3>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Categorize moves by learn method */}
+                  {['level-up', 'machine', 'egg', 'tutor'].map((method) => {
+                    const methodMoves = pokemon.moves.filter(m => 
+                      m.version_group_details.some(d => d.move_learn_method.name === method)
+                    ).sort((a, b) => {
+                      const levelA = a.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at || 0;
+                      const levelB = b.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at || 0;
+                      return levelA - levelB;
+                    });
+
+                    if (methodMoves.length === 0) return null;
+
+                    return (
+                      <div key={method} className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 mt-4 mb-2">
+                          {method === 'level-up' ? 'Level Up' : method === 'machine' ? 'TM/HM' : method === 'egg' ? 'Egg Moves' : 'Tutor'}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {methodMoves.map((m) => (
+                            <div key={m.move.name} className="flex items-center justify-between p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:border-primary/30 transition-all">
+                              <div className="flex flex-col">
+                                <span className="font-black text-sm text-foreground/80 capitalize">
+                                  {m.move.name.replace(/-/g, ' ')}
+                                </span>
+                                {method === 'level-up' && (
+                                  <span className="text-[10px] font-bold text-primary/60">
+                                    Level {m.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="p-1.5 bg-primary/10 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity">
+                                <Target className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Locations Tab */}
+            <TabsContent value="locations" className="space-y-6">
+              <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
+                <h3 className="text-2xl font-black text-foreground/90 flex items-center gap-3 mb-8 pb-4 border-b border-white/10">
+                  <div className="p-2 bg-green-500/10 rounded-xl">
+                    <MapPin className="w-6 h-6 text-green-500" />
+                  </div>
+                  {t('detail.where_to_find') || 'Where to Find'}
+                </h3>
+
+                {encounters && encounters.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {encounters.map((enc: PokemonEncounter, i: number) => (
+                      <div key={i} className="p-6 bg-secondary/20 border border-white/5 rounded-3xl space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-background/40 rounded-xl">
+                            <MapPin className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="font-black text-base text-foreground/80 capitalize">
+                            {enc.location_area.name.replace(/-/g, ' ')}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {enc.version_details.map((vd: { version: { name: string }, max_chance: number }, vi: number) => (
+                            <div key={vi} className="p-3 bg-background/40 rounded-2xl border border-white/5 flex flex-col gap-1">
+                              <span className="text-[10px] font-black uppercase text-primary/60">{vd.version.name}</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold">Chance</span>
+                                <span className="text-xs font-black text-foreground/90">{vd.max_chance}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="p-4 bg-secondary/30 rounded-full mb-4">
+                      <SearchX className="w-10 h-10 text-foreground/20" />
+                    </div>
+                    <p className="text-foreground/50 font-bold uppercase tracking-widest text-sm">{t('detail.no_location') || 'No specific location data found'}</p>
+                    <p className="text-[10px] text-foreground/30 mt-2 max-w-xs uppercase">This Pokémon might be found through evolution, special events, or in regions not yet fully mapped.</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>

@@ -18,13 +18,17 @@ const mainFont = Nunito({
 export const metadata: Metadata = {
   title: "Pokédex — Explore All Pokémon | Generation 1-9",
   description: "A beautiful, premium neumorphic Pokédex. Explore, search, and filter all Pokémon from Generation 1 to 9 with detailed stats, evolutions, and variations.",
-  keywords: ["Pokédex", "Pokémon", "PokeAPI", "Pokedex", "Pokemon", "Digital Pokédex", "Next.js", "Soft UI"],
-  authors: [{ name: "Pokédex Team" }],
+  keywords: ["Pokédex", "Pokémon", "PokeAPI", "Pokedex", "Pokemon", "Digital Pokédex", "Next.js", "Soft UI", "Team Builder", "Pokemon Quiz", "Competitive Pokemon"],
+  authors: [{ name: "Ultra Pokédex Team" }],
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "Pokédex — Explore All Pokémon",
     description: "Discover every Pokémon with our beautiful neumorphic Pokédex. Stats, types, evolutions and more.",
     type: "website",
-    siteName: "Pokédex Generation",
+    siteName: "Ultra Pokédex",
   },
   twitter: {
     card: "summary_large_image",
