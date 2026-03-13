@@ -180,7 +180,7 @@ export default function PokemonList() {
         results = results.filter((p) =>
           p.name.toLowerCase().includes(lowerSearch) ||
           p.id.toString().includes(lowerSearch) ||
-          p.localizedNames?.some(n => n.name.toLowerCase().includes(lowerSearch))
+          p.localizedNames?.some((n: { name: string }) => n.name.toLowerCase().includes(lowerSearch))
         );
       }
 
@@ -251,14 +251,14 @@ export default function PokemonList() {
       sortedResults.sort((a, b) => b.id - a.id);
     } else if (sortBy === 'name-asc') {
       sortedResults.sort((a, b) => {
-        const nameA = a.localizedNames?.find(n => n.language === resolvedLang)?.name || a.name;
-        const nameB = b.localizedNames?.find(n => n.language === resolvedLang)?.name || b.name;
+        const nameA = a.localizedNames?.find((n: { language: string }) => n.language === resolvedLang)?.name || a.name;
+        const nameB = b.localizedNames?.find((n: { language: string }) => n.language === resolvedLang)?.name || b.name;
         return nameA.localeCompare(nameB);
       });
     } else if (sortBy === 'name-desc') {
       sortedResults.sort((a, b) => {
-        const nameA = a.localizedNames?.find(n => n.language === resolvedLang)?.name || a.name;
-        const nameB = b.localizedNames?.find(n => n.language === resolvedLang)?.name || b.name;
+        const nameA = a.localizedNames?.find((n: { language: string }) => n.language === resolvedLang)?.name || a.name;
+        const nameB = b.localizedNames?.find((n: { language: string }) => n.language === resolvedLang)?.name || b.name;
         return nameB.localeCompare(nameA);
       });
     }
@@ -414,8 +414,8 @@ export default function PokemonList() {
                       name: p.name,
                       height: p.height,
                       weight: p.weight,
-                      types: p.types?.map((t, i) => ({ slot: i + 1, type: { name: t, url: '' } })),
-                      stats: p.stats?.map((s, i) => ({
+                      types: p.types?.map((t: string, i: number) => ({ slot: i + 1, type: { name: t, url: '' } })),
+                      stats: p.stats?.map((s: number, i: number) => ({
                         base_stat: s,
                         effort: 0,
                         stat: { name: ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'][i], url: '' }
@@ -425,8 +425,8 @@ export default function PokemonList() {
                       is_legendary: p.is_legendary,
                       is_mythical: p.is_mythical,
                       color: { name: p.color || '' },
-                      egg_groups: p.egg_groups?.map(eg => ({ name: eg, url: '' })) || [],
-                      names: p.localizedNames?.map(ln => ({
+                      egg_groups: p.egg_groups?.map((eg: string) => ({ name: eg, url: '' })) || [],
+                      names: p.localizedNames?.map((ln: { name: string, language: string }) => ({
                         name: ln.name,
                         language: { name: ln.language }
                       }))
@@ -451,8 +451,8 @@ export default function PokemonList() {
                     name: p.name,
                     height: p.height,
                     weight: p.weight,
-                    types: p.types?.map((t, i) => ({ slot: i + 1, type: { name: t, url: '' } })),
-                    stats: p.stats?.map((s, i) => ({
+                    types: p.types?.map((t: string, i: number) => ({ slot: i + 1, type: { name: t, url: '' } })),
+                    stats: p.stats?.map((s: number, i: number) => ({
                       base_stat: s,
                       effort: 0,
                       stat: { name: ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'][i], url: '' }
@@ -462,8 +462,8 @@ export default function PokemonList() {
                     is_legendary: p.is_legendary,
                     is_mythical: p.is_mythical,
                     color: { name: p.color || '' },
-                    egg_groups: p.egg_groups?.map(eg => ({ name: eg, url: '' })) || [],
-                    names: p.localizedNames?.map(ln => ({
+                    egg_groups: p.egg_groups?.map((eg: string) => ({ name: eg, url: '' })) || [],
+                    names: p.localizedNames?.map((ln: { name: string, language: string }) => ({
                       name: ln.name,
                       language: { name: ln.language }
                     }))

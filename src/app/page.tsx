@@ -18,7 +18,7 @@ export default async function Home() {
 
   // Prefetch the first page of pokemon
   await queryClient.prefetchInfiniteQuery({
-    queryKey: pokemonKeys.lists(),
+    queryKey: pokemonKeys.lists('en'),
     queryFn: getPokemonList,
     initialPageParam: 0,
   });
