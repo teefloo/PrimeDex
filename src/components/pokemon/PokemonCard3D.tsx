@@ -30,7 +30,7 @@ const adjust = (val: number, fromMin: number, fromMax: number, toMin: number, to
 export const PokemonCard3D: React.FC<PokemonCard3DProps> = ({
   name,
   image,
-  rarity = 'rare holo',
+  rarity = 'common',
   supertype = 'pokémon',
   subtypes = 'basic',
   types = '',
@@ -203,7 +203,7 @@ export const PokemonCard3D: React.FC<PokemonCard3DProps> = ({
   const mappedSubtypes = derivedSubtypes.trim().replace(/,/g, " ");
 
   // Comprehensive Rarity Mapping to CSS data-rarity
-  let mappedRarity = (rarity || "rare holo").toLowerCase();
+  let mappedRarity = (rarity || "common").toLowerCase();
   const supertypeLower = supertype.toLowerCase();
 
   // 1. Shiny Variants
