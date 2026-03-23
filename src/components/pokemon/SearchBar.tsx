@@ -2,7 +2,7 @@
 
 import { usePrimeDexStore } from '@/store/primedex';
 import { Search, X, Command } from 'lucide-react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/lib/i18n';
@@ -56,7 +56,7 @@ export default function SearchBar() {
   }, []);
 
   return (
-    <m.div
+    <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
@@ -100,7 +100,7 @@ export default function SearchBar() {
       {/* Clear button */}
       <AnimatePresence>
         {localSearch && (
-          <m.button
+          <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
@@ -112,9 +112,9 @@ export default function SearchBar() {
             aria-label={t('search.clear')}
           >
             <X className="w-5 h-5" />
-          </m.button>
+          </motion.button>
         )}
       </AnimatePresence>
-    </m.div>
+    </motion.div>
   );
 }

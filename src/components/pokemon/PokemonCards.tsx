@@ -6,7 +6,7 @@ import { getPokemonCards } from '@/lib/api';
 import { TCGCard } from '@/lib/api/tcg';
 import { pokemonKeys } from '@/lib/api/keys';
 import { Loader2, X } from 'lucide-react';
-import { m, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 import { PokemonCard3D } from './PokemonCard3D';
 
@@ -26,8 +26,8 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
   const [selectedCard, setSelectedCard] = useState<TCGCard | null>(null);
 
   const { data: cards, isLoading, error } = useQuery({
-    queryKey: [...pokemonKeys.tcg.cards(name), tcgLang],
-    queryFn: () => getPokemonCards(queryName, tcgLang),
+    queryKey: [...pokemonKeys.tcg.cards(name), tcgLang, queryName],
+    queryFn: () => getPokemonCards(queryName, tcgLang, name),
     enabled: !!queryName,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
@@ -77,7 +77,7 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
         </span>
       </h3>
 
-      <m.div 
+      <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="show"
@@ -112,7 +112,7 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
           <link rel="stylesheet" href="/pokemon-cards/css/cards/swsh-pikachu.css" precedence="default" />
         </div>
         {cards.map((card) => (
-          <m.div key={card.id} variants={itemVariants} className="group relative z-10 perspective-1000 w-full flex items-center justify-center">
+          <motion.div key={card.id} variants={itemVariants} className="group relative z-10 perspective-1000 w-full flex items-center justify-center">
             <PokemonCard3D
               name={card.name}
               image={`${card.image}/high.webp`}
@@ -133,20 +133,20 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
                 <p className="text-[9px] font-bold text-foreground/60 truncate uppercase tracking-widest">#{card.localId} ({card.id.split('-')[0].toUpperCase()})</p>
               </div>
             </div>
-          </m.div>
+          </motion.div>
         ))}
-      </m.div>
+      </motion.div>
 
       <AnimatePresence>
         {selectedCard && (
-          <m.div
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedCard(null)}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
           >
-            <m.div
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -181,8 +181,8 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
                   #{selectedCard.localId} • {selectedCard.id.split('-')[0].toUpperCase()}
                 </p>
               </div>
-            </m.div>
-          </m.div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

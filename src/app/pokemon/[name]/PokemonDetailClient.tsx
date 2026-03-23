@@ -24,7 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, TYPE_COLORS } from '@/types/pokemon';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatId, formatName } from '@/lib/utils';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -333,7 +333,7 @@ export function PokemonDetailClient({
         </div>
 
         <AnimatePresence mode="wait">
-          <m.div
+          <motion.div
             key={showShiny ? 'shiny' : 'normal'}
             initial={{ y: 50, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -354,12 +354,12 @@ export function PokemonDetailClient({
               className="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative z-10 transition-transform duration-700 group-hover:scale-110 group-hover:-translate-y-4"
               priority
             />
-          </m.div>
+          </motion.div>
         </AnimatePresence>
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative z-30 max-w-6xl">
-        <m.div
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -445,9 +445,9 @@ export function PokemonDetailClient({
             </div>
           )}
 
-        </m.div>
+        </motion.div>
 
-        <m.div
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -548,7 +548,7 @@ export function PokemonDetailClient({
                       </span>
                       <div className="flex-1 h-3.5 rounded-full bg-secondary/50 overflow-hidden border border-white/5 relative">
                         <div className="absolute inset-0 bg-black/10 shadow-inner" />
-                        <m.div
+                        <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min((s.base_stat / 255) * 100, 100)}%` }}
                           transition={{ duration: 1.2, ease: "easeOut", delay: 0.1 }}
@@ -559,7 +559,7 @@ export function PokemonDetailClient({
                           }}
                         >
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                        </m.div>
+                        </motion.div>
                       </div>
                     </div>
                   ))}
@@ -911,7 +911,7 @@ export function PokemonDetailClient({
               <PokemonCards name={pokemon.name} localizedName={displayName} lang={resolvedLang} />
             </TabsContent>
           </Tabs>
-        </m.div>
+        </motion.div>
       </div>
     </div>
   );

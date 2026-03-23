@@ -1,5 +1,0 @@
-feat(seo): ultimate SEO optimizations
-
-Adds dynamic sitemaps, robots.txt, metadataBase, Web App Manifest, JSON-LD schemas, and resolves semantic HTML issues (H1 headings) to ensure optimal indexing and Core Web Vitals rankings.
-
-Co-authored-by: Gemini CLI <agent@gemini.google.com>

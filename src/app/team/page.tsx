@@ -21,7 +21,7 @@ import {
   Trophy
 } from 'lucide-react';
 import Link from 'next/link';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState, SVGProps } from 'react';
 import { useTranslation } from '@/lib/i18n';
@@ -263,7 +263,7 @@ export default function TeamPage() {
                 return (
                   <div key={idx} className="h-64">
                     {p ? (
-                      <m.div 
+                      <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className="glass-panel h-full p-4 rounded-3xl flex flex-col items-center relative group"
@@ -306,7 +306,7 @@ export default function TeamPage() {
                             {t('team.details')}
                           </Button>
                         </Link>
-                      </m.div>
+                      </motion.div>
                     ) : (
                       <Link href="/" className="block h-full">
                         <div className="h-full rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-foreground/20 hover:border-primary/30 hover:text-primary/40 hover:bg-primary/5 transition-all group">
@@ -323,7 +323,7 @@ export default function TeamPage() {
             </div>
 
             {pokemonData.length > 0 && analysis && (
-              <m.div 
+              <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
@@ -351,7 +351,7 @@ export default function TeamPage() {
                     </div>
                     
                     <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-8 border border-white/5">
-                      <m.div 
+                      <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${synergyScore}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
@@ -483,7 +483,7 @@ export default function TeamPage() {
                     </div>
                   </div>
                 </div>
-              </m.div>
+              </motion.div>
             )}
           </div>
 

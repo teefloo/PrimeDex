@@ -18,7 +18,7 @@ import {
   Trophy
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState } from 'react';
@@ -183,7 +183,7 @@ export default function ComparePage() {
           <div className="space-y-12">
             {/* Radar Chart Section */}
             {compareData.length > 0 && (
-              <m.div 
+              <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="glass-panel p-8 rounded-[3rem] overflow-hidden"
@@ -257,7 +257,7 @@ export default function ComparePage() {
                     )}
                   </div>
                 </div>
-              </m.div>
+              </motion.div>
             )}
 
             <div className={cn(
@@ -276,7 +276,7 @@ export default function ComparePage() {
                 const displayName = s_data?.names?.find((n: any) => n.language.name === resolvedLang)?.name || p.name;
 
                 return (
-                  <m.div 
+                  <motion.div 
                     key={p.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -361,7 +361,7 @@ export default function ComparePage() {
                                   </span>
                                 </div>
                                 <div className="h-1.5 rounded-full bg-secondary/50 overflow-hidden">
-                                  <m.div 
+                                  <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${(s.base_stat / 255) * 100}%` }}
                                     className="h-full rounded-full"
@@ -392,7 +392,7 @@ export default function ComparePage() {
                         </div>
                       </div>
                     </div>
-                  </m.div>
+                  </motion.div>
                 );
               })}
             </div>

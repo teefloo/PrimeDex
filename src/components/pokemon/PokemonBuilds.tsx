@@ -3,7 +3,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { getMoveDetail, MoveDetail } from '@/lib/api';
 import { PokemonDetail, TYPE_COLORS } from '@/types/pokemon';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import { 
   Swords, 
@@ -107,7 +107,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
   return (
     <div className="space-y-8">
       {builds.map((build, idx) => (
-        <m.div 
+        <motion.div 
           key={build.name}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -174,7 +174,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
               );
             })}
           </div>
-        </m.div>
+        </motion.div>
       ))}
     </div>
   );

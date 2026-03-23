@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import Image from 'next/image';
 
@@ -48,7 +48,7 @@ function EvolutionItem({ name }: { name: string }) {
 
   return (
     <Link href={`/pokemon/${name}`} className="relative z-10 hover:z-20">
-      <m.div
+      <motion.div
         whileHover={{ y: -5, scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="flex flex-col items-center cursor-pointer group"
@@ -75,7 +75,7 @@ function EvolutionItem({ name }: { name: string }) {
             {displayName}
           </span>
         </div>
-      </m.div>
+      </motion.div>
     </Link>
   );
 }

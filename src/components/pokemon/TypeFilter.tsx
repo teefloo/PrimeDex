@@ -4,7 +4,7 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { TYPE_COLORS } from '@/types/pokemon';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
 export default function TypeFilter() {
@@ -13,7 +13,7 @@ export default function TypeFilter() {
   const { t } = useTranslation();
 
   return (
-    <m.div 
+    <motion.div 
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
@@ -22,7 +22,7 @@ export default function TypeFilter() {
       <div className="flex flex-nowrap lg:flex-wrap gap-2 justify-start lg:justify-center px-4 min-w-max lg:min-w-0 mx-auto max-w-7xl">
         <AnimatePresence>
           {selectedTypes.length > 0 && (
-            <m.button
+            <motion.button
               initial={{ scale: 0.8, opacity: 0, width: 0 }}
               animate={{ scale: 1, opacity: 1, width: 'auto' }}
               exit={{ scale: 0.8, opacity: 0, width: 0 }}
@@ -32,7 +32,7 @@ export default function TypeFilter() {
             >
               <X className="w-3.5 h-3.5" />
               <span className="uppercase tracking-wider">{t('filters.clear_types', { count: selectedTypes.length })}</span>
-            </m.button>
+            </motion.button>
           )}
         </AnimatePresence>
         
@@ -42,7 +42,7 @@ export default function TypeFilter() {
           const label = t(`types.${type}`);
           
           return (
-            <m.button
+            <motion.button
               key={type}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -73,7 +73,7 @@ export default function TypeFilter() {
               
               <span className="relative z-10 flex items-center gap-2">
                 {isActive && (
-                  <m.div
+                  <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
@@ -81,10 +81,10 @@ export default function TypeFilter() {
                 )}
                 {label}
               </span>
-            </m.button>
+            </motion.button>
           );
         })}
       </div>
-    </m.div>
+    </motion.div>
   );
 }

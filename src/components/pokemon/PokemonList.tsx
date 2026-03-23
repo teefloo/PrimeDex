@@ -6,7 +6,7 @@ import { getPokemonList, getPokemonByType, getAllPokemonDetailed, getAllPokemonS
 import { pokemonKeys } from '@/lib/api/keys';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useEffect, useRef, useMemo, useState } from 'react';
-import { useInView, m, AnimatePresence } from 'framer-motion';
+import { useInView, motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, SearchX } from 'lucide-react';
 import { PokemonBasicData } from '@/types/pokemon';
 import { Badge } from '@/components/ui/badge';
@@ -295,13 +295,13 @@ export default function PokemonList() {
 
   if (displayedPokemon.length === 0 && !isLoadingInfinite) {
     return (
-      <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
         <SearchX className="w-20 h-20 text-foreground/20" />
         <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.no_results')}</h3>
         <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
           <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
         </Button>
-      </m.div>
+      </motion.div>
     );
   }
 
@@ -337,13 +337,13 @@ export default function PokemonList() {
         </div>
       )}
 
-      <m.div layout={useAnimations} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2">
+      <motion.div layout={useAnimations} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2">
         {useAnimations ? (
           <AnimatePresence mode="popLayout">
             {displayedPokemon.map((p, idx) => (
-              <m.div layout key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
+              <motion.div layout key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
                 <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p, species: p.pokemon_v2_pokemonspecy }} />
-              </m.div>
+              </motion.div>
             ))}
           </AnimatePresence>
         ) : (
@@ -353,7 +353,7 @@ export default function PokemonList() {
             </div>
           ))
         )}
-      </m.div>
+      </motion.div>
 
       {(isBasicMode || hasMoreFiltered) && (
         <div ref={loadMoreRef} className="flex justify-center p-8">

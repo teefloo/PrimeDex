@@ -1,7 +1,7 @@
 'use client';
 
 import { usePrimeDexStore } from '@/store/primedex';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { SVGProps } from 'react';
 import { useTranslation } from '@/lib/i18n';
@@ -19,7 +19,7 @@ export default function CaughtFilter() {
   return (
     <div className="flex bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-full p-1">
       {modes.map((mode) => (
-        <m.button
+        <motion.button
           key={mode.id}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -33,7 +33,7 @@ export default function CaughtFilter() {
         >
           {mode.id === 'caught' && <PokeballIcon className="w-3 h-3" />}
           <span>{mode.label}</span>
-        </m.button>
+        </motion.button>
       ))}
     </div>
   );

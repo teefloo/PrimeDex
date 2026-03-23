@@ -7,7 +7,7 @@ import { getAllPokemonNames } from '@/lib/api';
 import { PokemonCard } from '@/components/pokemon/PokemonCard';
 import { Heart, Home, Loader2, Ghost } from 'lucide-react';
 import Link from 'next/link';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useMemo, useEffect, useState, ButtonHTMLAttributes } from 'react';
 import { useTranslation } from '@/lib/i18n';
 
@@ -82,7 +82,7 @@ export default function FavoritesPage() {
             <p className="text-foreground/30 font-black tracking-[0.2em] uppercase text-[10px]">{t('favorites.loading')}</p>
           </div>
         ) : favoritePokemon.length === 0 ? (
-          <m.div 
+          <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
@@ -101,7 +101,7 @@ export default function FavoritesPage() {
                 <span className="font-black uppercase tracking-[0.15em] text-sm">{t('favorites.back')}</span>
               </FavoriteButton>
             </Link>
-          </m.div>
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {favoritePokemon.map((p) => (

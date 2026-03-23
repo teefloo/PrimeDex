@@ -14,7 +14,7 @@ import {
 import { usePrimeDexStore } from '@/store/primedex';
 import SettingsModal from './SettingsModal';
 import { useEffect, useState, ReactNode } from 'react';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import PrimeDexLogo from '@/components/ui/PrimeDexLogo';
@@ -101,7 +101,7 @@ export default function Header() {
           scrolled && 'px-3 py-2 md:px-4 md:py-3'
         )}
       >
-        <m.div
+        <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
@@ -115,9 +115,9 @@ export default function Header() {
           {/* ── LOGO ── */}
           <div className="flex-1 flex items-center justify-start">
             <Link href="/" className="flex items-center gap-3 group" aria-label={t('header.home_aria')}>
-              <m.div whileHover={{ rotate: 12, scale: 1.1 }} transition={{ type: 'spring', stiffness: 300 }}>
+              <motion.div whileHover={{ rotate: 12, scale: 1.1 }} transition={{ type: 'spring', stiffness: 300 }}>
                 <PrimeDexLogo className="w-8 h-8 md:w-10 md:h-10 transition-all duration-300 drop-shadow-[0_0_8px_rgba(227,53,13,0.3)] group-hover:drop-shadow-[0_0_16px_rgba(227,53,13,0.6)]" />
-              </m.div>
+              </motion.div>
               <div className="flex flex-col">
                 <h1 className="text-xl md:text-2xl font-black tracking-tighter flex items-center leading-none">
                   <span className="gradient-text-primary">Prime</span>
@@ -132,7 +132,7 @@ export default function Header() {
                           {caughtCount} / 1025
                         </span>
                         <div className="w-12 h-[3px] rounded-full bg-white/10 overflow-hidden">
-                          <m.div
+                          <motion.div
                             className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400"
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
@@ -163,14 +163,14 @@ export default function Header() {
             <Tooltip>
               <TooltipTrigger>
                 <Link href="/favorites" aria-label={t('header.open_favorites')}>
-                  <m.div
+                  <motion.div
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.92 }}
                     className="p-2.5 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] text-foreground/60 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all duration-300 shadow-sm cursor-pointer flex items-center gap-2"
                   >
                     <Heart className="w-4 h-4 md:w-[18px] md:h-[18px]" />
                     <span className="hidden xl:inline text-[10px] font-black uppercase tracking-[0.15em] px-0.5">{t('nav.favorites')}</span>
-                  </m.div>
+                  </motion.div>
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
@@ -180,7 +180,7 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <m.button
+                <motion.button
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.92 }}
                   onClick={cycleLanguage}
@@ -189,7 +189,7 @@ export default function Header() {
                 >
                   <Languages className="w-4 h-4" />
                   <span className="text-[10px] font-black uppercase">{languageLabel}</span>
-                </m.button>
+                </motion.button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {t('header.language_title', { language: languageLabel })}
@@ -198,7 +198,7 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <m.button
+                <motion.button
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.92 }}
                   onClick={cycleTheme}
@@ -212,7 +212,7 @@ export default function Header() {
                   ) : (
                     <Sun className="w-4 h-4 md:w-[18px] md:h-[18px] text-amber-500" />
                   )}
-                </m.button>
+                </motion.button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {themeLabel}
@@ -221,7 +221,7 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <m.button
+                <motion.button
                   whileHover={{ scale: 1.08, rotate: 60 }}
                   whileTap={{ scale: 0.92 }}
                   onClick={toggleSettings}
@@ -229,14 +229,14 @@ export default function Header() {
                   aria-label={t('header.open_settings')}
                 >
                   <Settings className="w-4 h-4 md:w-[18px] md:h-[18px]" />
-                </m.button>
+                </motion.button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {t('settings.title')}
               </TooltipContent>
             </Tooltip>
           </div>
-        </m.div>
+        </motion.div>
       </header>
       <SettingsModal />
     </>

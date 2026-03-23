@@ -2,7 +2,7 @@
 
 import { usePrimeDexStore } from '@/store/primedex';
 import { Heart } from 'lucide-react';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 
@@ -11,7 +11,7 @@ export default function FavoriteToggle() {
   const { t } = useTranslation();
 
   return (
-    <m.button
+    <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
@@ -24,6 +24,6 @@ export default function FavoriteToggle() {
     >
       <Heart className={cn("w-3.5 h-3.5 transition-all", showFavoritesOnly && "fill-current scale-110")} />
       <span>{t('favorites.toggle', { count: favorites.length })}</span>
-    </m.button>
+    </motion.button>
   );
 }

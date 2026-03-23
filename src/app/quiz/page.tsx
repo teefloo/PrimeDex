@@ -24,7 +24,7 @@ import {
   BrainCircuit,
   Zap
 } from 'lucide-react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback, Suspense } from 'react';
@@ -345,7 +345,7 @@ function QuizPageContent() {
         <div className="max-w-2xl mx-auto">
           {gameState === 'idle' || gameState === 'finished' ? (
             <div className="space-y-8">
-              <m.div 
+              <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="glass-panel p-8 md:p-12 rounded-[3rem] space-y-8"
@@ -472,10 +472,10 @@ function QuizPageContent() {
                     </div>
                   </div>
                 )}
-              </m.div>
+              </motion.div>
 
               {/* Badges Section */}
-              <m.div 
+              <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -513,7 +513,7 @@ function QuizPageContent() {
                     );
                   })}
                 </div>
-              </m.div>
+              </motion.div>
             </div>
           ) : (
             <div className="space-y-8">
@@ -574,16 +574,16 @@ function QuizPageContent() {
                 
                 <AnimatePresence mode="wait">
                   {gameState === 'loading' ? (
-                    <m.div 
+                    <motion.div 
                       key="loading"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                     >
                       <Loader2 className="w-16 h-16 animate-spin text-primary/40" />
-                    </m.div>
+                    </motion.div>
                   ) : currentPokemon ? (
-                    <m.div
+                    <motion.div
                       key={currentPokemon.id}
                       initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
                       animate={{ scale: 1, opacity: 1, rotate: 0 }}
@@ -606,7 +606,7 @@ function QuizPageContent() {
                                 <span>{gameState === 'answered' ? s.val : '???'}</span>
                               </div>
                               <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                <m.div 
+                                <motion.div 
                                   initial={{ width: 0 }}
                                   animate={{ width: `${(s.val / 255) * 100}%` }}
                                   className="h-full"
@@ -632,7 +632,7 @@ function QuizPageContent() {
                       )}
                       
                       {gameState === 'answered' && (
-                        <m.div 
+                        <motion.div 
                           initial={{ scale: 0, rotate: -20 }}
                           animate={{ scale: 1, rotate: 0 }}
                           className="mt-4"
@@ -646,9 +646,9 @@ function QuizPageContent() {
                               <AlertCircle className="w-4 h-4" /> {t('quiz.wrong')}
                             </div>
                           )}
-                        </m.div>
+                        </motion.div>
                       )}
-                    </m.div>
+                    </motion.div>
                   ) : null}
                 </AnimatePresence>
               </div>

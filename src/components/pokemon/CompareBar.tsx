@@ -4,7 +4,7 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
 import axios from 'axios';
 import { PokemonDetail } from '@/types/pokemon';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeftRight, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ export default function CompareBar() {
 
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl">
-      <m.div 
+      <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
@@ -54,7 +54,7 @@ export default function CompareBar() {
               const id = compareList[idx];
               
               return (
-                <m.div 
+                <motion.div 
                   key={id}
                   layout
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -83,7 +83,7 @@ export default function CompareBar() {
                   >
                     <X className="w-3 h-3" />
                   </button>
-                </m.div>
+                </motion.div>
               );
             })}
           </AnimatePresence>
@@ -128,7 +128,7 @@ export default function CompareBar() {
             </Link>
           )}
         </div>
-      </m.div>
+      </motion.div>
     </div>
   );
 }

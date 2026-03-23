@@ -27,49 +27,8 @@ export interface TCGCard {
   types?: string[];
 }
 
-/** Detail response shape from TCGdex /cards/{id} endpoint */
-interface TCGCardDetail {
-  id: string;
-  localId: string;
-  name: string;
-  image?: string;
-  rarity?: string;
-  category?: string;
-  suffix?: string;
-  stage?: string;
-  types?: string[];
-}
-
-/**
- * Fetch rarity details for a batch of cards from their individual detail endpoints.
- * Uses Promise.allSettled so one failure doesn't block the rest.
- */
-const enrichCardsWithRarity = async (cards: TCGCard[], lang: string): Promise<TCGCard[]> => {
-  const results = await Promise.allSettled(
-    cards.map(async (card) => {
-      try {
-        const { data } = await tcgClient.get<TCGCardDetail>(`/${lang}/cards/${card.id}`);
-        return {
-          ...card,
-          rarity: data.rarity || undefined,
-          category: data.category || undefined,
-          suffix: data.suffix || undefined,
-          stage: data.stage || undefined,
-          types: data.types || undefined,
-        };
-      } catch {
-        // If the detail request fails, keep the card as-is
-        return card;
-      }
-    })
-  );
-
-  return results.map((result, i) =>
-    result.status === 'fulfilled' ? result.value : cards[i]
-  );
-};
-
-export const getPokemonCards = async (localizedName: string, lang: string): Promise<TCGCard[]> => {
+/** TCGdex API client for fetching Pokemon cards */
+export const getPokemonCards = async (localizedName: string, lang: string, englishName?: string): Promise<TCGCard[]> => {
   // Map our internal lang codes to TCGdex lang codes if needed (TCGdex supports en, fr, es, it, pt, de)
   const supportedLangs = ['en', 'fr', 'es', 'it', 'pt', 'de'];
   const tcgLang = supportedLangs.includes(lang) ? lang : 'en';
@@ -89,14 +48,20 @@ export const getPokemonCards = async (localizedName: string, lang: string): Prom
     
     const { data } = await tcgClient.get<TCGCard[]>(url);
     
-    // TCGdex returns all matching cards. Some might not have an image scan in this language.
-    // Pick only cards with an image, and limit to 30 for performance.
-    const validCards = data.filter(c => c.image).slice(0, 30);
-    console.log(`[TCG API] Received ${validCards.length} valid cards with images`);
+    // TCGdex returns all matching cards.
+    // To avoid hitting API rate limits with 30+ detail requests per page,
+    // we simply filter to only keep cards that have a valid image URL in the base response.
+    let enrichedCards = data.filter(card => !!card.image);
+    console.log(`[TCG API] Processed ${enrichedCards.length} cards instantly`);
 
-    // Enrich cards with rarity data from detail endpoints
-    const enrichedCards = await enrichCardsWithRarity(validCards, tcgLang);
-    console.log(`[TCG API] Enriched ${enrichedCards.filter(c => c.rarity).length}/${enrichedCards.length} cards with rarity data`);
+    // Fallback to English if no cards found and we aren't already in English
+    if (enrichedCards.length === 0 && tcgLang !== 'en' && englishName) {
+      console.log(`[TCG API] No cards found for ${localizedName} in ${tcgLang}, falling back to English for ${englishName}`);
+      const fallbackUrl = `/en/cards?name=${encodeURIComponent(englishName)}`;
+      const { data: fallbackData } = await tcgClient.get<TCGCard[]>(fallbackUrl);
+      enrichedCards = fallbackData.filter(card => !!card.image);
+      console.log(`[TCG API] Fallback found ${enrichedCards.length} cards`);
+    }
     
     await setCachedData(cacheKey, enrichedCards);
     return enrichedCards;

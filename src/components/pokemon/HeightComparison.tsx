@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
 import Image from 'next/image';
@@ -41,7 +41,7 @@ export function HeightComparison({ pokemonHeight, pokemonName, pokemonImage }: H
         
         {/* Human Side */}
         <div className="flex flex-col items-center z-10">
-          <m.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative flex items-end justify-center"
@@ -60,7 +60,7 @@ export function HeightComparison({ pokemonHeight, pokemonName, pokemonImage }: H
               <div className="absolute top-0 right-0 w-2 h-px bg-foreground/20" />
               <div className="absolute bottom-0 right-0 w-2 h-px bg-foreground/20" />
             </div>
-          </m.div>
+          </motion.div>
           <div className="mt-6 text-center">
             <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-1">{t('detail.human')}</p>
             <p className="text-sm font-black text-foreground/60">{humanHeight.toFixed(1)}m</p>
@@ -69,14 +69,14 @@ export function HeightComparison({ pokemonHeight, pokemonName, pokemonImage }: H
 
         {/* Pokemon Side */}
         <div className="flex flex-col items-center z-10">
-          <m.div
+          <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
             className="relative flex items-end justify-center"
             style={{ height: 200 }}
           >
-            <m.div
+            <motion.div
               style={{ height: pokemonDisplayHeight, width: pokemonDisplayHeight }}
               className="relative brightness-0 opacity-20 dark:opacity-30 drop-shadow-[0_0_15px_rgba(227,53,13,0.3)]"
               animate={{ 
@@ -95,14 +95,14 @@ export function HeightComparison({ pokemonHeight, pokemonName, pokemonImage }: H
                 sizes="180px"
                 className="object-contain"
               />
-            </m.div>
+            </motion.div>
             
             {/* Measurement Line */}
             <div className="absolute left-[-20px] bottom-0 w-px bg-primary/40" style={{ height: pokemonDisplayHeight }}>
               <div className="absolute top-0 left-0 w-2 h-px bg-primary/40" />
               <div className="absolute bottom-0 left-0 w-2 h-px bg-primary/40" />
             </div>
-          </m.div>
+          </motion.div>
           
           <div className="mt-6 text-center">
             <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-1 capitalize">{pokemonName}</p>

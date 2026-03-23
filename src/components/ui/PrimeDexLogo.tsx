@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface PrimeDexLogoProps {
   className?: string;
@@ -8,7 +8,7 @@ interface PrimeDexLogoProps {
 
 export default function PrimeDexLogo({ className = 'w-10 h-10' }: PrimeDexLogoProps) {
   return (
-    <m.div 
+    <motion.div 
       className={`relative flex items-center justify-center ${className}`}
       whileHover="hover"
       initial="initial"
@@ -30,7 +30,7 @@ export default function PrimeDexLogo({ className = 'w-10 h-10' }: PrimeDexLogoPr
         {/* Center Button Housing */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-1/3 bg-black rounded-full flex items-center justify-center z-10 shadow-md">
           {/* Inner Button */}
-          <m.div 
+          <motion.div 
             className="w-2/3 h-2/3 bg-white rounded-full border border-gray-400"
             variants={{
               hover: { 
@@ -43,6 +43,6 @@ export default function PrimeDexLogo({ className = 'w-10 h-10' }: PrimeDexLogoPr
         </div>
       </div>
 
-    </m.div>
+    </motion.div>
   );
 }

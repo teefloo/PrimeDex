@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { PokemonDetail, PokemonSpecies, TYPE_COLORS } from '@/types/pokemon';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatId } from '@/lib/utils';
@@ -179,7 +179,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
 
   return (
     <Link href={`/pokemon/${name}`} className="block h-full py-4 px-2" onMouseEnter={prefetchDetails}>
-      <m.div
+      <motion.div
         whileHover={{ scale: 1.03, y: -4 }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -215,7 +215,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         <div className="flex justify-between items-center w-full z-10 mb-4">
           <span className="text-sm font-black text-foreground/30 group-hover:text-foreground/60 transition-colors duration-300 tracking-tight">{formatId(pokemonId)}</span>
           <div className="flex items-center gap-1.5">
-            <m.button
+            <motion.button
               whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.85 }}
               onClick={toggleTeam} disabled={!isTeam && teamFull}
               aria-label={isTeam ? t('card.remove_team') : t('card.add_team')}
@@ -228,9 +228,9 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               )}
             >
               {isTeam ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            </m.button>
+            </motion.button>
 
-            <m.button
+            <motion.button
               whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.85 }}
               onClick={toggleCompare} disabled={!isComp && compareFull}
               aria-label={isComp ? t('card.remove_compare') : t('card.add_compare')}
@@ -243,9 +243,9 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               )}
             >
               <ArrowLeftRight className={cn("w-3.5 h-3.5 transition-transform", isComp && "scale-110")} />
-            </m.button>
+            </motion.button>
 
-            <m.button
+            <motion.button
               whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.85 }}
               onClick={toggleFavorite}
               aria-label={isFav ? t('card.remove_favorite') : t('card.add_favorite')}
@@ -256,10 +256,10 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]"
               )}
             >
-              <m.div animate={isFav ? { scale: [1, 1.5, 1], transition: { duration: 0.35 } } : {}}>
+              <motion.div animate={isFav ? { scale: [1, 1.5, 1], transition: { duration: 0.35 } } : {}}>
                 <Heart className={cn("w-3.5 h-3.5 transition-all", isFav && "fill-current")} />
-              </m.div>
-            </m.button>
+              </motion.div>
+            </motion.button>
           </div>
         </div>
 
@@ -294,7 +294,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
             })}
           </div>
         </div>
-      </m.div>
+      </motion.div>
     </Link>
   );
 });

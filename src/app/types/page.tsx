@@ -15,7 +15,7 @@ import {
   Star
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
@@ -104,7 +104,7 @@ export default function TypesPage() {
           {/* Main Analysis Section */}
           <div className="lg:col-span-8 space-y-8">
             <AnimatePresence mode="wait">
-              <m.div
+              <motion.div
                 key={selectedType}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -234,7 +234,7 @@ export default function TypesPage() {
                     </div>
                   </div>
                 </div>
-              </m.div>
+              </motion.div>
             </AnimatePresence>
           </div>
         </div>

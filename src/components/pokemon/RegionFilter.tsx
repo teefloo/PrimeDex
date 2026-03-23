@@ -3,7 +3,7 @@
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn } from '@/lib/utils';
 import { X, Map } from 'lucide-react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
 const REGIONS = [
@@ -23,7 +23,7 @@ export default function RegionFilter() {
   const { t } = useTranslation();
 
   return (
-    <m.div 
+    <motion.div 
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
@@ -38,7 +38,7 @@ export default function RegionFilter() {
 
         <AnimatePresence mode="popLayout">
           {selectedGeneration && (
-            <m.button
+            <motion.button
               initial={{ scale: 0.8, opacity: 0, width: 0 }}
               animate={{ scale: 1, opacity: 1, width: 'auto' }}
               exit={{ scale: 0.8, opacity: 0, width: 0 }}
@@ -48,7 +48,7 @@ export default function RegionFilter() {
             >
               <X className="w-3 h-3" />
               <span className="font-bold uppercase tracking-wider text-[10px]">{t('filters.reset')}</span>
-            </m.button>
+            </motion.button>
           )}
         </AnimatePresence>
         
@@ -57,7 +57,7 @@ export default function RegionFilter() {
           const label = t(`regions.${region.key}`);
           
           return (
-            <m.button
+            <motion.button
               key={region.key}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -82,10 +82,10 @@ export default function RegionFilter() {
               <span className="relative z-10 flex items-center gap-2">
                 {label}
               </span>
-            </m.button>
+            </motion.button>
           );
         })}
       </div>
-    </m.div>
+    </motion.div>
   );
 }

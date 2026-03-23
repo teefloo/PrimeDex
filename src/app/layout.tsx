@@ -7,7 +7,6 @@ import { Agentation } from "agentation";
 import { t } from '@/lib/server-i18n';
 import { AppContent } from "./AppContent";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import Script from "next/script";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
