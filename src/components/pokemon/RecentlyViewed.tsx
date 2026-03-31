@@ -6,20 +6,15 @@ import { motion } from 'framer-motion';
 import { formatId } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { useMounted } from '@/hooks/useMounted';
 
 import Image from 'next/image';
 
 export default function RecentlyViewed() {
   const { history, clearHistory } = usePrimeDexStore();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (!mounted || history.length === 0) return null;
 

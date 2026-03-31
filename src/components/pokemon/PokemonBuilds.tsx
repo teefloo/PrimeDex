@@ -16,7 +16,7 @@ import {
 import { cn, formatName } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import { usePrimeDexStore } from '@/store/primedex';
-import { useState, useEffect } from 'react';
+import { useMounted } from '@/hooks/useMounted';
 
 interface PokemonBuildsProps {
   pokemon: PokemonDetail;
@@ -25,12 +25,7 @@ interface PokemonBuildsProps {
 export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
   const { t, i18n } = useTranslation();
   const { language, systemLanguage } = usePrimeDexStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const mounted = useMounted();
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 
@@ -69,7 +64,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
       .concat(moves.filter(m => m.damage_class.name !== 'status').sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 2));
 
     // Balanced Build
-    const balancedMoves = moves.sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 3).concat(statusMoves.slice(0, 1));
+    const balancedMoves = [...moves].sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 3).concat(statusMoves.slice(0, 1));
 
     return [
       {

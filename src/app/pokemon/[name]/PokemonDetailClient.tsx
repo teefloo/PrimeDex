@@ -30,6 +30,7 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatId, formatName } from '@/lib/utils';
 import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useMounted } from '@/hooks/useMounted';
 
 interface LocalizedGqlData {
   pokemon_v2_pokemonspeciesnames: { 
@@ -95,12 +96,7 @@ export function PokemonDetailClient({
   const [showShiny, setShowShiny] = useState(false);
   const [playingCry, setPlayingCry] = useState<'latest' | 'legacy' | null>(null);
   const { isFavorite, addFavorite, removeFavorite, addToHistory, language, systemLanguage } = usePrimeDexStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const mounted = useMounted();
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 
@@ -730,7 +726,7 @@ export function PokemonDetailClient({
               {species?.evolution_chain?.url ? (
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
                   <h3 className="text-xl font-black mb-8 text-foreground/90 border-b border-white/10 pb-4 text-center">{t('detail.evolution_chain')}</h3>
-                  <EvolutionChain url={species.evolution_chain.url} />
+                  <EvolutionChain url={species.evolution_chain.url} speciesName={name} />
                 </div>
               ) : (
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] flex items-center justify-center min-h-[200px]">

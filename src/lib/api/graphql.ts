@@ -15,6 +15,8 @@ export const getAllPokemonSummary = async (): Promise<GraphQLPokemonSummary[]> =
         pokemon_v2_pokemon(limit: 1500, order_by: {id: asc}) {
           id
           name
+          height
+          weight
           pokemon_v2_pokemonspecy {
             generation_id
             pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {

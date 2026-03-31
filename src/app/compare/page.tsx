@@ -21,7 +21,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { 
   Radar, 
@@ -31,6 +31,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
+import { useMounted } from '@/hooks/useMounted';
 const STAT_KEYS = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'] as const;
 
 import Image from 'next/image';
@@ -38,13 +39,8 @@ import Image from 'next/image';
 export default function ComparePage() {
   const { language, systemLanguage, compareList, removeFromCompare, clearCompare } = usePrimeDexStore();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { t, i18n } = useTranslation();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 

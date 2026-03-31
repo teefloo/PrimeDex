@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useMounted } from '@/hooks/useMounted';
 
 interface HeaderLinkProps extends LinkProps {
   children: ReactNode;
@@ -52,7 +53,7 @@ function HeaderLink({ children, href, variant, size, className, ...props }: Head
 export default function Header() {
   const { toggleSettings, theme, setTheme, caughtPokemon, language, setLanguage } = usePrimeDexStore();
   const { t, i18n } = useTranslation();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [scrolled, setScrolled] = useState(false);
 
   const languageLabel = mounted ? (language === 'auto' ? t('settings.auto') : language.toUpperCase()) : 'EN';
@@ -61,12 +62,10 @@ export default function Header() {
     : t('settings.system');
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);

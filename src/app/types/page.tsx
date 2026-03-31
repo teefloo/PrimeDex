@@ -14,25 +14,21 @@ import {
   Sword,
   Star
 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { useMounted } from '@/hooks/useMounted';
 
 const TypeChart = dynamic(() => import('@/components/pokemon/TypeChart'), { ssr: false });
 
 export default function TypesPage() {
   const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<string>('fire');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const mounted = useMounted();
 
   const { data: typeRels } = useQuery({
     queryKey: ['typeRelations', selectedType],

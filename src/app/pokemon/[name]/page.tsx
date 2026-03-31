@@ -2,8 +2,8 @@ import { Metadata, ResolvingMetadata } from 'next';
 import { getPokemonDetail, getPokemonSpecies, getLocalizedPokemonData, getPokemonEncounters } from '@/lib/api';
 import { PokemonDetailClient } from './PokemonDetailClient';
 import Header from '@/components/layout/Header';
-import Script from 'next/script';
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, LocalizedPokemonData } from '@/types/pokemon';
+import { t } from '@/lib/server-i18n';
 
 interface Props {
   params: Promise<{ name: string }>;
@@ -12,14 +12,14 @@ interface Props {
 
 export async function generateMetadata(
   { params, searchParams }: Props,
-  parent: ResolvingMetadata
+  _parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { name } = await params;
   const sParams = await searchParams;
   const lang = (sParams.lang as string) || 'en';
   
   try {
-    const [pokemon, species] = await Promise.all([
+    const [pokemon] = await Promise.all([
       getPokemonDetail(name),
       getPokemonSpecies(name),
     ]);
@@ -69,7 +69,7 @@ export async function generateMetadata(
         'Abilities'
       ],
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Pokemon Not Found | PrimeDex',
     };
@@ -107,12 +107,12 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     species = speciesData;
     localized = localizedData;
     encounters = encountersData;
-  } catch (error) {
+  } catch {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Pokemon Not Found</h1>
-          <p className="text-muted-foreground">The pokemon you are looking for does not exist.</p>
+          <h1 className="text-4xl font-bold mb-4">{t('common.pokemon_not_found', { defaultValue: 'Pokemon Not Found' })}</h1>
+          <p className="text-muted-foreground">{t('common.pokemon_not_found_desc', { defaultValue: 'The pokemon you are looking for does not exist.' })}</p>
         </div>
       </div>
     );

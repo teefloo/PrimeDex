@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
 import { getPokemonDetail, getPokemonSpecies, getTypeRelations } from '@/lib/api';
-import { PokemonDetail, TYPE_COLORS } from '@/types/pokemon';
+import { PokemonDetail, PokemonSpecies, TYPE_COLORS } from '@/types/pokemon';
 import { TypeRelations } from '@/lib/api/rest';
 import { 
   Users, 
@@ -17,8 +17,6 @@ import {
   BarChart3,
   Loader2,
   Share,
-  Flame,
-  Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -37,20 +35,15 @@ import {
   Tooltip as RechartsTooltip
 } from 'recharts';
 import { getAllPokemonDetailed } from '@/lib/api';
+import { useMounted } from '@/hooks/useMounted';
 
 import Image from 'next/image';
 
 export default function TeamPage() {
   const { language, systemLanguage, team, addToTeam, removeFromTeam, clearTeam } = usePrimeDexStore();
-  const [mounted, setMounted] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const mounted = useMounted();
   const [isAutoCompleting, setIsAutoCompleting] = useState(false);
   const { t, i18n } = useTranslation();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 
@@ -89,7 +82,7 @@ export default function TeamPage() {
   });
 
   const isLoading = pokemonQueries.some(q => q.isLoading);
-  const teamData = pokemonQueries.map(q => q.data).filter((d): d is { pokemon: PokemonDetail, species: any } => !!d);
+  const teamData = pokemonQueries.map(q => q.data).filter((d): d is { pokemon: PokemonDetail; species: PokemonSpecies | null } => !!d);
   const pokemonData = teamData.map(d => d.pokemon);
 
   // Type relations for the whole team
@@ -258,7 +251,7 @@ export default function TeamPage() {
                 const d = teamData[idx];
                 const p = d?.pokemon;
                 const s_data = d?.species;
-                const displayName = s_data?.names?.find((n: any) => n.language.name === resolvedLang)?.name || p?.name;
+                const displayName = s_data?.names?.find((n) => n.language.name === resolvedLang)?.name || p?.name;
 
                 return (
                   <div key={idx} className="h-64">
@@ -290,7 +283,7 @@ export default function TeamPage() {
                         
                         <h3 className="text-lg font-black capitalize mb-2">{displayName}</h3>
                         <div className="flex gap-1 justify-center">
-                        {p.types.map((typeItem: any) => (
+                        {p.types.map((typeItem) => (
                           <span 
                             key={typeItem.type.name} 
                             className="px-2 py-0.5 rounded-lg border border-white/5 text-[8px] font-black uppercase"

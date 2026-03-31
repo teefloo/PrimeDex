@@ -8,14 +8,16 @@ import { cn, formatId } from '@/lib/utils';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
-import { SVGProps, memo, useCallback, useState, useEffect } from 'react';
+import { memo, useCallback } from 'react';
+import { useMounted } from '@/hooks/useMounted';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { PokeballIcon } from '@/components/ui/PokeballIcon';
 
 interface GqlPokemonData {
   id?: number;
   name?: string;
-  types?: PokemonDetail['types'];
+  types?: PokemonDetail['types'] | string[];
   pokemon_v2_pokemontypes?: Array<{ pokemon_v2_type: { name: string } }>;
   localizedNames?: LocalizedNameEntry[];
 }
@@ -29,6 +31,8 @@ interface PokemonCardProps {
     species?: Partial<PokemonSpecies>;
   };
 }
+
+export type { GqlPokemonData, PokemonCardProps };
 
 export function PokemonCardSkeleton() {
   return (
@@ -58,12 +62,7 @@ export function PokemonCardSkeleton() {
 export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, initialData }: PokemonCardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const mounted = useMounted();
   
   const language = usePrimeDexStore(s => s.language);
   const systemLanguage = usePrimeDexStore(s => s.systemLanguage);
@@ -164,17 +163,17 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    isFav ? removeFavorite(pokemonId) : addFavorite(pokemonId);
+    if (isFav) { removeFavorite(pokemonId); } else { addFavorite(pokemonId); }
   };
 
   const toggleCompare = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    isComp ? removeFromCompare(pokemonId) : addToCompare(pokemonId);
+    if (isComp) { removeFromCompare(pokemonId); } else { addToCompare(pokemonId); }
   };
 
   const toggleTeam = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    isTeam ? removeFromTeam(pokemonId) : addToTeam(pokemonId);
+    if (isTeam) { removeFromTeam(pokemonId); } else { addToTeam(pokemonId); }
   };
 
   const handleToggleCaught = (e: React.MouseEvent) => {
@@ -304,7 +303,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         <div className="mt-auto w-full text-center z-10 pt-6">
           <h3 className="text-xl font-black text-foreground capitalize mb-3 tracking-tight group-hover:text-foreground/90 transition-colors">{displayName}</h3>
           <div className="flex justify-center gap-2 flex-wrap mb-2">
-            {types.map((typeItem: any, i: number) => {
+            {types.map((typeItem: PokemonCardType, i: number) => {
               const typeName = typeItem?.type?.name;
               if (!typeName) return null;
               return (
@@ -319,13 +318,3 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
     </Link>
   );
 });
-
-function PokeballIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M2 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="3" fill={props.className?.includes('text-red-500') ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

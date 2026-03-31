@@ -1,16 +1,15 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/lib/i18n';
 import { Trophy, Target, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { getPokemonMovesLocalized } from '@/lib/api/graphql';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TYPE_COLORS } from '@/types/pokemon';
+import { TYPE_COLORS, GraphQLPokemonMoveData } from '@/types/pokemon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 
 interface PokemonMovesProps {
   pokemonName: string;
@@ -61,7 +60,7 @@ export const PokemonMoves = ({ pokemonName }: PokemonMovesProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {moves.map((moveData: any) => {
+      {moves.map((moveData: GraphQLPokemonMoveData) => {
         const move = moveData.pokemon_v2_move;
         const moveNameInternal = move.name;
         const localizedName = move.pokemon_v2_movenames?.[0]?.name || moveNameInternal;

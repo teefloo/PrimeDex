@@ -2,38 +2,24 @@
 
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
-import axios from 'axios';
-import { PokemonDetail } from '@/types/pokemon';
+import { getPokemonDetail } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeftRight, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
-import { useState, useEffect } from 'react';
-
 import Image from 'next/image';
 
 export default function CompareBar() {
-  const { language, systemLanguage, compareList, removeFromCompare, clearCompare } = usePrimeDexStore();
-  const { t, i18n } = useTranslation();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const resolvedLang = mounted 
-    ? (language === 'auto' ? systemLanguage : language) 
-    : i18n.language || 'en';
+  const compareList = usePrimeDexStore(s => s.compareList);
+  const removeFromCompare = usePrimeDexStore(s => s.removeFromCompare);
+  const clearCompare = usePrimeDexStore(s => s.clearCompare);
+  const { t } = useTranslation();
 
   const pokemonQueries = useQueries({
     queries: compareList.map(id => ({
-      queryKey: ['pokemon-compare-bar', id, resolvedLang],
-      queryFn: async () => {
-        const { data } = await axios.get<PokemonDetail>(`https://pokeapi.co/api/v2/pokemon/${id}`);
-        return data;
-      },
+      queryKey: ['pokemon-compare-bar', id],
+      queryFn: () => getPokemonDetail(id.toString()),
       staleTime: 10 * 60 * 1000,
     }))
   });

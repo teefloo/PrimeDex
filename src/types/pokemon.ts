@@ -138,6 +138,13 @@ export interface PokemonSpecies {
   evolution_chain: {
     url: string;
   };
+  varieties: {
+    is_default: boolean;
+    pokemon: {
+      name: string;
+      url: string;
+    };
+  }[];
 }
 
 export interface PokemonEncounterDetail {
@@ -211,6 +218,8 @@ export const TYPE_COLORS: Record<string, string> = {
 export interface GraphQLPokemonSummary {
   id: number;
   name: string;
+  height?: number;
+  weight?: number;
   pokemon_v2_pokemonspecy: {
     generation_id: number;
     pokemon_v2_pokemonspeciesnames: Array<{

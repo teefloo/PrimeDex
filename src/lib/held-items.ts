@@ -192,10 +192,16 @@ const POISON_HEAL_POKEMON = [
   'gliscor', 'breloom', 'shroomish',
 ];
 
-export const getRecommendedItems = (pokemon: any): HeldItem[] => {
+interface HeldItemPokemon {
+  name: string;
+  stats: Array<{ stat?: { name: string }; name?: string; base_stat: number }>;
+  types: Array<{ type?: { name: string }; name?: string } | string>;
+}
+
+export const getRecommendedItems = (pokemon: HeldItemPokemon): HeldItem[] => {
   if (!pokemon || !pokemon.stats) return [];
 
-  const getStat = (name: string) => pokemon.stats.find((s: any) => s.stat?.name === name || s.name === name)?.base_stat || 0;
+  const getStat = (name: string) => pokemon.stats.find((s) => s.stat?.name === name || s.name === name)?.base_stat || 0;
   
   const hp = getStat('hp');
   const atk = getStat('attack');
@@ -205,7 +211,10 @@ export const getRecommendedItems = (pokemon: any): HeldItem[] => {
   const spe = getStat('speed');
   const totalStats = hp + atk + def + spa + spd + spe;
 
-  const types = pokemon.types.map((t: any) => t.type?.name || t.name || t);
+  const types = pokemon.types.map((t) => {
+    if (typeof t === 'string') return t;
+    return t.type?.name || t.name || '';
+  });
   const pokemonName = (pokemon.name || '').toLowerCase();
   
   const isPoison = types.includes('poison');

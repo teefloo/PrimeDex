@@ -9,11 +9,12 @@ import { useTranslation } from '@/lib/i18n';
 import { useQueryClient } from '@tanstack/react-query';
 import { pokemonKeys } from '@/lib/api/keys';
 import { getAllPokemonSummary } from '@/lib/api';
+import { useMounted } from '@/hooks/useMounted';
 
 export default function SearchBar() {
   const { searchTerm, setSearchTerm, language, systemLanguage } = usePrimeDexStore();
   const [localSearch, setLocalSearch] = useState(searchTerm);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
@@ -28,10 +29,6 @@ export default function SearchBar() {
       staleTime: 24 * 60 * 60 * 1000,
     });
   }, [queryClient, resolvedLang]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     setLocalSearch(searchTerm);

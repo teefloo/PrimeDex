@@ -5,11 +5,12 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { useQuery } from '@tanstack/react-query';
 import { getAllPokemonNames } from '@/lib/api';
 import { PokemonCard } from '@/components/pokemon/PokemonCard';
-import { Heart, Home, Loader2, Ghost } from 'lucide-react';
+import { Heart, Home, Ghost } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { useMemo, useEffect, useState, ButtonHTMLAttributes } from 'react';
+import { useMemo, ButtonHTMLAttributes } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { useMounted } from '@/hooks/useMounted';
 
 interface FavoriteButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -25,13 +26,8 @@ function FavoriteButton({ children, className, ...props }: FavoriteButtonProps) 
 
 export default function FavoritesPage() {
   const { favorites } = usePrimeDexStore();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { data: allNames, isLoading } = useQuery({
     queryKey: ['allPokemonNames'],

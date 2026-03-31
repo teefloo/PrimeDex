@@ -1,14 +1,14 @@
 'use client';
 
 import { motion, Variants } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/lib/i18n';
 import SearchBar from '@/components/pokemon/SearchBar';
 import TypeFilter from '@/components/pokemon/TypeFilter';
 import RegionFilter from '@/components/pokemon/RegionFilter';
 import FavoriteToggle from '@/components/pokemon/FavoriteToggle';
 import CaughtFilter from '@/components/pokemon/CaughtFilter';
 import SortSelector from '@/components/pokemon/SortSelector';
-import AdvancedFiltersWrapper from '@/components/pokemon/AdvancedFilters';
+import AdvancedFiltersWrapper from '@/components/pokemon/AdvancedFiltersWrapper';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },

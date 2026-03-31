@@ -1,17 +1,36 @@
 'use client';
 
-import { useInfiniteQuery, useQuery, useQueries } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { usePrimeDexStore } from '@/store/primedex';
-import { getPokemonList, getPokemonByType, getAllPokemonDetailed, getAllPokemonSummary, getPokemonByGeneration } from '@/lib/api';
+import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary, getPokemonByGeneration } from '@/lib/api';
 import { pokemonKeys } from '@/lib/api/keys';
-import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
+import { PokemonCard, PokemonCardSkeleton, PokemonCardProps } from './PokemonCard';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { useInView, motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, SearchX } from 'lucide-react';
-import { PokemonBasicData } from '@/types/pokemon';
+import { PokemonBasicData, GraphQLPokemonSummary, LocalizedNameEntry, PokemonSpecies } from '@/types/pokemon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
+
+interface PokemonResultItem {
+  id: number;
+  name: string;
+  url: string;
+  types?: string[];
+  localizedNames?: LocalizedNameEntry[];
+  generation_id?: number;
+  height?: number;
+  weight?: number;
+  stats?: number[];
+  base_stat_total?: number;
+  is_legendary?: boolean;
+  is_mythical?: boolean;
+  egg_groups?: string[];
+  color?: string;
+  shape?: string;
+  species?: Partial<PokemonSpecies>;
+}
 
 export default function PokemonList() {
   const { t } = useTranslation();
@@ -125,7 +144,7 @@ export default function PokemonList() {
   });
 
   // 4. Mode Filtre par Génération
-  const { data: genPokemon } = useQuery({
+  useQuery({
     queryKey: ['genPokemon', selectedGeneration, resolvedLang],
     queryFn: () => (selectedGeneration ? getPokemonByGeneration(selectedGeneration.toString()) : Promise.resolve([])),
     enabled: !!selectedGeneration,
@@ -134,12 +153,14 @@ export default function PokemonList() {
 
   const transformedSummary = useMemo(() => {
     if (!allSummary) return [];
-    return allSummary.map((p: any) => ({
+    return allSummary.map((p: GraphQLPokemonSummary) => ({
       name: p.name,
       url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
       id: p.id,
-      types: p.pokemon_v2_pokemontypes?.map((t: any) => t.pokemon_v2_type.name) || [],
-      localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map((n: any) => ({
+      height: p.height,
+      weight: p.weight,
+      types: p.pokemon_v2_pokemontypes?.map((t) => t.pokemon_v2_type.name) || [],
+      localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map((n) => ({
         language: n.pokemon_v2_language.name,
         name: n.name
       })) || [],
@@ -171,28 +192,25 @@ export default function PokemonList() {
   }, [allDetailed]);
 
   const [displayLimit, setDisplayLimit] = useState(40);
-  const [prevFiltersKey, setPrevFiltersKey] = useState('');
-  const currentFiltersKey = JSON.stringify({
+  const currentFiltersKey = useMemo(() => JSON.stringify({
     searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, 
     isLegendary, isMythical, selectedEggGroups, selectedColors, 
     selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, 
     minHp, heightRange, weightRange, isBasicMode, showCaughtOnly
-  });
+  }), [searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, showCaughtOnly]);
 
-  if (prevFiltersKey !== currentFiltersKey) {
-    setPrevFiltersKey(currentFiltersKey);
+  useEffect(() => {
     setDisplayLimit(40);
-  }
+  }, [currentFiltersKey]);
 
   const filteredAndSortedResults = useMemo(() => {
-    let results: any[] = [];
+    let results: PokemonResultItem[] = [];
 
     if (isBasicMode) {
+      const summaryMap = new Map(transformedSummary.map(d => [d.id, d]));
       results = infiniteData?.pages.flatMap((page) => page.results).map(p => {
         const id = parseInt(p.url.split('/').filter(Boolean).pop() || '0');
-        const summary = transformedSummary?.find(d => d.id === id);
-        if (summary) return summary;
-        return { ...p, id };
+        return summaryMap.get(id) || { ...p, id };
       }) || [];
     } else {
       // Use detailed data if advanced filters are active, otherwise use summary
@@ -236,52 +254,40 @@ export default function PokemonList() {
         if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
         if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
         if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
-        if (heightRange[0] > 0 || heightRange[1] < 25) {
-          results = results.filter(p => {
-            const h = (Number(p.height) || 0) / 10;
-            const meetsMin = h >= heightRange[0];
-            const meetsMax = heightRange[1] === 25 || h <= heightRange[1];
-            return meetsMin && meetsMax;
-          });
-        }
-        if (weightRange[0] > 0 || weightRange[1] < 1200) {
-          results = results.filter(p => {
-            const w = (Number(p.weight) || 0) / 10;
-            const meetsMin = w >= weightRange[0];
-            const meetsMax = weightRange[1] === 1200 || w <= weightRange[1];
-            return meetsMin && meetsMax;
-          });
-        }
       }
-    }
 
-    // Enrich results with height/weight from detailed data when available
-    // This ensures sorting works even when the source data is summary-only
-    let sortedResults = [...results];
-    if (sortBy.includes('height') || sortBy.includes('weight')) {
-      if (transformedDetailed.length > 0) {
-        const detailedMap = new Map(transformedDetailed.map(d => [d.id, d]));
-        sortedResults = sortedResults.map(p => {
-          if (p.height != null && p.weight != null) return p;
-          const detailed = detailedMap.get(p.id);
-          if (detailed) return { ...p, height: detailed.height, weight: detailed.weight };
-          return p;
+      if (heightRange[0] > 0 || heightRange[1] < 25) {
+        results = results.filter(p => {
+          const h = (Number(p.height) || 0) / 10;
+          const meetsMin = h >= heightRange[0];
+          const meetsMax = heightRange[1] === 25 || h <= heightRange[1];
+          return meetsMin && meetsMax;
+        });
+      }
+      if (weightRange[0] > 0 || weightRange[1] < 1200) {
+        results = results.filter(p => {
+          const w = (Number(p.weight) || 0) / 10;
+          const meetsMin = w >= weightRange[0];
+          const meetsMax = weightRange[1] === 1200 || w <= weightRange[1];
+          return meetsMin && meetsMax;
         });
       }
     }
+
+    const sortedResults = [...results];
 
     if (sortBy === 'id-asc') sortedResults.sort((a, b) => a.id - b.id);
     else if (sortBy === 'id-desc') sortedResults.sort((a, b) => b.id - a.id);
     else if (sortBy === 'name-asc') {
       sortedResults.sort((a, b) => {
-        const nameA = a.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || a.name;
-        const nameB = b.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || b.name;
+        const nameA = a.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || a.name;
+        const nameB = b.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || b.name;
         return nameA.localeCompare(nameB);
       });
     } else if (sortBy === 'name-desc') {
       sortedResults.sort((a, b) => {
-        const nameA = a.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || a.name;
-        const nameB = b.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || b.name;
+        const nameA = a.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || a.name;
+        const nameB = b.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || b.name;
         return nameB.localeCompare(nameA);
       });
     } else if (sortBy === 'height-asc') {
@@ -344,7 +350,7 @@ export default function PokemonList() {
     itemListElement: displayedPokemon.map((p, idx) => ({
       '@type': 'ListItem',
       position: idx + 1,
-      name: p.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || p.name,
+      name: p.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || p.name,
       url: `https://primedex.vercel.app/pokemon/${p.name}`,
     })),
   };
@@ -374,14 +380,14 @@ export default function PokemonList() {
           <AnimatePresence mode="popLayout">
             {displayedPokemon.map((p, idx) => (
               <motion.div layout key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
-                <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p, species: p.pokemon_v2_pokemonspecy }} />
+                <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p as PokemonCardProps['initialData'] extends { pokemon: infer P } ? P : never, species: p.species }} />
               </motion.div>
             ))}
           </AnimatePresence>
         ) : (
           displayedPokemon.map((p, idx) => (
             <div key={`${p.id}-${idx}`} className="pokemon-grid-item">
-              <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p, species: p.pokemon_v2_pokemonspecy }} />
+              <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p as PokemonCardProps['initialData'] extends { pokemon: infer P } ? P : never, species: p.species }} />
             </div>
           ))
         )}

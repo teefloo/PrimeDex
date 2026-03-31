@@ -3,7 +3,6 @@
 import Header from '@/components/layout/Header';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  getAllPokemonNames, 
   getAllPokemonSummary,
   getPokemonDetail, 
   getPokemonByGeneration, 
@@ -29,12 +28,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { PokemonDetail, GraphQLPokemonSummary } from '@/types/pokemon';
+import { PokemonDetail } from '@/types/pokemon';
 import { useTranslation } from '@/lib/i18n';
 import { usePrimeDexStore } from '@/store/primedex';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { useMounted } from '@/hooks/useMounted';
 
 type GameMode = 'time-attack' | 'survival' | 'marathon';
 type QuizChallenge = 'classic' | 'silhouette' | 'stats';
@@ -92,20 +92,15 @@ function QuizPageContent() {
   const [options, setOptions] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [selectedGen, setSelectedGen] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [filteredPool, setFilteredPool] = useState<Array<{ name: string; url?: string }>>([]);
+  const [filteredPool, setFilteredPool] = useState<Array<{ name: string }>>([]);
   const [isDaily, setIsDaily] = useState(false);
   const [dailyIndex, setDailyIndex] = useState(0);
   
   const { t, i18n } = useTranslation();
   const { language, systemLanguage, quizHighScores, updateQuizHighScore, addBadge, badges } = usePrimeDexStore();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  const mounted = useMounted();
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 
@@ -119,11 +114,11 @@ function QuizPageContent() {
 
   const getLocalizedName = useCallback((internalName: string) => {
     if (!allNames) return internalName;
-    const summary = allNames.find((p: any) => p.name === internalName);
+    const summary = allNames.find((p) => p.name === internalName);
     if (!summary) return internalName;
     
     const speciesNames = summary.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
-    const localized = speciesNames.find((sn: any) => sn.pokemon_v2_language?.name === resolvedLang);
+    const localized = speciesNames.find((sn) => sn.pokemon_v2_language?.name === resolvedLang);
     return localized?.name || internalName;
   }, [allNames, resolvedLang]);
 
@@ -216,7 +211,7 @@ function QuizPageContent() {
     setQuizChallenge(challenge);
     setGameMode(mode);
     
-    let pool = allNames || [];
+    let pool: Array<{ name: string; url?: string }> = allNames?.map((p) => ({ name: p.name })) || [];
     
     if (selectedGen || selectedType) {
       const genPool = selectedGen ? await getPokemonByGeneration(selectedGen) : null;
