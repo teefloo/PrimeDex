@@ -89,6 +89,9 @@ export default async function PokemonPage({ params, searchParams }: Props) {
   const lang = (sParams.lang as string) || 'en';
   const langId = lang === 'fr' ? 5 : 9;
 
+  // For mega/primal/ultra forms, derive the base species name
+  const baseName = name.split(/-(mega|primal|ultra)/)[0] || name;
+
   let pokemon: PokemonDetail;
   let species: PokemonSpecies | null = null;
   let localized: LocalizedPokemonData | null = null;
@@ -98,13 +101,16 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     const detailData = await getPokemonDetail(name);
     pokemon = detailData;
     
-    const [speciesData, localizedData, encountersData] = await Promise.all([
-      getPokemonSpecies(name).catch(() => null),
+    // Try species for the form name first, fall back to base name for mega/primal/ultra
+    const speciesName = name !== baseName ? name : baseName;
+    const [speciesData, localizedData, encountersData, fallbackSpeciesData] = await Promise.all([
+      getPokemonSpecies(speciesName).catch(() => null),
       getLocalizedPokemonData(name, langId).catch(() => null) as Promise<LocalizedPokemonData | null>,
-      getPokemonEncounters(detailData.id).catch(() => [])
+      getPokemonEncounters(detailData.id).catch(() => []),
+      name !== baseName ? getPokemonSpecies(baseName).catch(() => null) : Promise.resolve(null),
     ]);
 
-    species = speciesData;
+    species = speciesData || fallbackSpeciesData;
     localized = localizedData;
     encounters = encountersData;
   } catch {
