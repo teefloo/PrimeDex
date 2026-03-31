@@ -224,18 +224,31 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
 
   const { data: speciesData, isLoading, isError, error } = useQuery({
     queryKey: ['species-alternate-forms', speciesName, resolvedLang],
-    queryFn: () => getPokemonSpecies(speciesName),
+    queryFn: async () => {
+      const data = await getPokemonSpecies(speciesName);
+      console.log('AlternateFormsSection - speciesData for', speciesName, ':', {
+        hasVarieties: !!data?.varieties,
+        varietiesCount: data?.varieties?.length,
+        varieties: data?.varieties?.map(v => ({ name: v.pokemon.name, is_default: v.is_default })),
+      });
+      return data;
+    },
     staleTime: 24 * 60 * 60 * 1000,
     retry: 2,
   });
 
   const alternateForms: AlternateForm[] = (() => {
     if (!speciesData?.varieties) return [];
-    return speciesData.varieties
+    const allVarieties = speciesData.varieties;
+    console.log('AlternateFormsSection - all varieties:', allVarieties.map(v => v.pokemon.name));
+    
+    const filtered = allVarieties
       .filter(v => {
         if (v.is_default) return false;
         const name = v.pokemon.name;
-        return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
+        const isAltForm = name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
+        console.log(`Checking ${name}: is_default=${v.is_default}, isAltForm=${isAltForm}`);
+        return isAltForm;
       })
       .map(v => {
         const name = v.pokemon.name;
@@ -248,6 +261,9 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
           formType,
         };
       });
+    
+    console.log('AlternateFormsSection - filtered forms:', filtered);
+    return filtered;
   })();
 
   if (isLoading) {
@@ -258,7 +274,13 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
     );
   }
 
+  if (isError) {
+    console.error('AlternateFormsSection - Error loading species:', error);
+    return null;
+  }
+
   if (alternateForms.length === 0) {
+    console.log('AlternateFormsSection - No alternate forms found for', speciesName);
     return null;
   }
 
