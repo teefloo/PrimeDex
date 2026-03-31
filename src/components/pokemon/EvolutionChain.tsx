@@ -224,10 +224,7 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
 
   const { data: speciesData, isLoading, isError, error } = useQuery({
     queryKey: ['species-alternate-forms', speciesName, resolvedLang],
-    queryFn: async () => {
-      const data = await getPokemonSpecies(speciesName);
-      return data;
-    },
+    queryFn: () => getPokemonSpecies(speciesName),
     staleTime: 24 * 60 * 60 * 1000,
     retry: 2,
   });
@@ -260,6 +257,43 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
       </div>
     );
   }
+
+  if (isError) {
+    return (
+      <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
+            {t('detail.alternate_forms')}
+          </h3>
+          <Sparkles className="w-5 h-5 text-purple-400" />
+        </div>
+        <p className="text-center text-xs text-red-400">Error loading alternate forms</p>
+      </div>
+    );
+  }
+
+  if (alternateForms.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-12 pt-8 border-t border-white/10">
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <Sparkles className="w-5 h-5 text-purple-400" />
+        <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
+          {t('detail.alternate_forms')}
+        </h3>
+        <Sparkles className="w-5 h-5 text-purple-400" />
+      </div>
+      <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+        {alternateForms.map((form) => (
+          <AlternateFormItem key={form.name} form={form} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
   if (isError) {
     return (
