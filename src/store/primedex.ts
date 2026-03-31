@@ -219,10 +219,10 @@ export const usePrimeDexStore = create<PrimeDexStore>()(
       minHp: 0,
       setMinHp: (minHp) => set({ minHp }),
 
-      heightRange: [0, 20],
+      heightRange: [0, 25],
       setHeightRange: (range) => set({ heightRange: range }),
 
-      weightRange: [0, 1000],
+      weightRange: [0, 1200],
       setWeightRange: (range) => set({ weightRange: range }),
 
       selectedRegion: null,
@@ -288,11 +288,12 @@ export const usePrimeDexStore = create<PrimeDexStore>()(
         minDefense: 0,
         minSpeed: 0,
         minHp: 0,
-        heightRange: [0, 20],
-        weightRange: [0, 1000],
+        heightRange: [0, 25],
+        weightRange: [0, 1200],
         selectedRegion: null,
         showFavoritesOnly: false,
         showCaughtOnly: 'all',
+        sortBy: 'id-asc',
       }),
 
       // Quiz

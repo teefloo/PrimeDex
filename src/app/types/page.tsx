@@ -20,6 +20,9 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const TypeChart = dynamic(() => import('@/components/pokemon/TypeChart'), { ssr: false });
 
 export default function TypesPage() {
   const { t } = useTranslation();
@@ -71,6 +74,11 @@ export default function TypesPage() {
         </section>
 
         <div className="grid lg:grid-cols-12 gap-8">
+          {/* Full-width Type Chart Matrix */}
+          <div className="lg:col-span-12">
+            <TypeChart onTypeClick={(type) => setSelectedType(type)} />
+          </div>
+
           {/* Type Selector Sidebar */}
           <div className="lg:col-span-4 space-y-4">
             <div className="glass-panel p-6 rounded-[2.5rem]">

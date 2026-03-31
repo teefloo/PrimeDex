@@ -3,7 +3,7 @@ import { getPokemonDetail, getPokemonSpecies, getLocalizedPokemonData, getPokemo
 import { PokemonDetailClient } from './PokemonDetailClient';
 import Header from '@/components/layout/Header';
 import Script from 'next/script';
-import { PokemonDetail, PokemonSpecies, PokemonEncounter } from '@/types/pokemon';
+import { PokemonDetail, PokemonSpecies, PokemonEncounter, LocalizedPokemonData } from '@/types/pokemon';
 
 interface Props {
   params: Promise<{ name: string }>;
@@ -26,10 +26,10 @@ export async function generateMetadata(
     
     // lang ID 5 is French, 9 is English in PokeAPI GraphQL
     const langId = lang === 'fr' ? 5 : 9;
-    const localizedData = await getLocalizedPokemonData(name, langId).catch(() => null);
+    const localizedData = await getLocalizedPokemonData(name, langId).catch(() => null) as LocalizedPokemonData | null;
     
-    const localizedName = (localizedData as any)?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
-    const flavorTexts = (localizedData as any)?.pokemon_v2_pokemonspeciesflavortexts || [];
+    const localizedName = localizedData?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
+    const flavorTexts = localizedData?.pokemon_v2_pokemonspeciesflavortexts || [];
     const description = flavorTexts[0]?.flavor_text?.replace(/\f/g, ' ') || '';
 
     const title = `${localizedName.charAt(0).toUpperCase() + localizedName.slice(1)} | PrimeDex`;
@@ -91,7 +91,7 @@ export default async function PokemonPage({ params, searchParams }: Props) {
 
   let pokemon: PokemonDetail;
   let species: PokemonSpecies | null = null;
-  let localized: any = null;
+  let localized: LocalizedPokemonData | null = null;
   let encounters: PokemonEncounter[] = [];
 
   try {
@@ -100,7 +100,7 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     
     const [speciesData, localizedData, encountersData] = await Promise.all([
       getPokemonSpecies(name).catch(() => null),
-      getLocalizedPokemonData(name, langId).catch(() => null),
+      getLocalizedPokemonData(name, langId).catch(() => null) as Promise<LocalizedPokemonData | null>,
       getPokemonEncounters(detailData.id).catch(() => [])
     ]);
 
@@ -118,14 +118,14 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     );
   }
 
-  const displayName = (localized as any)?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
+  const displayName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
 
   // JSON-LD structured data for Pokemon
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'IndividualProduct',
     name: displayName,
-    description: (localized as any)?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ') || `Stats and details for ${displayName}`,
+    description: localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ') || `Stats and details for ${displayName}`,
     image: pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default,
     sku: pokemon.id.toString(),
     brand: {

@@ -82,6 +82,21 @@ export interface PokemonDetail {
   };
 }
 
+export interface LocalizedPokemonData {
+  pokemon_v2_pokemonspeciesnames: Array<{
+    name: string;
+    pokemon_v2_language: {
+      name: string;
+    };
+  }>;
+  pokemon_v2_pokemonspeciesflavortexts: Array<{
+    flavor_text: string;
+    pokemon_v2_language: {
+      name: string;
+    };
+  }>;
+}
+
 export interface PokemonSpecies {
   flavor_text_entries: {
     flavor_text: string;
@@ -125,22 +140,26 @@ export interface PokemonSpecies {
   };
 }
 
+export interface PokemonEncounterDetail {
+  chance: number;
+  condition_values: Array<{ name: string; url: string }>;
+  method: { name: string; url: string };
+  min_level: number;
+  max_level: number;
+}
+
+export interface PokemonEncounterVersionDetail {
+  max_chance: number;
+  encounter_details: PokemonEncounterDetail[];
+  version: { name: string; url: string };
+}
+
 export interface PokemonEncounter {
   location_area: {
     name: string;
     url: string;
   };
-  version_details: {
-    max_chance: number;
-    encounter_details: {
-      chance: number;
-      condition_values: { name: string; url: string }[];
-      method: { name: string; url: string };
-      min_level: number;
-      max_level: number;
-    }[];
-    version: { name: string; url: string };
-  }[];
+  version_details: PokemonEncounterVersionDetail[];
 }
 
 export interface PokemonBasicData {
@@ -188,3 +207,80 @@ export const TYPE_COLORS: Record<string, string> = {
   steel: '#B7B7CE',
   fairy: '#D685AD',
 };
+
+export interface GraphQLPokemonSummary {
+  id: number;
+  name: string;
+  pokemon_v2_pokemonspecy: {
+    generation_id: number;
+    pokemon_v2_pokemonspeciesnames: Array<{
+      name: string;
+      pokemon_v2_language: { name: string };
+    }>;
+  } | null;
+  pokemon_v2_pokemontypes: Array<{
+    pokemon_v2_type: { name: string };
+  }>;
+}
+
+export interface GraphQLPokemonMoveData {
+  pokemon_v2_move: {
+    name: string;
+    power: number | null;
+    accuracy: number | null;
+    pokemon_v2_type: { name: string };
+    pokemon_v2_movedamageclass: { name: string };
+    pokemon_v2_movenames: Array<{ name: string }>;
+    pokemon_v2_moveflavortexts: Array<{ flavor_text: string }>;
+  };
+}
+
+export interface LocalizedNameEntry {
+  name: string;
+  language: string;
+}
+
+export interface PokemonCardType {
+  type: { name: string; url?: string };
+  slot?: number;
+}
+
+export interface PokemonFilters {
+  types?: string[];
+  generation?: number | null;
+  sortBy?: string;
+  searchTerm?: string;
+  selectedEggGroups?: string[];
+  selectedColors?: string[];
+  selectedShapes?: string[];
+  isLegendary?: boolean | null;
+  isMythical?: boolean | null;
+  minBaseStats?: number;
+  minAttack?: number;
+  minDefense?: number;
+  minSpeed?: number;
+  minHp?: number;
+  heightRange?: [number, number];
+  weightRange?: [number, number];
+  selectedRegion?: string | null;
+  showFavoritesOnly?: boolean;
+  showCaughtOnly?: 'all' | 'caught' | 'uncaught';
+  caughtPokemon?: number[];
+  favorites?: number[];
+}
+
+export interface PokemonSummaryItem {
+  id: number;
+  name: string;
+  types: string[];
+  height?: number;
+  weight?: number;
+  stats?: number[];
+  generation?: number;
+  localizedNames?: LocalizedNameEntry[];
+  isLegendary?: boolean;
+  isMythical?: boolean;
+  color?: string;
+  shape?: string;
+  eggGroups?: string[];
+}

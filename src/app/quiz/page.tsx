@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import { useQuery } from '@tanstack/react-query';
 import { 
   getAllPokemonNames, 
+  getAllPokemonSummary,
   getPokemonDetail, 
   getPokemonByGeneration, 
   getPokemonByType 
@@ -28,7 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { PokemonDetail } from '@/types/pokemon';
+import { PokemonDetail, GraphQLPokemonSummary } from '@/types/pokemon';
 import { useTranslation } from '@/lib/i18n';
 import { usePrimeDexStore } from '@/store/primedex';
 import { toast } from 'sonner';
@@ -94,7 +95,7 @@ function QuizPageContent() {
   const [mounted, setMounted] = useState(false);
   const [selectedGen, setSelectedGen] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [filteredPool, setFilteredPool] = useState<{ name: string; url: string }[]>([]);
+  const [filteredPool, setFilteredPool] = useState<Array<{ name: string; url?: string }>>([]);
   const [isDaily, setIsDaily] = useState(false);
   const [dailyIndex, setDailyIndex] = useState(0);
   
@@ -111,10 +112,20 @@ function QuizPageContent() {
     : i18n.language || 'en';
 
   const { data: allNames } = useQuery({
-    queryKey: ['allPokemonNames', resolvedLang],
-    queryFn: getAllPokemonNames,
+    queryKey: ['allPokemonSummary'],
+    queryFn: getAllPokemonSummary,
     staleTime: 30 * 60 * 1000,
   });
+
+  const getLocalizedName = useCallback((internalName: string) => {
+    if (!allNames) return internalName;
+    const summary = allNames.find((p: any) => p.name === internalName);
+    if (!summary) return internalName;
+    
+    const speciesNames = summary.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
+    const localized = speciesNames.find((sn: any) => sn.pokemon_v2_language?.name === resolvedLang);
+    return localized?.name || internalName;
+  }, [allNames, resolvedLang]);
 
   // Handle target pokemon from query params
   useEffect(() => {
@@ -672,7 +683,7 @@ function QuizPageContent() {
                             : "bg-secondary/10 border-white/5 opacity-40"
                     )}
                   >
-                    {option}
+                    {getLocalizedName(option)}
                   </button>
                 ))}
               </div>

@@ -38,13 +38,11 @@ export const getPokemonCards = async (localizedName: string, lang: string, engli
   try {
     const cached = await getCachedData<TCGCard[]>(cacheKey);
     if (cached) {
-      console.log(`[TCG API] Returning cached data for: ${localizedName} (${tcgLang})`);
       return cached;
     }
     
     // Fetch directly from the lightweight REST endpoint
     const url = `/${tcgLang}/cards?name=${encodeURIComponent(localizedName)}`;
-    console.log(`[TCG API] Calling endpoint: ${url}`);
     
     const { data } = await tcgClient.get<TCGCard[]>(url);
     
@@ -52,15 +50,12 @@ export const getPokemonCards = async (localizedName: string, lang: string, engli
     // To avoid hitting API rate limits with 30+ detail requests per page,
     // we simply filter to only keep cards that have a valid image URL in the base response.
     let enrichedCards = data.filter(card => !!card.image);
-    console.log(`[TCG API] Processed ${enrichedCards.length} cards instantly`);
 
     // Fallback to English if no cards found and we aren't already in English
     if (enrichedCards.length === 0 && tcgLang !== 'en' && englishName) {
-      console.log(`[TCG API] No cards found for ${localizedName} in ${tcgLang}, falling back to English for ${englishName}`);
       const fallbackUrl = `/en/cards?name=${encodeURIComponent(englishName)}`;
       const { data: fallbackData } = await tcgClient.get<TCGCard[]>(fallbackUrl);
       enrichedCards = fallbackData.filter(card => !!card.image);
-      console.log(`[TCG API] Fallback found ${enrichedCards.length} cards`);
     }
     
     await setCachedData(cacheKey, enrichedCards);

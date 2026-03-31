@@ -15,13 +15,13 @@ export function Breadcrumbs() {
   const pathSegments = pathname.split('/').filter(Boolean);
   
   const breadcrumbs = [
-    { label: t('common.home'), href: '/', icon: true },
+    { label: t('nav.home'), href: '/', icon: true },
     ...pathSegments.map((segment, index) => {
       const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
       
       // Handle special cases for labels
       let label = segment;
-      if (segment === 'pokemon') label = t('common.pokemon');
+      if (segment === 'pokemon') label = t('list.pokemon');
       else if (segment.match(/^[0-9]+$/)) label = `#${segment}`; // Pokemon ID
       else label = segment.charAt(0).toUpperCase() + segment.slice(1);
 

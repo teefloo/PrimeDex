@@ -156,6 +156,16 @@ export const PokemonCard3D: React.FC<PokemonCard3DProps> = ({
     } as React.PointerEvent<HTMLDivElement>);
   }, [handlePointerMove]);
 
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+    };
+  }, []);
+
   // Seed for cosmos/background
   const [seeds, setSeeds] = useState({ seedx: 0, seedy: 0, cx: 0, cy: 0 });
   useEffect(() => {

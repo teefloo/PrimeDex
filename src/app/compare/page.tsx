@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
 import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
-import { TYPE_COLORS } from '@/types/pokemon';
+import { TYPE_COLORS, PokemonDetail, PokemonSpecies } from '@/types/pokemon';
 import { 
   ArrowLeft, 
   Loader2, 
@@ -75,7 +75,7 @@ export default function ComparePage() {
 
   const isLoading = pokemonQueries.some(q => q.isLoading);
   const compareData = useMemo(() => 
-    pokemonQueries.map(q => q.data).filter((d): d is { pokemon: any, species: any } => !!d),
+    pokemonQueries.map(q => q.data).filter((d): d is { pokemon: PokemonDetail, species: PokemonSpecies | null } => !!d),
     [pokemonQueries]
   );
 
@@ -89,7 +89,7 @@ export default function ComparePage() {
       };
       compareData.forEach(d => {
         if (d.pokemon) {
-          const s = d.pokemon.stats.find((st: any) => st.stat.name === stat);
+          const s = d.pokemon.stats.find((st) => st.stat.name === stat);
           data[d.pokemon.name] = s ? s.base_stat : 0;
         }
       });
@@ -112,10 +112,10 @@ export default function ComparePage() {
 
     compareData.forEach((d, idx) => {
       if (!d.pokemon) return;
-      const total = d.pokemon.stats.reduce((acc: number, s: any) => acc + s.base_stat, 0);
+      const total = d.pokemon.stats.reduce((acc: number, s) => acc + s.base_stat, 0);
       if (total > stats.total.val) stats.total = { val: total, index: idx };
 
-      d.pokemon.stats.forEach((s: any) => {
+      d.pokemon.stats.forEach((s) => {
         if (s.base_stat > (stats[s.stat.name]?.val || -1)) {
           stats[s.stat.name] = { val: s.base_stat, index: idx };
         }
@@ -200,7 +200,7 @@ export default function ComparePage() {
                         {compareData.map((d) => d.pokemon && (
                           <Radar
                             key={d.pokemon.id}
-                            name={d.species?.names?.find((n: any) => n.language.name === resolvedLang)?.name || d.pokemon.name}
+                            name={d.species?.names?.find((n) => n.language.name === resolvedLang)?.name || d.pokemon.name}
                             dataKey={d.pokemon.name}
                             stroke={TYPE_COLORS[d.pokemon.types[0].type.name]}
                             fill={TYPE_COLORS[d.pokemon.types[0].type.name]}
@@ -223,7 +223,7 @@ export default function ComparePage() {
                         if (key === 'total') return null;
                         const winner = compareData[info.index];
                         if (!winner || !winner.pokemon) return null;
-                        const winnerName = winner.species?.names?.find((n: any) => n.language.name === resolvedLang)?.name || winner.pokemon.name;
+                        const winnerName = winner.species?.names?.find((n) => n.language.name === resolvedLang)?.name || winner.pokemon.name;
                         return (
                           <div key={key} className="bg-secondary/20 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 hover:border-primary/30 transition-all">
                             <span className="text-[10px] font-black uppercase text-foreground/40">{statLabels[key]}</span>
@@ -245,7 +245,7 @@ export default function ComparePage() {
                           <div>
                             <p className="text-[10px] font-black uppercase text-primary tracking-widest">{t('compare.overall_champion')}</p>
                             <h4 className="text-xl font-black capitalize">
-                              {compareData[bestStats.total.index]?.species?.names?.find((n: any) => n.language.name === resolvedLang)?.name || compareData[bestStats.total.index]?.pokemon?.name}
+                              {compareData[bestStats.total.index]?.species?.names?.find((n) => n.language.name === resolvedLang)?.name || compareData[bestStats.total.index]?.pokemon?.name}
                             </h4>
                           </div>
                         </div>
@@ -271,9 +271,9 @@ export default function ComparePage() {
                 const p = d.pokemon;
                 const s_data = d.species;
                 const color = TYPE_COLORS[p.types[0].type.name];
-                const totalStats = p.stats.reduce((acc: number, s: any) => acc + s.base_stat, 0);
+                const totalStats = p.stats.reduce((acc: number, s) => acc + s.base_stat, 0);
                 const isOverallBest = bestStats.total?.index === idx;
-                const displayName = s_data?.names?.find((n: any) => n.language.name === resolvedLang)?.name || p.name;
+                const displayName = s_data?.names?.find((n) => n.language.name === resolvedLang)?.name || p.name;
 
                 return (
                   <motion.div 
@@ -307,7 +307,7 @@ export default function ComparePage() {
                       </div>
                       <h3 className="text-2xl font-black capitalize mb-4">{displayName}</h3>
                       <div className="flex gap-2 justify-center">
-                        {p.types.map((typeItem: any) => (
+                        {p.types.map((typeItem) => (
                           <span 
                             key={typeItem.type.name} 
                             className="glass-tag px-4 py-1 text-[10px]"
@@ -348,7 +348,7 @@ export default function ComparePage() {
                           </div>
                         </div>
                         <div className="space-y-3">
-                          {p.stats.map((s: any) => {
+                          {p.stats.map((s) => {
                             const isBest = bestStats[s.stat.name]?.index === idx;
                             return (
                               <div key={s.stat.name} className="space-y-1">
@@ -380,7 +380,7 @@ export default function ComparePage() {
                           <Sparkles className="w-3 h-3" /> {t('detail.abilities')}
                         </h4>
                         <div className="flex flex-wrap gap-2">
-                          {p.abilities.map((a: any) => (
+                          {p.abilities.map((a) => (
                             <div 
                               key={a.ability.name} 
                               className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"

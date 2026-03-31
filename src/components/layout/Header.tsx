@@ -153,6 +153,10 @@ export default function Header() {
               <Users className="w-3.5 h-3.5" /> {t('nav.team')}
             </HeaderLink>
             <div className="w-px h-4 bg-white/10" />
+            <HeaderLink href="/types" variant="ghost" size="sm" className="gap-2 font-black uppercase tracking-[0.15em] text-[10px] text-foreground/60 hover:text-primary">
+              <Sparkles className="w-3.5 h-3.5" /> {t('nav.types')}
+            </HeaderLink>
+            <div className="w-px h-4 bg-white/10" />
             <HeaderLink href="/quiz" variant="ghost" size="sm" className="gap-2 font-black uppercase tracking-[0.15em] text-[10px] text-foreground/60 hover:text-primary">
               <BrainCircuit className="w-3.5 h-3.5" /> {t('nav.quiz')}
             </HeaderLink>

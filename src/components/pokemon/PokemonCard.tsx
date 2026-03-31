@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { PokemonDetail, PokemonSpecies, TYPE_COLORS } from '@/types/pokemon';
+import { PokemonDetail, PokemonSpecies, TYPE_COLORS, PokemonCardType, LocalizedNameEntry } from '@/types/pokemon';
 import { motion } from 'framer-motion';
 import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
@@ -12,12 +12,20 @@ import { SVGProps, memo, useCallback, useState, useEffect } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface GqlPokemonData {
+  id?: number;
+  name?: string;
+  types?: PokemonDetail['types'];
+  pokemon_v2_pokemontypes?: Array<{ pokemon_v2_type: { name: string } }>;
+  localizedNames?: LocalizedNameEntry[];
+}
+
 interface PokemonCardProps {
   name: string;
   url: string;
   index?: number;
   initialData?: {
-    pokemon: Partial<PokemonDetail>;
+    pokemon: Partial<PokemonDetail> & GqlPokemonData;
     species?: Partial<PokemonSpecies>;
   };
 }
@@ -53,7 +61,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
   
   const language = usePrimeDexStore(s => s.language);
@@ -73,6 +82,13 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
 
   const resolvedLang = language === 'auto' ? systemLanguage : language;
 
+  // Only fetch from REST when we have no usable display data at all
+  // (no types, no name to show). The grid passes initialData from GraphQL summary
+  // which already contains types and localized names — no need for extra fetches.
+  const pokemonGql = initialData?.pokemon as GqlPokemonData | undefined;
+  const hasUsableData = !!(initialData?.pokemon?.id && 
+    ((pokemonGql?.types?.length ?? 0) > 0 || (pokemonGql?.pokemon_v2_pokemontypes?.length ?? 0) > 0));
+
   const { data, isLoading } = useQuery<{
     pokemon: Partial<PokemonDetail>;
     species?: Partial<PokemonSpecies>;
@@ -90,7 +106,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
       };
     },
     staleTime: 10 * 60 * 1000,
-    enabled: !initialData?.species?.names || initialData.species.names.length === 0,
+    gcTime: 30 * 60 * 1000,
+    enabled: !hasUsableData,
   });
 
   const displayData = data || initialData;
@@ -130,14 +147,18 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   const teamFull = mounted && team.length >= 6;
   const compareFull = mounted && compareList.length >= 3;
 
-  const typesRaw = pokemon.types || (pokemon as any).pokemon_v2_pokemontypes || [];
-  const types = typesRaw.map((t: any) => {
+  const pokemonGqlData = pokemon as unknown as GqlPokemonData;
+  const typesRaw: (PokemonDetail['types'][number] | { pokemon_v2_type: { name: string } })[] = pokemon.types || pokemonGqlData.pokemon_v2_pokemontypes || [];
+  const types: PokemonCardType[] = typesRaw.map((t): PokemonCardType | null => {
     if (!t) return null;
     if (typeof t === 'string') return { type: { name: t } };
-    if (t.type?.name) return t;
-    if (t.pokemon_v2_type?.name) return { type: { name: t.pokemon_v2_type.name } };
+    if ('type' in t && (t as { type?: { name?: string } }).type?.name) return t as PokemonCardType;
+    if ('pokemon_v2_type' in t) {
+      const gqlType = t as { pokemon_v2_type?: { name?: string } };
+      if (gqlType.pokemon_v2_type?.name) return { type: { name: gqlType.pokemon_v2_type.name } };
+    }
     return null;
-  }).filter(Boolean);
+  }).filter((t): t is PokemonCardType => t !== null);
   const mainType = types[0]?.type?.name || 'normal';
   const color = TYPE_COLORS[mainType] || '#A8A77A';
 
@@ -166,9 +187,9 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
       const entry = species.names.find(n => n?.language?.name === resolvedLang) || species.names.find(n => n?.language?.name === 'en');
       if (entry?.name) return entry.name;
     }
-    const gqlSpeciesData = pokemon as any;
+    const gqlSpeciesData = pokemonGqlData;
     if (gqlSpeciesData.localizedNames?.length) {
-      const entry = gqlSpeciesData.localizedNames.find((n: any) => n?.language === resolvedLang) || gqlSpeciesData.localizedNames.find((n: any) => n?.language === 'en');
+      const entry = gqlSpeciesData.localizedNames.find((n: LocalizedNameEntry) => n?.language === resolvedLang) || gqlSpeciesData.localizedNames.find((n: LocalizedNameEntry) => n?.language === 'en');
       if (entry?.name) return entry.name;
     }
     return pokemon.name || name;

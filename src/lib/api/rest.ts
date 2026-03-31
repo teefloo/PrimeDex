@@ -135,3 +135,25 @@ export const getMoveDetail = async (name: string): Promise<MoveDetail> => {
   await setCachedData(cacheKey, data);
   return data;
 };
+
+export interface AbilityDetail {
+  id: number;
+  name: string;
+  is_main_series: boolean;
+  names: { name: string; language: { name: string } }[];
+  effect_entries: { effect: string; short_effect: string; language: { name: string } }[];
+  flavor_text_entries: { flavor_text: string; language: { name: string }; version_group: { name: string } }[];
+}
+
+export const getAbilityDetail = async (name: string): Promise<AbilityDetail> => {
+  const cacheKey = `ability-detail-${name}`;
+  try {
+    const { data } = await apiClient.get<AbilityDetail>(`/ability/${name}`);
+    await setCachedData(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = await getCachedData<AbilityDetail>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
+};

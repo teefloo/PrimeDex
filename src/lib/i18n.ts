@@ -25,3 +25,5 @@ export const useTranslation = () => useReactTranslation();
 export const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options);
 
 export default i18n;
+
+// force reload

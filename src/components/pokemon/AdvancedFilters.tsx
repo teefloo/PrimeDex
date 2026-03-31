@@ -97,8 +97,8 @@ export default function AdvancedFilters() {
     minDefense > 0,
     minSpeed > 0,
     minHp > 0,
-    heightRange[0] > 0 || heightRange[1] < 20,
-    weightRange[0] > 0 || weightRange[1] < 1000
+    heightRange[0] > 0 || heightRange[1] < 25,
+    weightRange[0] > 0 || weightRange[1] < 1200
   ].filter(Boolean).length;
 
   return (
@@ -419,7 +419,7 @@ export default function AdvancedFilters() {
               <Slider
                 value={heightRange}
                 onValueChange={(val) => setHeightRange(val as [number, number])}
-                max={20}
+                max={25}
                 step={0.1}
                 className="py-4 cursor-pointer"
               />
@@ -440,7 +440,7 @@ export default function AdvancedFilters() {
               <Slider
                 value={weightRange}
                 onValueChange={(val) => setWeightRange(val as [number, number])}
-                max={1000}
+                max={1200}
                 step={1}
                 className="py-4 cursor-pointer"
               />

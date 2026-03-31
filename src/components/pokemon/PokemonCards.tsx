@@ -30,9 +30,9 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
     queryFn: () => getPokemonCards(queryName, tcgLang, name),
     enabled: !!queryName,
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 48, // Keep in garbage collection for 48 hours
+    retry: 2,
   });
-
-  console.log(`[PokemonCards] Render - name: ${queryName}, lang: ${tcgLang}, isLoading: ${isLoading}, hasError: ${!!error}, cardsCount: ${cards?.length || 0}`);
 
   if (isLoading) {
     return (

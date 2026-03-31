@@ -64,9 +64,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5 * 60 * 1000,
+        staleTime: 10 * 60 * 1000, // 10 minutes default
+        gcTime: 30 * 60 * 1000, // Keep unused queries 30min before GC
         retry: 2,
         refetchOnWindowFocus: false,
+        refetchOnReconnect: 'always',
       },
     },
   }));

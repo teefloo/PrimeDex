@@ -39,7 +39,11 @@ export default function PokemonList() {
   const systemLanguage = usePrimeDexStore(s => s.systemLanguage);
   const showCaughtOnly = usePrimeDexStore(s => s.showCaughtOnly);
   const caughtPokemon = usePrimeDexStore(s => s.caughtPokemon);
-  const resetFilters = usePrimeDexStore(s => s.resetFilters);
+  const storeResetFilters = usePrimeDexStore(s => s.resetFilters);
+  const resetFilters = () => {
+    storeResetFilters();
+    setDisplayLimit(40);
+  };
 
   const resolvedLang = language === 'auto' ? systemLanguage : language;
 
@@ -62,9 +66,9 @@ export default function PokemonList() {
     minSpeed === 0 &&
     minHp === 0 &&
     heightRange[0] === 0 &&
-    heightRange[1] === 20 &&
+    heightRange[1] === 25 &&
     weightRange[0] === 0 &&
-    weightRange[1] === 1000 &&
+    weightRange[1] === 1200 &&
     sortBy === 'id-asc';
 
   // Advanced mode check
@@ -79,26 +83,28 @@ export default function PokemonList() {
     minSpeed > 0 || 
     minHp > 0 || 
     heightRange[0] > 0 || 
-    heightRange[1] < 20 || 
+    heightRange[1] < 25 || 
     weightRange[0] > 0 || 
-    weightRange[1] < 1000 ||
+    weightRange[1] < 1200 ||
     sortBy.includes('height') ||
     sortBy.includes('weight');
 
   // 1. Summary Data : Loaded on demand (Search or Filters)
-  const { data: allSummary } = useQuery({
+  const { data: allSummary, isLoading: isLoadingSummary } = useQuery({
     queryKey: pokemonKeys.allSummary(resolvedLang),
     queryFn: () => getAllPokemonSummary(),
     enabled: !isBasicMode || !!searchTerm, // Load only if filtering or searching
     staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 48 * 60 * 60 * 1000, // Keep 48h in garbage collection
   });
 
   // 2. Detailed Data : Loaded ONLY if advanced filters are used
-  const { data: allDetailed } = useQuery({
+  const { data: allDetailed, isLoading: isLoadingDetailed } = useQuery({
     queryKey: pokemonKeys.allDetailed(resolvedLang),
     queryFn: () => getAllPokemonDetailed(),
     enabled: isAdvancedFilterActive,
     staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 48 * 60 * 60 * 1000,
   });
 
   // 3. Normal Mode : Infinite Scroll
@@ -115,6 +121,7 @@ export default function PokemonList() {
     getNextPageParam: (lastPage) => lastPage.nextParam,
     enabled: isBasicMode,
     staleTime: 60 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000, // Keep pages 2h in GC
   });
 
   // 4. Mode Filtre par Génération
@@ -229,22 +236,40 @@ export default function PokemonList() {
         if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
         if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
         if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
-        if (heightRange[0] > 0 || heightRange[1] < 20) {
+        if (heightRange[0] > 0 || heightRange[1] < 25) {
           results = results.filter(p => {
-            const h = (p.height || 0) / 10;
-            return h >= heightRange[0] && h <= heightRange[1];
+            const h = (Number(p.height) || 0) / 10;
+            const meetsMin = h >= heightRange[0];
+            const meetsMax = heightRange[1] === 25 || h <= heightRange[1];
+            return meetsMin && meetsMax;
           });
         }
-        if (weightRange[0] > 0 || weightRange[1] < 1000) {
+        if (weightRange[0] > 0 || weightRange[1] < 1200) {
           results = results.filter(p => {
-            const w = (p.weight || 0) / 10;
-            return w >= weightRange[0] && w <= weightRange[1];
+            const w = (Number(p.weight) || 0) / 10;
+            const meetsMin = w >= weightRange[0];
+            const meetsMax = weightRange[1] === 1200 || w <= weightRange[1];
+            return meetsMin && meetsMax;
           });
         }
       }
     }
 
-    const sortedResults = [...results];
+    // Enrich results with height/weight from detailed data when available
+    // This ensures sorting works even when the source data is summary-only
+    let sortedResults = [...results];
+    if (sortBy.includes('height') || sortBy.includes('weight')) {
+      if (transformedDetailed.length > 0) {
+        const detailedMap = new Map(transformedDetailed.map(d => [d.id, d]));
+        sortedResults = sortedResults.map(p => {
+          if (p.height != null && p.weight != null) return p;
+          const detailed = detailedMap.get(p.id);
+          if (detailed) return { ...p, height: detailed.height, weight: detailed.weight };
+          return p;
+        });
+      }
+    }
+
     if (sortBy === 'id-asc') sortedResults.sort((a, b) => a.id - b.id);
     else if (sortBy === 'id-desc') sortedResults.sort((a, b) => b.id - a.id);
     else if (sortBy === 'name-asc') {
@@ -259,11 +284,14 @@ export default function PokemonList() {
         const nameB = b.localizedNames?.find((n: any) => n.language === resolvedLang)?.name || b.name;
         return nameB.localeCompare(nameA);
       });
-    } else if (isAdvancedFilterActive) {
-      if (sortBy === 'height-asc') sortedResults.sort((a, b) => a.height - b.height);
-      else if (sortBy === 'height-desc') sortedResults.sort((a, b) => b.height - a.height);
-      else if (sortBy === 'weight-asc') sortedResults.sort((a, b) => a.weight - b.weight);
-      else if (sortBy === 'weight-desc') sortedResults.sort((a, b) => b.weight - a.weight);
+    } else if (sortBy === 'height-asc') {
+      sortedResults.sort((a, b) => (Number(a.height) || 0) - (Number(b.height) || 0));
+    } else if (sortBy === 'height-desc') {
+      sortedResults.sort((a, b) => (Number(b.height) || 0) - (Number(a.height) || 0));
+    } else if (sortBy === 'weight-asc') {
+      sortedResults.sort((a, b) => (Number(a.weight) || 0) - (Number(b.weight) || 0));
+    } else if (sortBy === 'weight-desc') {
+      sortedResults.sort((a, b) => (Number(b.weight) || 0) - (Number(a.weight) || 0));
     }
 
     return sortedResults;
@@ -285,7 +313,11 @@ export default function PokemonList() {
 
   const useAnimations = displayedPokemon.length < 60;
 
-  if (isLoadingInfinite && isBasicMode) {
+  const isDataLoading = (isBasicMode && isLoadingInfinite) || 
+                        (!isBasicMode && isAdvancedFilterActive && isLoadingDetailed) || 
+                        (!isBasicMode && !isAdvancedFilterActive && isLoadingSummary);
+
+  if (isDataLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2 mt-8">
         {Array.from({ length: 10 }).map((_, i) => <PokemonCardSkeleton key={i} />)}
@@ -293,7 +325,7 @@ export default function PokemonList() {
     );
   }
 
-  if (displayedPokemon.length === 0 && !isLoadingInfinite) {
+  if (displayedPokemon.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
         <SearchX className="w-20 h-20 text-foreground/20" />

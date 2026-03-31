@@ -110,6 +110,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-body", displayFont.variable, bodyFont.variable)}>
       <head>
+        {/* DNS Prefetch & Preconnect for external APIs */}
+        <link rel="preconnect" href="https://pokeapi.co" />
+        <link rel="preconnect" href="https://raw.githubusercontent.com" />
+        <link rel="preconnect" href="https://beta.pokeapi.co" />
+        <link rel="preconnect" href="https://api.tcgdex.net" />
+        <link rel="preconnect" href="https://assets.tcgdex.net" />
+        <link rel="dns-prefetch" href="https://pokeapi.co" />
+        <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
+        <link rel="dns-prefetch" href="https://beta.pokeapi.co" />
+        <link rel="dns-prefetch" href="https://api.tcgdex.net" />
+        <link rel="dns-prefetch" href="https://assets.tcgdex.net" />
         <script
           id="website-jsonld"
           type="application/ld+json"

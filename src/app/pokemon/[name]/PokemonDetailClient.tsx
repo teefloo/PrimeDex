@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { getPokemonDetail, getPokemonSpecies, getTypeRelations, getPokemonEncounters } from '@/lib/api';
+import { getPokemonDetail, getPokemonSpecies, getTypeRelations, getPokemonEncounters, getAbilityDetail } from '@/lib/api';
+import { getRecommendedItems } from '@/lib/held-items';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Loader2, 
@@ -23,7 +24,7 @@ import {
   SearchX,
   Sparkles
 } from 'lucide-react';
-import { PokemonDetail, PokemonSpecies, PokemonEncounter, TYPE_COLORS } from '@/types/pokemon';
+import { PokemonDetail, PokemonSpecies, PokemonEncounter, PokemonEncounterVersionDetail, PokemonEncounterDetail, TYPE_COLORS } from '@/types/pokemon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatId, formatName } from '@/lib/utils';
@@ -54,6 +55,9 @@ const HeightComparison = dynamic(() => import('@/components/pokemon/HeightCompar
   loading: () => <div className="h-40 animate-pulse bg-white/5 rounded-3xl" />
 });
 const PokemonCards = dynamic(() => import('@/components/pokemon/PokemonCards').then(m => m.PokemonCards), {
+  loading: () => <div className="h-40 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary/20" /></div>
+});
+const PokemonMoves = dynamic(() => import('@/components/pokemon/PokemonMoves').then(m => m.PokemonMoves), {
   loading: () => <div className="h-40 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary/20" /></div>
 });
 
@@ -125,11 +129,21 @@ export function PokemonDetailClient({
       
       return { pokemon, species, localized: localized as LocalizedGqlData | null, encounters };
     },
-    initialData: {
-      pokemon: initialPokemon,
-      species: initialSpecies,
-      localized: initialLocalized,
-      encounters: initialEncounters
+    initialData: () => {
+      const fetchedLang = initialLocalized?.pokemon_v2_pokemonspeciesnames?.[0]?.pokemon_v2_language?.name;
+      // If the localized language passed from server does not match our current client language,
+      // return undefined so that React Query fetches fresh localized data while showing a loader
+      const isMatching = !initialLocalized || fetchedLang === resolvedLang || (!fetchedLang && resolvedLang === 'en');
+
+      if (isMatching) {
+        return {
+          pokemon: initialPokemon,
+          species: initialSpecies,
+          localized: initialLocalized as LocalizedGqlData | null,
+          encounters: initialEncounters
+        };
+      }
+      return undefined;
     },
     enabled: !!name,
   });
@@ -151,6 +165,14 @@ export function PokemonDetailClient({
     queries: (pokemon?.types || []).map(t => ({
       queryKey: ['typeRelations', t.type.name],
       queryFn: () => getTypeRelations(t.type.name),
+      staleTime: 24 * 60 * 60 * 1000,
+    }))
+  });
+
+  const abilityQueries = useQueries({
+    queries: (pokemon?.abilities || []).map(a => ({
+      queryKey: ['abilityDetail', a.ability.name],
+      queryFn: () => getAbilityDetail(a.ability.name),
       staleTime: 24 * 60 * 60 * 1000,
     }))
   });
@@ -494,18 +516,78 @@ export function PokemonDetailClient({
                   <h3 className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-primary" /> {t('detail.abilities')}
                   </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {pokemon.abilities.map((a, idx) => {
+                      const abilityData = abilityQueries[idx]?.data;
+                      let description = t('detail.no_ability_desc');
+                      let localizedName = formatName(a.ability.name);
+                      if (abilityData) {
+                        // Localized ability name
+                        const nameEntry = abilityData.names.find(n => n.language.name === resolvedLang)
+                                       || abilityData.names.find(n => n.language.name === 'en');
+                        if (nameEntry) localizedName = nameEntry.name;
+
+                        // Localized description — find all available for resolvedLang and fallback to en
+                        const langEffect = abilityData.effect_entries.find(e => e.language.name === resolvedLang);
+                        const langFlavor = abilityData.flavor_text_entries.find(e => e.language.name === resolvedLang);
+                        const enEffect = abilityData.effect_entries.find(e => e.language.name === 'en');
+                        const enFlavor = abilityData.flavor_text_entries.find(e => e.language.name === 'en');
+                        
+                        // Priority: Lang Effect > Lang Flavor > En Effect > En Flavor
+                        description = langEffect?.short_effect 
+                                   || langFlavor?.flavor_text 
+                                   || langEffect?.effect 
+                                   || enEffect?.short_effect 
+                                   || enFlavor?.flavor_text 
+                                   || enEffect?.effect 
+                                   || description;
+                      }
+
+                      return (
+                        <div key={a.ability.name} className="flex flex-col gap-2 p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:bg-secondary/40 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-sm text-foreground/80 group-hover:text-primary transition-colors">{localizedName}</span>
+                              {a.is_hidden && <span className="px-1.5 py-0.5 bg-primary/20 text-[9px] font-black text-primary uppercase tracking-tighter rounded">{t('detail.hidden')}</span>}
+                            </div>
+                            {abilityQueries[idx]?.isLoading && <Loader2 className="w-3 h-3 animate-spin text-primary/50" />}
+                          </div>
+                          <p className="text-xs text-foreground/60 leading-relaxed">
+                            {description.replace(/\n|\f/g, ' ')}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <h3 className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" /> {t('detail.recommended_items')}
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {pokemon.abilities.map((a) => (
-                      <div key={a.ability.name} className="flex items-center justify-between p-4 bg-secondary/20 border border-white/5 rounded-2xl">
-                        <div className="flex flex-col">
-                          <span className="font-black text-sm text-foreground/80 capitalize">{formatName(a.ability.name)}</span>
-                          {a.is_hidden && <span className="text-[9px] font-black text-primary uppercase tracking-tighter">{t('detail.hidden')}</span>}
+                    {(() => {
+                      const items = getRecommendedItems(pokemon);
+                      if (!items.length) {
+                        return <div className="col-span-full p-4 text-center text-xs text-foreground/50 bg-secondary/20 rounded-2xl border border-white/5">{t('detail.no_items')}</div>;
+                      }
+                      return items.map(item => (
+                        <div key={item.id} className="flex gap-3 p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:bg-secondary/40 transition-colors">
+                          <div className="flex-shrink-0 w-12 h-12 bg-background/50 rounded-xl flex items-center justify-center p-2 border border-white/5">
+                            {/* Using native img for external raw.githubusercontent.com domain to avoid next/image domain config issues */}
+                            <img src={item.iconUrl} alt={item.name[language as 'en' | 'fr'] || item.name.en} className="w-full h-full object-contain filter group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all" />
+                          </div>
+                          <div className="flex flex-col flex-1 min-w-0 justify-center">
+                            <span className="font-black text-sm text-foreground/90 truncate group-hover:text-primary transition-colors">
+                              {item.name[language as 'en' | 'fr'] || item.name.en}
+                            </span>
+                            <span className="text-[10px] text-foreground/60 leading-tight mt-1 line-clamp-2">
+                              {item.description[language as 'en' | 'fr'] || item.description.en}
+                            </span>
+                          </div>
                         </div>
-                        <div className="px-2 py-1 bg-background/40 rounded-lg text-[9px] font-bold text-foreground/40 uppercase tracking-widest border border-white/5">
-                          {t('detail.infos')}
-                        </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
                 </div>
               </div>
@@ -638,6 +720,11 @@ export function PokemonDetailClient({
               </div>
             </TabsContent>
 
+            {/* Moves Tab */}
+            <TabsContent value="moves" className="space-y-6">
+              <PokemonMoves pokemonName={pokemon.name} />
+            </TabsContent>
+
             {/* Evolution Tab */}
             <TabsContent value="evolution" className="space-y-6">
               {species?.evolution_chain?.url ? (
@@ -648,27 +735,6 @@ export function PokemonDetailClient({
               ) : (
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] flex items-center justify-center min-h-[200px]">
                   <p className="text-foreground/50 font-bold uppercase tracking-widest text-sm">{t('detail.no_evolution')}</p>
-                </div>
-              )}
-              
-              {pokemon.moves.length > 0 && (
-                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
-                  <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                    <h3 className="text-xl font-black text-foreground/90">{t('detail.main_moves')}</h3>
-                    <span className="px-2 py-1 bg-secondary/50 rounded-md text-xs font-bold text-foreground/60">{t('detail.total_moves', { count: pokemon.moves.length })}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {pokemon.moves.slice(0, 8).map((m) => (
-                      <div key={m.move.name} className="flex items-center justify-between p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:border-primary/30 transition-all">
-                        <span className="font-black text-sm text-foreground/80 capitalize">
-                          {m.move.name.replace(/-/g, ' ')}
-                        </span>
-                        <div className="p-1.5 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Zap className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </TabsContent>
@@ -881,12 +947,62 @@ export function PokemonDetailClient({
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {enc.version_details.map((vd: { version: { name: string }, max_chance: number }, vi: number) => (
-                            <div key={vi} className="p-3 bg-background/40 rounded-2xl border border-white/5 flex flex-col gap-1">
-                              <span className="text-[10px] font-black uppercase text-primary/60">{vd.version.name}</span>
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold">{t('detail.encounter_chance')}</span>
-                                <span className="text-xs font-black text-foreground/90">{vd.max_chance}%</span>
+                          {enc.version_details.map((vd: PokemonEncounterVersionDetail, vi: number) => (
+                            <div key={vi} className="p-4 bg-background/40 rounded-2xl border border-white/5 flex flex-col gap-2">
+                              <div className="flex items-center mb-1">
+                                <span className="text-[10px] font-black uppercase text-primary/60">{formatName(vd.version.name)}</span>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                {(() => {
+                                  // Group encounter details by method
+                                  const groupedDetails: Record<string, PokemonEncounterDetail> = {};
+                                  vd.encounter_details.forEach((ed: PokemonEncounterDetail) => {
+                                    const methodName = ed.method.name;
+                                    if (!groupedDetails[methodName]) {
+                                      groupedDetails[methodName] = {
+                                        method: ed.method,
+                                        chance: 0,
+                                        min_level: ed.min_level,
+                                        max_level: ed.max_level,
+                                        condition_values: [...(ed.condition_values || [])]
+                                      };
+                                    }
+                                    groupedDetails[methodName].chance += ed.chance;
+                                    groupedDetails[methodName].min_level = Math.min(groupedDetails[methodName].min_level, ed.min_level);
+                                    groupedDetails[methodName].max_level = Math.max(groupedDetails[methodName].max_level, ed.max_level);
+                                    // Add unique condition values
+                                    (ed.condition_values || []).forEach((c) => {
+                                      if (!groupedDetails[methodName].condition_values.find((cv) => cv.name === c.name)) {
+                                        groupedDetails[methodName].condition_values.push(c);
+                                      }
+                                    });
+                                  });
+
+                                  return Object.values(groupedDetails).map((gd: PokemonEncounterDetail, ei: number) => (
+                                    <div key={ei} className="flex flex-col gap-1 pb-2 border-b border-white/5 last:border-0 last:pb-0">
+                                      <div className="flex justify-between items-center text-xs">
+                                        <span className="font-bold text-foreground/70 capitalize">{formatName(gd.method.name)}</span>
+                                        <span className="font-black text-foreground/90">{gd.chance}%</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <div className="flex-1 h-1.5 rounded-full bg-secondary/50 overflow-hidden border border-white/5">
+                                          <div
+                                            className="h-full rounded-full bg-green-500 transition-all duration-500"
+                                            style={{ width: `${Math.min(gd.chance, 100)}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="text-[10px] text-foreground/50">
+                                        Lv. {gd.min_level}{gd.min_level !== gd.max_level ? ` - ${gd.max_level}` : ''}
+                                      </div>
+                                      {gd.condition_values && gd.condition_values.length > 0 && (
+                                        <div className="text-[9px] text-primary/70 uppercase">
+                                          {gd.condition_values.map((c) => formatName(c.name)).join(', ')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ));
+                                })()}
                               </div>
                             </div>
                           ))}
