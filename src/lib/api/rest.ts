@@ -41,7 +41,6 @@ export const getPokemonSpecies = async (name: string): Promise<PokemonSpecies> =
     await setCachedData(cacheKey, data);
     return data;
   } catch (error) {
-    console.error(`getPokemonSpecies error for ${name}:`, error);
     const cached = await getCachedData<PokemonSpecies>(cacheKey, true);
     if (cached) return cached;
     throw error;

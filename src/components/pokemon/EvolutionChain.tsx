@@ -226,11 +226,6 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
     queryKey: ['species-alternate-forms', speciesName, resolvedLang],
     queryFn: async () => {
       const data = await getPokemonSpecies(speciesName);
-      console.log('AlternateFormsSection - speciesData for', speciesName, ':', {
-        hasVarieties: !!data?.varieties,
-        varietiesCount: data?.varieties?.length,
-        varieties: data?.varieties?.map(v => ({ name: v.pokemon.name, is_default: v.is_default })),
-      });
       return data;
     },
     staleTime: 24 * 60 * 60 * 1000,
@@ -239,16 +234,11 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
 
   const alternateForms: AlternateForm[] = (() => {
     if (!speciesData?.varieties) return [];
-    const allVarieties = speciesData.varieties;
-    console.log('AlternateFormsSection - all varieties:', allVarieties.map(v => v.pokemon.name));
-    
-    const filtered = allVarieties
+    return speciesData.varieties
       .filter(v => {
         if (v.is_default) return false;
         const name = v.pokemon.name;
-        const isAltForm = name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
-        console.log(`Checking ${name}: is_default=${v.is_default}, isAltForm=${isAltForm}`);
-        return isAltForm;
+        return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
       })
       .map(v => {
         const name = v.pokemon.name;
@@ -261,9 +251,6 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
           formType,
         };
       });
-    
-    console.log('AlternateFormsSection - filtered forms:', filtered);
-    return filtered;
   })();
 
   if (isLoading) {
@@ -275,12 +262,58 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
   }
 
   if (isError) {
-    console.error('AlternateFormsSection - Error loading species:', error);
-    return null;
+    return (
+      <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
+            {t('detail.alternate_forms')}
+          </h3>
+          <Sparkles className="w-5 h-5 text-purple-400" />
+        </div>
+        <p className="text-center text-xs text-red-400">Error loading alternate forms</p>
+      </div>
+    );
   }
 
   if (alternateForms.length === 0) {
-    console.log('AlternateFormsSection - No alternate forms found for', speciesName);
+    return null;
+  }
+
+  return (
+    <div className="mt-12 pt-8 border-t border-white/10">
+      <div className="flex items-center justify-center gap-3 mb-8">
+        <Sparkles className="w-5 h-5 text-purple-400" />
+        <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
+          {t('detail.alternate_forms')}
+        </h3>
+        <Sparkles className="w-5 h-5 text-purple-400" />
+      </div>
+      <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+        {alternateForms.map((form) => (
+          <AlternateFormItem key={form.name} form={form} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+  if (isError) {
+    return (
+      <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <Sparkles className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
+            {t('detail.alternate_forms')}
+          </h3>
+          <Sparkles className="w-5 h-5 text-purple-400" />
+        </div>
+        <p className="text-center text-xs text-red-400">Error loading alternate forms</p>
+      </div>
+    );
+  }
+
+  if (alternateForms.length === 0) {
     return null;
   }
 
