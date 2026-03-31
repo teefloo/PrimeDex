@@ -67,6 +67,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from '@/lib/i18n';
 import { getLocalizedPokemonData } from '@/lib/api';
+import { ABILITY_BATTLE_DESCRIPTIONS } from '@/lib/ability-battle-descriptions';
 
 import Image from 'next/image';
 
@@ -517,19 +518,17 @@ export function PokemonDetailClient({
                       const abilityData = abilityQueries[idx]?.data;
                       let description = t('detail.no_ability_desc');
                       let localizedName = formatName(a.ability.name);
+                      let battleDesc = '';
                       if (abilityData) {
-                        // Localized ability name
                         const nameEntry = abilityData.names.find(n => n.language.name === resolvedLang)
                                        || abilityData.names.find(n => n.language.name === 'en');
                         if (nameEntry) localizedName = nameEntry.name;
 
-                        // Localized description — find all available for resolvedLang and fallback to en
                         const langEffect = abilityData.effect_entries.find(e => e.language.name === resolvedLang);
                         const langFlavor = abilityData.flavor_text_entries.find(e => e.language.name === resolvedLang);
                         const enEffect = abilityData.effect_entries.find(e => e.language.name === 'en');
                         const enFlavor = abilityData.flavor_text_entries.find(e => e.language.name === 'en');
                         
-                        // Priority: Lang Effect > Lang Flavor > En Effect > En Flavor
                         description = langEffect?.short_effect 
                                    || langFlavor?.flavor_text 
                                    || langEffect?.effect 
@@ -537,6 +536,12 @@ export function PokemonDetailClient({
                                    || enFlavor?.flavor_text 
                                    || enEffect?.effect 
                                    || description;
+
+                        const battleMapping = ABILITY_BATTLE_DESCRIPTIONS[a.ability.name];
+                        if (battleMapping) {
+                          battleDesc = battleMapping[resolvedLang as keyof typeof battleMapping] 
+                                    || battleMapping.en;
+                        }
                       }
 
                       return (
@@ -548,6 +553,14 @@ export function PokemonDetailClient({
                             </div>
                             {abilityQueries[idx]?.isLoading && <Loader2 className="w-3 h-3 animate-spin text-primary/50" />}
                           </div>
+                          {battleDesc && (
+                            <div className="flex items-start gap-2 p-2.5 bg-primary/5 border border-primary/10 rounded-xl">
+                              <Zap className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                              <p className="text-xs text-primary/90 leading-relaxed font-medium">
+                                {battleDesc}
+                              </p>
+                            </div>
+                          )}
                           <p className="text-xs text-foreground/60 leading-relaxed">
                             {description.replace(/\n|\f/g, ' ')}
                           </p>
@@ -865,60 +878,6 @@ export function PokemonDetailClient({
               </div>
             </TabsContent>
 
-            {/* Moves Tab */}
-            <TabsContent value="moves" className="space-y-6">
-              <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
-                <h3 className="text-2xl font-black text-foreground/90 flex items-center gap-3 mb-8 pb-4 border-b border-white/10">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <Zap className="w-6 h-6 text-primary" />
-                  </div>
-                  {t('detail.moveset')}
-                </h3>
-
-                <div className="grid grid-cols-1 gap-4">
-                  {/* Categorize moves by learn method */}
-                  {['level-up', 'machine', 'egg', 'tutor'].map((method) => {
-                    const methodMoves = pokemon.moves.filter(m => 
-                      m.version_group_details.some(d => d.move_learn_method.name === method)
-                    ).sort((a, b) => {
-                      const levelA = a.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at || 0;
-                      const levelB = b.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at || 0;
-                      return levelA - levelB;
-                    });
-
-                    if (methodMoves.length === 0) return null;
-
-                    return (
-                      <div key={method} className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 mt-4 mb-2">
-                          {method === 'level-up' ? t('detail.move_method.level_up') : method === 'machine' ? t('detail.move_method.machine') : method === 'egg' ? t('detail.move_method.egg') : t('detail.move_method.tutor')}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {methodMoves.map((m) => (
-                            <div key={m.move.name} className="flex items-center justify-between p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:border-primary/30 transition-all">
-                              <div className="flex flex-col gap-1">
-                                <span className="font-black text-sm text-foreground/80 capitalize">
-                                  {formatName(m.move.name)}
-                                </span>
-                                {method === 'level-up' && (
-                                  <span className="text-[10px] font-bold text-primary/60">
-                                    {t('detail.level', { level: m.version_group_details.find(d => d.move_learn_method.name === method)?.level_learned_at || 1 })}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="p-1.5 bg-primary/10 rounded-lg opacity-40 group-hover:opacity-100 transition-opacity">
-                                <Target className="w-3.5 h-3.5 text-primary" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </TabsContent>
-
             {/* Locations Tab */}
             <TabsContent value="locations" className="space-y-6">
               <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
@@ -950,54 +909,33 @@ export function PokemonDetailClient({
                               </div>
                               <div className="flex flex-col gap-2">
                                 {(() => {
-                                  // Group encounter details by method
-                                  const groupedDetails: Record<string, PokemonEncounterDetail> = {};
-                                  vd.encounter_details.forEach((ed: PokemonEncounterDetail) => {
-                                    const methodName = ed.method.name;
-                                    if (!groupedDetails[methodName]) {
-                                      groupedDetails[methodName] = {
-                                        method: ed.method,
-                                        chance: 0,
-                                        min_level: ed.min_level,
-                                        max_level: ed.max_level,
-                                        condition_values: [...(ed.condition_values || [])]
-                                      };
-                                    }
-                                    groupedDetails[methodName].chance += ed.chance;
-                                    groupedDetails[methodName].min_level = Math.min(groupedDetails[methodName].min_level, ed.min_level);
-                                    groupedDetails[methodName].max_level = Math.max(groupedDetails[methodName].max_level, ed.max_level);
-                                    // Add unique condition values
-                                    (ed.condition_values || []).forEach((c) => {
-                                      if (!groupedDetails[methodName].condition_values.find((cv) => cv.name === c.name)) {
-                                        groupedDetails[methodName].condition_values.push(c);
-                                      }
-                                    });
+                                  return vd.encounter_details.map((ed: PokemonEncounterDetail, ei: number) => {
+                                    const actualChance = vd.max_chance > 0 ? Math.round((ed.chance / vd.max_chance) * 100) : 0;
+                                    return (
+                                      <div key={ei} className="flex flex-col gap-1 pb-2 border-b border-white/5 last:border-0 last:pb-0">
+                                        <div className="flex justify-between items-center text-xs">
+                                          <span className="font-bold text-foreground/70 capitalize">{formatName(ed.method.name)}</span>
+                                          <span className="font-black text-foreground/90">{actualChance}%</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          <div className="flex-1 h-1.5 rounded-full bg-secondary/50 overflow-hidden border border-white/5">
+                                            <div
+                                              className="h-full rounded-full bg-green-500 transition-all duration-500"
+                                              style={{ width: `${Math.min(actualChance, 100)}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="text-[10px] text-foreground/50">
+                                          Lv. {ed.min_level}{ed.min_level !== ed.max_level ? ` - ${ed.max_level}` : ''}
+                                        </div>
+                                        {ed.condition_values && ed.condition_values.length > 0 && (
+                                          <div className="text-[9px] text-primary/70 uppercase">
+                                            {ed.condition_values.map((c) => formatName(c.name)).join(', ')}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
                                   });
-
-                                  return Object.values(groupedDetails).map((gd: PokemonEncounterDetail, ei: number) => (
-                                    <div key={ei} className="flex flex-col gap-1 pb-2 border-b border-white/5 last:border-0 last:pb-0">
-                                      <div className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-foreground/70 capitalize">{formatName(gd.method.name)}</span>
-                                        <span className="font-black text-foreground/90">{gd.chance}%</span>
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="flex-1 h-1.5 rounded-full bg-secondary/50 overflow-hidden border border-white/5">
-                                          <div
-                                            className="h-full rounded-full bg-green-500 transition-all duration-500"
-                                            style={{ width: `${Math.min(gd.chance, 100)}%` }}
-                                          />
-                                        </div>
-                                      </div>
-                                      <div className="text-[10px] text-foreground/50">
-                                        Lv. {gd.min_level}{gd.min_level !== gd.max_level ? ` - ${gd.max_level}` : ''}
-                                      </div>
-                                      {gd.condition_values && gd.condition_values.length > 0 && (
-                                        <div className="text-[9px] text-primary/70 uppercase">
-                                          {gd.condition_values.map((c) => formatName(c.name)).join(', ')}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ));
                                 })()}
                               </div>
                             </div>

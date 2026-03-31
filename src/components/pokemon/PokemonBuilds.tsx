@@ -102,76 +102,84 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
 
   return (
     <div className="space-y-8">
-      {builds.map((build, idx) => (
-        <motion.div 
-          key={build.name}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          className={cn("glass-panel p-6 md:p-8 rounded-[2.5rem] border", build.color)}
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-background/50 rounded-2xl border border-white/5 shadow-inner">
-                {build.icon}
-              </div>
-              <div>
-                <h3 className="text-2xl font-black">{t('builds.title', { name: build.name })}</h3>
-                <p className="text-xs text-foreground/50 font-medium">{build.desc}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-background/40 rounded-full border border-white/5">
-              <Trophy className="w-4 h-4 text-yellow-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{t('builds.recommended')}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {build.moves.map((move, i) => {
-              const localizedMoveName = move.names.find(n => n.language.name === resolvedLang)?.name 
-                || move.names.find(n => n.language.name === 'en')?.name 
-                || formatName(move.name);
-
-              return (
-                <div key={`${move.name}-${i}`} className="bg-background/40 p-4 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="font-black text-sm capitalize group-hover:text-primary transition-colors">
-                      {localizedMoveName}
-                    </span>
-                    <span 
-                      className="px-2 py-0.5 rounded text-[8px] font-black uppercase text-white shadow-sm"
-                      style={{ backgroundColor: TYPE_COLORS[move.type.name] }}
-                    >
-                      {t(`types.${move.type.name}`)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5">
-                      <Zap className="w-3 h-3 text-yellow-500/60" />
-                      <span className="text-[10px] font-bold text-foreground/40 uppercase">{t('moves.power_short')}</span>
-                      <span className="text-xs font-black">{move.power || '--'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Target className="w-3 h-3 text-blue-500/60" />
-                      <span className="text-[10px] font-bold text-foreground/40 uppercase">{t('moves.accuracy_short')}</span>
-                      <span className="text-xs font-black">{move.accuracy || '--'}%</span>
-                    </div>
-                    <div className="ml-auto flex items-center gap-1">
-                      <div className={cn(
-                        "w-2 h-2 rounded-full",
-                        move.damage_class.name === 'physical' ? 'bg-orange-500' : 
-                        move.damage_class.name === 'special' ? 'bg-blue-500' : 'bg-gray-500'
-                      )} />
-                      <span className="text-[8px] font-black uppercase text-foreground/30">{t(`moves.damage_class.${move.damage_class.name}`)}</span>
-                    </div>
-                  </div>
+      {builds.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 gap-4 text-center">
+          <Trophy className="w-10 h-10 text-foreground/20" />
+          <p className="text-sm font-black uppercase tracking-widest text-foreground/40">{t('builds.no_builds')}</p>
+          <p className="text-[10px] text-foreground/30 max-w-xs">{t('builds.no_builds_desc')}</p>
+        </div>
+      ) : (
+        builds.map((build, idx) => (
+          <motion.div 
+            key={build.name}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className={cn("glass-panel p-6 md:p-8 rounded-[2.5rem] border", build.color)}
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-background/50 rounded-2xl border border-white/5 shadow-inner">
+                  {build.icon}
                 </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      ))}
+                <div>
+                  <h3 className="text-2xl font-black">{build.name}</h3>
+                  <p className="text-xs text-foreground/50 font-medium">{build.desc}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-background/40 rounded-full border border-white/5">
+                <Trophy className="w-4 h-4 text-yellow-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{t('builds.recommended')}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {build.moves.map((move, i) => {
+                const localizedMoveName = move.names.find(n => n.language.name === resolvedLang)?.name 
+                  || move.names.find(n => n.language.name === 'en')?.name 
+                  || formatName(move.name);
+
+                return (
+                  <div key={`${move.name}-${i}`} className="bg-background/40 p-4 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="font-black text-sm capitalize group-hover:text-primary transition-colors">
+                        {localizedMoveName}
+                      </span>
+                      <span 
+                        className="px-2 py-0.5 rounded text-[8px] font-black uppercase text-white shadow-sm"
+                        style={{ backgroundColor: TYPE_COLORS[move.type.name] }}
+                      >
+                        {t(`types.${move.type.name}`)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-3 h-3 text-yellow-500/60" />
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase">{t('moves.power_short')}</span>
+                        <span className="text-xs font-black">{move.power || '--'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Target className="w-3 h-3 text-blue-500/60" />
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase">{t('moves.accuracy_short')}</span>
+                        <span className="text-xs font-black">{move.accuracy || '--'}%</span>
+                      </div>
+                      <div className="ml-auto flex items-center gap-1">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          move.damage_class.name === 'physical' ? 'bg-orange-500' : 
+                          move.damage_class.name === 'special' ? 'bg-blue-500' : 'bg-gray-500'
+                        )} />
+                        <span className="text-[8px] font-black uppercase text-foreground/30">{t(`moves.damage_class.${move.damage_class.name}`)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        ))
+      )}
     </div>
   );
 }

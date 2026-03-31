@@ -168,6 +168,24 @@ export default function PokemonList() {
     }));
   }, [allSummary]);
 
+  const buildInitialData = (p: PokemonResultItem) => {
+    const localizedNames = p.localizedNames || [];
+    return {
+      pokemon: {
+        id: p.id,
+        name: p.name,
+        types: p.types?.map((t) => ({ type: { name: t, url: '' }, slot: 1 })) || [],
+        localizedNames,
+      },
+      species: {
+        names: localizedNames.map((n: LocalizedNameEntry) => ({
+          name: n.name,
+          language: { name: n.language },
+        })),
+      } as Partial<PokemonSpecies>,
+    };
+  };
+
   const transformedDetailed = useMemo(() => {
     if (!allDetailed) return [];
     return allDetailed.map((p: PokemonBasicData) => ({
@@ -380,14 +398,14 @@ export default function PokemonList() {
           <AnimatePresence mode="popLayout">
             {displayedPokemon.map((p, idx) => (
               <motion.div layout key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
-                <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p as PokemonCardProps['initialData'] extends { pokemon: infer P } ? P : never, species: p.species }} />
+                <PokemonCard name={p.name} url={p.url} index={idx} initialData={buildInitialData(p)} />
               </motion.div>
             ))}
           </AnimatePresence>
         ) : (
           displayedPokemon.map((p, idx) => (
             <div key={`${p.id}-${idx}`} className="pokemon-grid-item">
-              <PokemonCard name={p.name} url={p.url} index={idx} initialData={{ pokemon: p as PokemonCardProps['initialData'] extends { pokemon: infer P } ? P : never, species: p.species }} />
+              <PokemonCard name={p.name} url={p.url} index={idx} initialData={buildInitialData(p)} />
             </div>
           ))
         )}
