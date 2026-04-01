@@ -23,15 +23,19 @@ import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { 
-  Radar, 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  ResponsiveContainer,
-  Legend
-} from 'recharts';
+import dynamic from 'next/dynamic';
 import { useMounted } from '@/hooks/useMounted';
+
+// Dynamic imports for heavy charting library
+const RadarChart = dynamic(
+  () => import('recharts').then(m => m.RadarChart),
+  { ssr: false, loading: () => <div className="h-[400px] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary/40" /></div> }
+);
+const Radar = dynamic(() => import('recharts').then(m => m.Radar), { ssr: false });
+const PolarGrid = dynamic(() => import('recharts').then(m => m.PolarGrid), { ssr: false });
+const PolarAngleAxis = dynamic(() => import('recharts').then(m => m.PolarAngleAxis), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
+const Legend = dynamic(() => import('recharts').then(m => m.Legend), { ssr: false });
 const STAT_KEYS = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'] as const;
 
 import Image from 'next/image';

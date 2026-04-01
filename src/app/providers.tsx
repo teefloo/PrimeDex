@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { usePrimeDexStore } from '@/store/primedex';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '@/lib/i18n';
+import i18n, { loadLanguage } from '@/lib/i18n';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 
@@ -41,7 +41,10 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!_hasHydrated) return;
     const resolvedLang = language === 'auto' ? systemLanguage : language;
-    i18n.changeLanguage(resolvedLang);
+    // Load language bundle on demand, then switch
+    loadLanguage(resolvedLang).then(() => {
+      i18n.changeLanguage(resolvedLang);
+    });
     // Mirror to localStorage for synchronous initial boot on next reload
     localStorage.setItem('primedex-lang', resolvedLang);
   }, [language, systemLanguage, _hasHydrated]);
@@ -64,9 +67,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 10 * 60 * 1000, // 10 minutes default
-        gcTime: 30 * 60 * 1000, // Keep unused queries 30min before GC
-        retry: 2,
+        staleTime: 10 * 60 * 1000,
+        gcTime: 60 * 60 * 1000,
+        retry: 1,
         refetchOnWindowFocus: false,
         refetchOnReconnect: 'always',
       },

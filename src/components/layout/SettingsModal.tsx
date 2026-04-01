@@ -3,7 +3,7 @@
 import { usePrimeDexStore } from '@/store/primedex';
 import { X, Volume2, VolumeX, Sun, Moon, Monitor, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation, loadLanguage } from '@/lib/i18n';
 
 export default function SettingsModal() {
   const { isSettingsOpen, toggleSettings, soundEnabled, toggleSound, theme, setTheme, language, setLanguage, systemLanguage } = usePrimeDexStore();
@@ -18,7 +18,9 @@ export default function SettingsModal() {
   const handleLanguageChange = (code: string) => {
     setLanguage(code);
     const resolvedLang = code === 'auto' ? systemLanguage : code;
-    i18n.changeLanguage(resolvedLang);
+    loadLanguage(resolvedLang).then(() => {
+      i18n.changeLanguage(resolvedLang);
+    });
   };
 
   const languageOptions = [

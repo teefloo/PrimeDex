@@ -5,6 +5,10 @@ import Header from '@/components/layout/Header';
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, LocalizedPokemonData } from '@/types/pokemon';
 import { t } from '@/lib/server-i18n';
 
+// Route segment config for performance optimization
+export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = true; // Allow dynamic params for non-static pages
+
 interface Props {
   params: Promise<{ name: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

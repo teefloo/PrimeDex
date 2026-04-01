@@ -1,11 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
 import { PokemonDetail, PokemonSpecies, TYPE_COLORS, PokemonCardType, LocalizedNameEntry } from '@/types/pokemon';
 import { motion } from 'framer-motion';
 import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatId } from '@/lib/utils';
-import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
 import { memo, useCallback } from 'react';
@@ -94,14 +93,13 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   }>({
     queryKey: ['pokemon-card', name, resolvedLang],
     queryFn: async () => {
-      const speciesUrl = url.replace('/pokemon/', '/pokemon-species/');
-      const [pokemonRes, speciesRes] = await Promise.all([
-        axios.get<PokemonDetail>(url),
-        axios.get<PokemonSpecies>(speciesUrl).catch(() => null)
+      const [pokemon, species] = await Promise.all([
+        getPokemonDetail(name),
+        getPokemonSpecies(name).catch(() => null)
       ]);
       return { 
-        pokemon: pokemonRes.data, 
-        species: speciesRes?.data as PokemonSpecies
+        pokemon, 
+        species: species as PokemonSpecies
       };
     },
     staleTime: 10 * 60 * 1000,
@@ -113,22 +111,21 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   
   const prefetchDetails = useCallback(() => {
     if (!name) return;
-    const speciesUrl = url.replace('/pokemon/', '/pokemon-species/');
     queryClient.prefetchQuery({
       queryKey: ['pokemon-card', name, resolvedLang],
       queryFn: async () => {
-        const [pokemonRes, speciesRes] = await Promise.all([
-          axios.get<PokemonDetail>(url),
-          axios.get<PokemonSpecies>(speciesUrl).catch(() => null)
+        const [pokemon, species] = await Promise.all([
+          getPokemonDetail(name),
+          getPokemonSpecies(name).catch(() => null)
         ]);
         return { 
-          pokemon: pokemonRes.data, 
-          species: speciesRes?.data as PokemonSpecies
+          pokemon, 
+          species: species as PokemonSpecies
         };
       },
       staleTime: 10 * 60 * 1000,
     });
-  }, [name, url, queryClient, resolvedLang]);
+  }, [name, queryClient, resolvedLang]);
 
   if (isLoading && !displayData) {
     return <PokemonCardSkeleton />;
@@ -197,8 +194,12 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   const displayName = getLocalizedName();
   const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
 
+  const handleCardClick = () => {
+    window.open(`/pokemon/${name}`, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <Link href={`/pokemon/${name}`} className="block h-full py-4 px-2" onMouseEnter={prefetchDetails}>
+    <div className="block h-full py-4 px-2 cursor-pointer" onMouseEnter={prefetchDetails} onClick={handleCardClick}>
       <motion.div
         whileHover={{ scale: 1.03, y: -4 }}
         whileTap={{ scale: 0.97 }}
@@ -315,6 +316,6 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
           </div>
         </div>
       </motion.div>
-    </Link>
+    </div>
   );
 });

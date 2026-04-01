@@ -297,3 +297,52 @@ export interface PokemonSummaryItem {
   shape?: string;
   eggGroups?: string[];
 }
+
+export interface MoveListItem {
+  id: number;
+  name: string;
+  power: number | null;
+  accuracy: number | null;
+  pp: number | null;
+  priority: number;
+  type: string;
+  damage_class: string;
+  localizedName: string;
+  description: string;
+  generation_id: number | null;
+}
+
+export interface MovePokemonLearner {
+  id: number;
+  name: string;
+  types: string[];
+  localizedName: string;
+}
+
+export interface GraphQLMoveData {
+  id: number;
+  name: string;
+  power: number | null;
+  accuracy: number | null;
+  pp: number | null;
+  priority: number;
+  generation_id: number | null;
+  pokemon_v2_type: { name: string };
+  pokemon_v2_movedamageclass: { name: string };
+  pokemon_v2_movenames: Array<{ name: string }>;
+  pokemon_v2_moveflavortexts: Array<{ flavor_text: string }>;
+  pokemon_v2_moveeffect: {
+    pokemon_v2_moveeffecteffecttexts: Array<{ short_effect: string; effect: string }>;
+  } | null;
+}
+
+export interface GraphQLMovePokemonData {
+  pokemon_v2_pokemon: {
+    id: number;
+    name: string;
+    pokemon_v2_pokemontypes: Array<{ pokemon_v2_type: { name: string } }>;
+    pokemon_v2_pokemonspecy: {
+      pokemon_v2_pokemonspeciesnames: Array<{ name: string }>;
+    } | null;
+  } | null;
+}

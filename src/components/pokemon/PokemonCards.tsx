@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPokemonCards } from '@/lib/api';
 import { TCGCard } from '@/lib/api/tcg';
@@ -137,14 +138,14 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
         ))}
       </motion.div>
 
-      <AnimatePresence>
-        {selectedCard && (
+      {selectedCard && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedCard(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -156,7 +157,8 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
             >
               <button
                 onClick={() => setSelectedCard(null)}
-                className="fixed top-4 right-4 md:top-8 md:right-8 p-3 text-white/70 hover:text-white bg-black/60 hover:bg-black/90 rounded-full backdrop-blur-md transition-all z-[60] hover:scale-110"
+                aria-label={t('detail.close_card', { defaultValue: 'Close card' })}
+                className="fixed top-4 right-4 md:top-8 md:right-8 p-3 text-white/70 hover:text-white bg-black/60 hover:bg-black/90 rounded-full backdrop-blur-md transition-all z-[10000] hover:scale-110"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -183,8 +185,9 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

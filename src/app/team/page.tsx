@@ -3,7 +3,7 @@
 import Header from '@/components/layout/Header';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
-import { getPokemonDetail, getPokemonSpecies, getTypeRelations } from '@/lib/api';
+import { getPokemonDetail, getPokemonSpecies, getTypeRelations, getAllPokemonDetailed } from '@/lib/api';
 import { PokemonDetail, PokemonSpecies, TYPE_COLORS } from '@/types/pokemon';
 import { TypeRelations } from '@/lib/api/rest';
 import { 
@@ -26,16 +26,19 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { analyzeTeam, calculateSynergyScore } from '@/lib/team-analysis';
 import { cn } from '@/lib/utils';
-import { 
-  ResponsiveContainer, 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  Radar,
-  Tooltip as RechartsTooltip
-} from 'recharts';
-import { getAllPokemonDetailed } from '@/lib/api';
+import dynamic from 'next/dynamic';
 import { useMounted } from '@/hooks/useMounted';
+
+// Dynamic imports for heavy charting library
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
+const RadarChart = dynamic(
+  () => import('recharts').then(m => m.RadarChart),
+  { ssr: false, loading: () => <div className="h-[250px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary/40" /></div> }
+);
+const PolarGrid = dynamic(() => import('recharts').then(m => m.PolarGrid), { ssr: false });
+const PolarAngleAxis = dynamic(() => import('recharts').then(m => m.PolarAngleAxis), { ssr: false });
+const Radar = dynamic(() => import('recharts').then(m => m.Radar), { ssr: false });
+const RechartsTooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
 
 import Image from 'next/image';
 

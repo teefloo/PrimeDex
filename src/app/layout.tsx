@@ -7,12 +7,14 @@ import { Agentation } from "agentation";
 import { t } from '@/lib/server-i18n';
 import { AppContent } from "./AppContent";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { Analytics } from "@vercel/analytics/react";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
+  preload: true,
 });
 
 const bodyFont = Manrope({
@@ -20,6 +22,7 @@ const bodyFont = Manrope({
   weight: ["400", "500", "600", "700"],
   variable: "--font-body",
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -139,6 +142,7 @@ export default function RootLayout({
             {children}
           </AppContent>
           {process.env.NODE_ENV === "development" && <Agentation />}
+          <Analytics />
         </Providers>
       </body>
     </html>

@@ -411,14 +411,21 @@ export default function AdvancedFilters() {
                   {t('filters.height')}
                 </h4>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="font-black border-white/10">{heightRange[0]}m</Badge>
+                  <Badge variant="outline" className="font-black border-white/10">{heightRange[0].toFixed(1)}m</Badge>
                   <span className="text-foreground/20">-</span>
-                  <Badge variant="outline" className="font-black border-white/10">{heightRange[1]}m</Badge>
+                  <Badge variant="outline" className="font-black border-white/10">{heightRange[1].toFixed(1)}m</Badge>
                 </div>
               </div>
               <Slider
                 value={heightRange}
-                onValueChange={(val) => setHeightRange(val as [number, number])}
+                onValueChange={(val) => {
+                  const values = Array.isArray(val) ? val : [val];
+                  const clamped = [
+                    Math.min(values[0], values[1]),
+                    Math.max(values[0], values[1])
+                  ] as [number, number];
+                  setHeightRange(clamped);
+                }}
                 max={25}
                 step={0.1}
                 className="py-4 cursor-pointer"
@@ -439,7 +446,14 @@ export default function AdvancedFilters() {
               </div>
               <Slider
                 value={weightRange}
-                onValueChange={(val) => setWeightRange(val as [number, number])}
+                onValueChange={(val) => {
+                  const values = Array.isArray(val) ? val : [val];
+                  const clamped = [
+                    Math.min(values[0], values[1]),
+                    Math.max(values[0], values[1])
+                  ] as [number, number];
+                  setWeightRange(clamped);
+                }}
                 max={1200}
                 step={1}
                 className="py-4 cursor-pointer"
