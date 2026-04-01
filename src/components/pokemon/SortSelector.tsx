@@ -10,12 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from '@/lib/i18n';
+import { useMemo } from 'react';
 
 export default function SortSelector() {
   const { sortBy, setSortBy } = usePrimeDexStore();
   const { t } = useTranslation();
 
-  const options = [
+  const options = useMemo(() => [
     { value: 'id-asc', label: t('sort.id-asc'), icon: Hash },
     { value: 'id-desc', label: t('sort.id-desc'), icon: ListOrdered },
     { value: 'name-asc', label: t('sort.name-asc'), icon: ArrowDownAZ },
@@ -24,7 +25,7 @@ export default function SortSelector() {
     { value: 'height-desc', label: t('sort.height-desc'), icon: ArrowUp10 },
     { value: 'weight-asc', label: t('sort.weight-asc'), icon: Scale },
     { value: 'weight-desc', label: t('sort.weight-desc'), icon: Scale },
-  ] as const;
+  ] as const, [t]);
 
   type SortValue = typeof options[number]['value'];
 

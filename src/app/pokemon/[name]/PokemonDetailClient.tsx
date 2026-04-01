@@ -313,7 +313,7 @@ export function PokemonDetailClient({
       {/* Hero Section */}
       <div className="relative min-h-[50vh] w-full flex flex-col items-center justify-end pb-16 pt-28">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push('/')}
           className="fixed top-24 left-6 md:left-12 p-3 bg-white/[0.04] backdrop-blur-2xl rounded-full border border-white/[0.06] z-50 text-foreground/50 hover:text-foreground hover:bg-white/[0.08] hover:border-white/[0.12] hover:scale-105 transition-all duration-300 shadow-lg"
           aria-label={t('common.back') || 'Go back'}
         >

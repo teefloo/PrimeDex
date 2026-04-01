@@ -9,14 +9,15 @@ import {
   Users,
   BrainCircuit,
   Languages,
-  Sparkles
+  Sparkles,
+  Swords
 } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
 import SettingsModal from './SettingsModal';
 import { useEffect, useState, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation, loadLanguage } from '@/lib/i18n';
 import PrimeDexLogo from '@/components/ui/PrimeDexLogo';
 import {
   Tooltip,
@@ -86,7 +87,9 @@ export default function Header() {
     const currentIdx = langs.indexOf(language === 'auto' ? 'en' : language as 'en' | 'fr' | 'es' | 'de' | 'it' | 'ja' | 'ko');
     const nextLang = langs[(currentIdx + 1) % langs.length];
     setLanguage(nextLang);
-    i18n.changeLanguage(nextLang);
+    loadLanguage(nextLang).then(() => {
+      i18n.changeLanguage(nextLang);
+    });
   };
 
   const caughtCount = mounted ? caughtPokemon.length : 0;
@@ -156,13 +159,17 @@ export default function Header() {
               <Sparkles className="w-3.5 h-3.5" /> {t('nav.types')}
             </HeaderLink>
             <div className="w-px h-4 bg-white/10" />
+            <HeaderLink href="/moves" variant="ghost" size="sm" className="gap-2 font-black uppercase tracking-[0.15em] text-[10px] text-foreground/60 hover:text-primary">
+              <Swords className="w-3.5 h-3.5" /> {t('nav.moves')}
+            </HeaderLink>
+            <div className="w-px h-4 bg-white/10" />
             <HeaderLink href="/quiz" variant="ghost" size="sm" className="gap-2 font-black uppercase tracking-[0.15em] text-[10px] text-foreground/60 hover:text-primary">
               <BrainCircuit className="w-3.5 h-3.5" /> {t('nav.quiz')}
             </HeaderLink>
           </nav>
 
           {/* ── ACTIONS ── */}
-          <div className="flex-1 flex items-center justify-end gap-1.5 md:gap-2">
+          <div className="flex-1 flex items-center justify-end gap-2 md:gap-3">
             <Tooltip>
               <TooltipTrigger>
                 <Link href="/favorites" aria-label={t('header.open_favorites')}>

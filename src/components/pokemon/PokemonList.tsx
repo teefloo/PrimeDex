@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { usePrimeDexStore } from '@/store/primedex';
 import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary, getPokemonByGeneration } from '@/lib/api';
 import { pokemonKeys } from '@/lib/api/keys';
-import { PokemonCard, PokemonCardSkeleton, PokemonCardProps } from './PokemonCard';
+import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { useInView, motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, SearchX } from 'lucide-react';
@@ -65,9 +65,6 @@ export default function PokemonList() {
   };
 
   const resolvedLang = language === 'auto' ? systemLanguage : language;
-
-  const loadMoreRef = useRef(null);
-  const isInView = useInView(loadMoreRef, { margin: '200px' });
 
   const isBasicMode = selectedTypes.length === 0 &&
     !searchTerm &&
@@ -157,8 +154,8 @@ export default function PokemonList() {
       name: p.name,
       url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
       id: p.id,
-      height: p.height,
-      weight: p.weight,
+      height: p.height ?? 0,
+      weight: p.weight ?? 0,
       types: p.pokemon_v2_pokemontypes?.map((t) => t.pokemon_v2_type.name) || [],
       localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map((n) => ({
         language: n.pokemon_v2_language.name,
@@ -192,8 +189,8 @@ export default function PokemonList() {
       name: p.name,
       url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
       id: p.id,
-      height: p.height,
-      weight: p.weight,
+      height: p.height ?? 0,
+      weight: p.weight ?? 0,
       stats: p.pokemon_v2_pokemonstats?.map(s => s.base_stat) || [],
       base_stat_total: p.pokemon_v2_pokemonstats?.reduce((acc, curr) => acc + curr.base_stat, 0) || 0,
       is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
@@ -209,7 +206,7 @@ export default function PokemonList() {
     }));
   }, [allDetailed]);
 
-  const [displayLimit, setDisplayLimit] = useState(40);
+  const [displayLimit, setDisplayLimit] = useState(20);
   const currentFiltersKey = useMemo(() => JSON.stringify({
     searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, 
     isLegendary, isMythical, selectedEggGroups, selectedColors, 
@@ -218,7 +215,7 @@ export default function PokemonList() {
   }), [searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, showCaughtOnly]);
 
   useEffect(() => {
-    setDisplayLimit(40);
+    setDisplayLimit(20);
   }, [currentFiltersKey]);
 
   const filteredAndSortedResults = useMemo(() => {
@@ -231,8 +228,12 @@ export default function PokemonList() {
         return summaryMap.get(id) || { ...p, id };
       }) || [];
     } else {
-      // Use detailed data if advanced filters are active, otherwise use summary
-      const sourceData = isAdvancedFilterActive ? transformedDetailed : transformedSummary;
+      // Only use detailed data when stat-based advanced filters require it
+      const needsDetailedData = isLegendary !== null || isMythical !== null ||
+        selectedEggGroups.length > 0 || selectedColors.length > 0 ||
+        selectedShapes.length > 0 || minBaseStats > 0 || minAttack > 0 ||
+        minDefense > 0 || minSpeed > 0 || minHp > 0;
+      const sourceData = needsDetailedData ? transformedDetailed : transformedSummary;
       if (!sourceData || sourceData.length === 0) return [];
       results = [...sourceData];
 
@@ -261,7 +262,7 @@ export default function PokemonList() {
         results = results.filter(p => !caughtPokemon.includes(p.id));
       }
 
-      if (isAdvancedFilterActive && transformedDetailed.length > 0) {
+      if (needsDetailedData && transformedDetailed.length > 0) {
         if (isLegendary === true) results = results.filter(p => p.is_legendary);
         if (isMythical === true) results = results.filter(p => p.is_mythical);
         if (selectedEggGroups.length > 0) results = results.filter(p => selectedEggGroups.some(eg => p.egg_groups?.includes(eg)));
@@ -275,18 +276,26 @@ export default function PokemonList() {
       }
 
       if (heightRange[0] > 0 || heightRange[1] < 25) {
+        const minH = heightRange[0];
+        const maxH = heightRange[1];
         results = results.filter(p => {
-          const h = (Number(p.height) || 0) / 10;
-          const meetsMin = h >= heightRange[0];
-          const meetsMax = heightRange[1] === 25 || h <= heightRange[1];
+          const rawHeight = Number(p.height);
+          if (Number.isNaN(rawHeight)) return false;
+          const h = rawHeight / 10;
+          const meetsMin = h >= minH;
+          const meetsMax = maxH >= 25 || h <= maxH;
           return meetsMin && meetsMax;
         });
       }
       if (weightRange[0] > 0 || weightRange[1] < 1200) {
+        const minW = weightRange[0];
+        const maxW = weightRange[1];
         results = results.filter(p => {
-          const w = (Number(p.weight) || 0) / 10;
-          const meetsMin = w >= weightRange[0];
-          const meetsMax = weightRange[1] === 1200 || w <= weightRange[1];
+          const rawWeight = Number(p.weight);
+          if (Number.isNaN(rawWeight)) return false;
+          const w = rawWeight / 10;
+          const meetsMin = w >= minW;
+          const meetsMax = maxW >= 1200 || w <= maxW;
           return meetsMin && meetsMax;
         });
       }
@@ -319,7 +328,7 @@ export default function PokemonList() {
     }
 
     return sortedResults;
-  }, [infiniteData, transformedSummary, transformedDetailed, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon, isAdvancedFilterActive]);
+  }, [infiniteData, transformedSummary, transformedDetailed, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon]);
 
   const displayedPokemon = useMemo(() => {
     if (isBasicMode) return filteredAndSortedResults;
@@ -328,12 +337,12 @@ export default function PokemonList() {
 
   const hasMoreFiltered = !isBasicMode && displayLimit < filteredAndSortedResults.length;
 
-  useEffect(() => {
-    if (isInView) {
-      if (isBasicMode && hasNextPage) fetchNextPage();
-      else if (hasMoreFiltered) setDisplayLimit(prev => prev + 40);
+  const handleLoadMore = () => {
+    if (isBasicMode && hasNextPage) {
+      fetchNextPage();
     }
-  }, [isInView, fetchNextPage, hasNextPage, isBasicMode, hasMoreFiltered]);
+    setDisplayLimit(prev => prev + 20);
+  };
 
   const useAnimations = displayedPokemon.length < 60;
 
@@ -412,13 +421,21 @@ export default function PokemonList() {
       </motion.div>
 
       {(isBasicMode || hasMoreFiltered) && (
-        <div ref={loadMoreRef} className="flex justify-center p-8">
-          {(isFetchingNextPage || hasMoreFiltered) && (
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-              <span className="text-[10px] font-bold text-foreground/20 uppercase tracking-[0.3em]">{t('list.loading_more')}</span>
-            </div>
-          )}
+        <div className="flex justify-center p-8">
+          <Button
+            variant="outline"
+            onClick={handleLoadMore}
+            disabled={isFetchingNextPage || (!hasNextPage && !hasMoreFiltered)}
+            className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2"
+          >
+            {isFetchingNextPage ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> {t('list.loading_more')}
+              </>
+            ) : (
+              t('list.load_more')
+            )}
+          </Button>
         </div>
       )}
     </div>
