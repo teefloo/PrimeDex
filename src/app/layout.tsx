@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   description: t("meta.description"),
   keywords: t("meta.keywords", { returnObjects: true }) as unknown as string[],
-  authors: [{ name: t("meta.author"), url: "https://primedex.vercel.app" }],
+  authors: [{ name: t("meta.author"), url: process.env.NEXT_PUBLIC_APP_URL || "https://primedex.vercel.app" }],
   creator: "PrimeDex",
   publisher: "PrimeDex",
   applicationName: "PrimeDex",
@@ -87,14 +87,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'PrimeDex',
-    url: 'https://primedex.vercel.app',
+    url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://primedex.vercel.app/?search={search_term_string}',
+      target: `${baseUrl}/?search={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   };
@@ -103,8 +105,8 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'PrimeDex',
-    url: 'https://primedex.vercel.app',
-    logo: 'https://primedex.vercel.app/icon.svg',
+    url: baseUrl,
+    logo: `${baseUrl}/icon.svg`,
     sameAs: [
       'https://github.com/Teeflo/PrimeDex',
     ],
@@ -136,10 +138,18 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-background text-foreground font-body">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-bold"
+        >
+          Skip to main content
+        </a>
         <Providers>
           <Breadcrumbs />
           <AppContent>
-            {children}
+            <div id="main-content">
+              {children}
+            </div>
           </AppContent>
           {process.env.NODE_ENV === "development" && <Agentation />}
           <Analytics />

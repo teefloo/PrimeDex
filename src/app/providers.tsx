@@ -46,7 +46,11 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
       i18n.changeLanguage(resolvedLang);
     });
     // Mirror to localStorage for synchronous initial boot on next reload
-    localStorage.setItem('primedex-lang', resolvedLang);
+    try {
+      localStorage.setItem('primedex-lang', resolvedLang);
+    } catch {
+      // localStorage may be unavailable in private browsing
+    }
   }, [language, systemLanguage, _hasHydrated]);
 
   if (!_hasHydrated) {

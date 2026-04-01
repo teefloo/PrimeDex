@@ -140,8 +140,8 @@ export default function PokemonList() {
     gcTime: 2 * 60 * 60 * 1000, // Keep pages 2h in GC
   });
 
-  // 4. Mode Filtre par Génération
-  useQuery({
+  // 4. Mode Filtre par Génération — data integrated into filteredAndSortedResults
+  const { data: genPokemon } = useQuery({
     queryKey: ['genPokemon', selectedGeneration, resolvedLang],
     queryFn: () => (selectedGeneration ? getPokemonByGeneration(selectedGeneration.toString()) : Promise.resolve([])),
     enabled: !!selectedGeneration,
@@ -344,7 +344,7 @@ export default function PokemonList() {
     setDisplayLimit(prev => prev + 20);
   };
 
-  const useAnimations = displayedPokemon.length < 60;
+  const useAnimations = displayedPokemon.length < 30;
 
   const isDataLoading = (isBasicMode && isLoadingInfinite) || 
                         (!isBasicMode && isAdvancedFilterActive && isLoadingDetailed) || 

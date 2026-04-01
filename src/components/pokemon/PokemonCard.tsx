@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
 import { memo, useCallback } from 'react';
 import { useMounted } from '@/hooks/useMounted';
+import { useRouter } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { PokeballIcon } from '@/components/ui/PokeballIcon';
@@ -62,14 +63,15 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const mounted = useMounted();
-  
+  const router = useRouter();
+
   const language = usePrimeDexStore(s => s.language);
   const systemLanguage = usePrimeDexStore(s => s.systemLanguage);
   const favorites = usePrimeDexStore(s => s.favorites);
   const compareList = usePrimeDexStore(s => s.compareList);
   const team = usePrimeDexStore(s => s.team);
   const caughtPokemon = usePrimeDexStore(s => s.caughtPokemon);
-  
+
   const addFavorite = usePrimeDexStore(s => s.addFavorite);
   const removeFavorite = usePrimeDexStore(s => s.removeFavorite);
   const addToCompare = usePrimeDexStore(s => s.addToCompare);
@@ -80,11 +82,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
 
   const resolvedLang = language === 'auto' ? systemLanguage : language;
 
-  // Only fetch from REST when we have no usable display data at all
-  // (no types, no name to show). The grid passes initialData from GraphQL summary
-  // which already contains types and localized names — no need for extra fetches.
   const pokemonGql = initialData?.pokemon as GqlPokemonData | undefined;
-  const hasUsableData = !!(initialData?.pokemon?.id && 
+  const hasUsableData = !!(initialData?.pokemon?.id &&
     ((pokemonGql?.types?.length ?? 0) > 0 || (pokemonGql?.pokemon_v2_pokemontypes?.length ?? 0) > 0));
 
   const { data, isLoading } = useQuery<{
@@ -97,8 +96,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         getPokemonDetail(name),
         getPokemonSpecies(name).catch(() => null)
       ]);
-      return { 
-        pokemon, 
+      return {
+        pokemon,
         species: species as PokemonSpecies
       };
     },
@@ -108,7 +107,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   });
 
   const displayData = data || initialData;
-  
+
   const prefetchDetails = useCallback(() => {
     if (!name) return;
     queryClient.prefetchQuery({
@@ -118,14 +117,25 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
           getPokemonDetail(name),
           getPokemonSpecies(name).catch(() => null)
         ]);
-        return { 
-          pokemon, 
+        return {
+          pokemon,
           species: species as PokemonSpecies
         };
       },
       staleTime: 10 * 60 * 1000,
     });
   }, [name, queryClient, resolvedLang]);
+
+  const handleCardClick = useCallback(() => {
+    router.push(`/pokemon/${name}`);
+  }, [router, name]);
+
+  const handleCardKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      router.push(`/pokemon/${name}`);
+    }
+  }, [router, name]);
 
   if (isLoading && !displayData) {
     return <PokemonCardSkeleton />;
@@ -139,24 +149,9 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
   const isComp = mounted && compareList.includes(pokemonId);
   const isTeam = mounted && team.includes(pokemonId);
   const caught = mounted && caughtPokemon.includes(pokemonId);
-  
+
   const teamFull = mounted && team.length >= 6;
   const compareFull = mounted && compareList.length >= 3;
-
-  const pokemonGqlData = pokemon as unknown as GqlPokemonData;
-  const typesRaw: (PokemonDetail['types'][number] | { pokemon_v2_type: { name: string } })[] = pokemon.types || pokemonGqlData.pokemon_v2_pokemontypes || [];
-  const types: PokemonCardType[] = typesRaw.map((t): PokemonCardType | null => {
-    if (!t) return null;
-    if (typeof t === 'string') return { type: { name: t } };
-    if ('type' in t && (t as { type?: { name?: string } }).type?.name) return t as PokemonCardType;
-    if ('pokemon_v2_type' in t) {
-      const gqlType = t as { pokemon_v2_type?: { name?: string } };
-      if (gqlType.pokemon_v2_type?.name) return { type: { name: gqlType.pokemon_v2_type.name } };
-    }
-    return null;
-  }).filter((t): t is PokemonCardType => t !== null);
-  const mainType = types[0]?.type?.name || 'normal';
-  const color = TYPE_COLORS[mainType] || '#A8A77A';
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
@@ -178,28 +173,45 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
     toggleCaught(pokemonId);
   };
 
-  const getLocalizedName = () => {
+  const pokemonGqlData = pokemon as unknown as GqlPokemonData;
+  const types: PokemonCardType[] = (pokemon.types || pokemonGqlData.pokemon_v2_pokemontypes || []).map((t): PokemonCardType | null => {
+    if (!t) return null;
+    if (typeof t === 'string') return { type: { name: t } };
+    if ('type' in t && (t as { type?: { name?: string } }).type?.name) return t as PokemonCardType;
+    if ('pokemon_v2_type' in t) {
+      const gqlType = t as { pokemon_v2_type?: { name?: string } };
+      if (gqlType.pokemon_v2_type?.name) return { type: { name: gqlType.pokemon_v2_type.name } };
+    }
+    return null;
+  }).filter((t): t is PokemonCardType => t !== null);
+
+  const mainType = types[0]?.type?.name || 'normal';
+  const color = TYPE_COLORS[mainType] || '#A8A77A';
+
+  const displayName = (() => {
     if (species?.names?.length) {
       const entry = species.names.find(n => n?.language?.name === resolvedLang) || species.names.find(n => n?.language?.name === 'en');
       if (entry?.name) return entry.name;
     }
-    const gqlSpeciesData = pokemonGqlData;
-    if (gqlSpeciesData.localizedNames?.length) {
-      const entry = gqlSpeciesData.localizedNames.find((n: LocalizedNameEntry) => n?.language === resolvedLang) || gqlSpeciesData.localizedNames.find((n: LocalizedNameEntry) => n?.language === 'en');
+    if (pokemonGqlData.localizedNames?.length) {
+      const entry = pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === resolvedLang) || pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === 'en');
       if (entry?.name) return entry.name;
     }
     return pokemon.name || name;
-  };
+  })();
 
-  const displayName = getLocalizedName();
   const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`;
 
-  const handleCardClick = () => {
-    window.open(`/pokemon/${name}`, '_blank', 'noopener,noreferrer');
-  };
-
   return (
-    <div className="block h-full py-4 px-2 cursor-pointer" onMouseEnter={prefetchDetails} onClick={handleCardClick}>
+    <div
+      className="block h-full py-4 px-2 cursor-pointer"
+      onMouseEnter={prefetchDetails}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role="link"
+      tabIndex={0}
+      aria-label={`${displayName} — ${formatId(pokemonId)}. View details`}
+    >
       <motion.div
         whileHover={{ scale: 1.03, y: -4 }}
         whileTap={{ scale: 0.97 }}
@@ -208,7 +220,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         style={{ '--type-color': `${color}50` } as React.CSSProperties}
       >
         {/* Caught pokeball */}
-        <button 
+        <button
           onClick={handleToggleCaught}
           className={cn(
             "absolute bottom-6 left-6 z-20 transition-all duration-500 hover:scale-110 active:scale-90",
@@ -221,17 +233,17 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         </button>
 
         {/* Top ambient glow */}
-        <div 
-          className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-[80px] opacity-15 group-hover:opacity-35 transition-all duration-1000" 
-          style={{ backgroundColor: color }} 
+        <div
+          className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-[80px] opacity-15 group-hover:opacity-35 transition-all duration-1000"
+          style={{ backgroundColor: color }}
         />
-        
+
         {/* Bottom subtle glow */}
-        <div 
-          className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full blur-[60px] opacity-0 group-hover:opacity-20 transition-all duration-1000" 
-          style={{ backgroundColor: color }} 
+        <div
+          className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full blur-[60px] opacity-0 group-hover:opacity-20 transition-all duration-1000"
+          style={{ backgroundColor: color }}
         />
-        
+
         {/* ID and Action buttons */}
         <div className="flex justify-between items-center w-full z-10 mb-4">
           <span className="text-sm font-black text-foreground/30 group-hover:text-foreground/60 transition-colors duration-300 tracking-tight">{formatId(pokemonId)}</span>
@@ -242,8 +254,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               aria-label={isTeam ? t('card.remove_team') : t('card.add_team')}
               className={cn(
                 "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
-                isTeam 
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.2)]" 
+                isTeam
+                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]",
                 !isTeam && teamFull && "opacity-15 cursor-not-allowed"
               )}
@@ -257,8 +269,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               aria-label={isComp ? t('card.remove_compare') : t('card.add_compare')}
               className={cn(
                 "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
-                isComp 
-                  ? "bg-primary/15 text-primary border-primary/20 shadow-[0_0_12px_rgba(227,53,13,0.2)]" 
+                isComp
+                  ? "bg-primary/15 text-primary border-primary/20 shadow-[0_0_12px_rgba(227,53,13,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]",
                 !isComp && compareFull && "opacity-15 cursor-not-allowed"
               )}
@@ -272,8 +284,8 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               aria-label={isFav ? t('card.remove_favorite') : t('card.add_favorite')}
               className={cn(
                 "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
-                isFav 
-                  ? "bg-rose-500/15 text-rose-400 border-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.2)]" 
+                isFav
+                  ? "bg-rose-500/15 text-rose-400 border-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]"
               )}
             >
@@ -286,13 +298,13 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
 
         {/* Pokemon Image */}
         <div className="relative w-36 h-36 my-4 z-10 flex items-center justify-center">
-          <div 
-            className="absolute inset-0 rounded-full blur-[40px] opacity-20 group-hover:opacity-50 group-hover:scale-130 transition-all duration-1000" 
-            style={{ backgroundColor: color }} 
+          <div
+            className="absolute inset-0 rounded-full blur-[40px] opacity-20 group-hover:opacity-50 group-hover:scale-130 transition-all duration-1000"
+            style={{ backgroundColor: color }}
           />
           <Image
-            src={spriteUrl} 
-            alt={t('pokemon.artwork', { name: displayName })} 
+            src={spriteUrl}
+            alt={t('pokemon.artwork', { name: displayName })}
             width={160} height={160}
             className="w-full h-full object-contain drop-shadow-2xl transition-all duration-700 ease-out group-hover:scale-[1.2] group-hover:-translate-y-4 relative z-10"
             priority={index < 10}

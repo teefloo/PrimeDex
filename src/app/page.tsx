@@ -17,14 +17,16 @@ export default async function Home() {
     initialPageParam: 0,
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'PrimeDex',
-    url: 'https://primedex.vercel.app',
+    url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://primedex.vercel.app/?search={search_term_string}',
+      target: `${baseUrl}/?search={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   };
@@ -36,7 +38,7 @@ export default async function Home() {
     operatingSystem: 'All',
     applicationCategory: 'GameApplication',
     description: 'A high-performance Gaming Dashboard for Pokémon tracking and team building.',
-    url: 'https://primedex.vercel.app',
+    url: baseUrl,
   };
 
   return (
