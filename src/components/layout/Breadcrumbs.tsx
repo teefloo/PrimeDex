@@ -10,7 +10,7 @@ export function Breadcrumbs() {
   const pathname = usePathname();
   const { t } = useTranslation();
 
-  if (pathname === '/') return null;
+  if (pathname === '/' || pathname.startsWith('/pokemon/')) return null;
 
   const pathSegments = pathname.split('/').filter(Boolean);
   

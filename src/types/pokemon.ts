@@ -80,6 +80,10 @@ export interface PokemonDetail {
     latest: string;
     legacy: string;
   };
+  forms: {
+    name: string;
+    url: string;
+  }[];
 }
 
 export interface LocalizedPokemonData {

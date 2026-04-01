@@ -211,12 +211,45 @@ export function PokemonDetailClient({
   const mainType = pokemon.types[0].type.name;
   const color = TYPE_COLORS[mainType] || '#A8A77A';
 
+  const isAlternateForm = pokemon.name.includes('-mega') || pokemon.name.includes('-primal') || pokemon.name.includes('-ultra');
+  
   const typeLabel = pokemon.types.map((typeItem) => t(`types.${typeItem.type.name}`)).join(' / ');
 
-  const displayName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-    || species?.names?.find(n => n.language.name === resolvedLang)?.name
-    || species?.names?.find(n => n.language.name === 'en')?.name
-    || pokemon.name;
+  const getLocalizedName = (name: string) => {
+    if (name.includes('-mega')) {
+      const baseName = name.replace('-mega-x', '').replace('-mega-y', '').replace('-mega', '');
+      const suffixX = name.includes('-mega-x') ? ' X' : name.includes('-mega-y') ? ' Y' : '';
+      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+        || species?.names?.find(n => n.language.name === resolvedLang)?.name
+        || species?.names?.find(n => n.language.name === 'en')?.name
+        || baseName;
+      return `${baseLocalizedName}-Méga${suffixX}`;
+    }
+    if (name.includes('-primal')) {
+      const baseName = name.replace('-primal', '');
+      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+        || species?.names?.find(n => n.language.name === resolvedLang)?.name
+        || species?.names?.find(n => n.language.name === 'en')?.name
+        || baseName;
+      return `${baseLocalizedName}-Primal`;
+    }
+    if (name.includes('-ultra')) {
+      const baseName = name.replace('-ultra', '').replace(/-\w+$/, '');
+      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+        || species?.names?.find(n => n.language.name === resolvedLang)?.name
+        || species?.names?.find(n => n.language.name === 'en')?.name
+        || baseName;
+      return `Ultra-${baseLocalizedName}`;
+    }
+    return null;
+  };
+
+  const displayName = isAlternateForm 
+    ? getLocalizedName(pokemon.name) || pokemon.name
+    : localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+      || species?.names?.find(n => n.language.name === resolvedLang)?.name
+      || species?.names?.find(n => n.language.name === 'en')?.name
+      || pokemon.name;
 
   const flavorText = localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ')
     || species?.flavor_text_entries.find((entry) => entry.language.name === resolvedLang)?.flavor_text.replace(/\f/g, ' ')
@@ -281,24 +314,13 @@ export function PokemonDetailClient({
       <div className="relative min-h-[50vh] w-full flex flex-col items-center justify-end pb-16 pt-28">
         <button
           onClick={() => router.back()}
-          className="absolute top-8 left-6 md:left-12 p-3 bg-white/[0.04] backdrop-blur-2xl rounded-full border border-white/[0.06] z-30 text-foreground/50 hover:text-foreground hover:bg-white/[0.08] hover:border-white/[0.12] hover:scale-105 transition-all duration-300 shadow-lg"
+          className="fixed top-24 left-6 md:left-12 p-3 bg-white/[0.04] backdrop-blur-2xl rounded-full border border-white/[0.06] z-50 text-foreground/50 hover:text-foreground hover:bg-white/[0.08] hover:border-white/[0.12] hover:scale-105 transition-all duration-300 shadow-lg"
           aria-label={t('common.back') || 'Go back'}
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
 
-        <div className="absolute top-8 right-6 md:right-12 z-30 flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.push(`/quiz?pokemon=${pokemon.name}`)}
-            className="rounded-full transition-all h-12 w-12 bg-white/[0.04] border-white/[0.06] text-foreground/60 hover:bg-purple-500/15 hover:text-purple-400 hover:border-purple-500/30 backdrop-blur-xl"
-            title={t('detail.test_knowledge')}
-            aria-label={t('detail.test_knowledge_aria', { name: displayName })}
-          >
-            <BrainCircuit className="w-5 h-5" />
-          </Button>
-
+        <div className="fixed top-1/2 -translate-y-1/2 right-0 z-50 flex flex-col items-center gap-3">
           <Button
             variant="outline"
             size="icon"
@@ -312,10 +334,10 @@ export function PokemonDetailClient({
 
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setShowShiny(!showShiny)}
             className={cn(
-              "rounded-full gap-2 font-black uppercase tracking-widest text-[10px] transition-all h-12 px-5",
+              "rounded-full transition-all h-12 w-12",
               showShiny 
                 ? "bg-yellow-500/15 border-yellow-500/30 text-yellow-400 shadow-[0_4px_16px_-4px_rgba(234,179,8,0.3)]" 
                 : "bg-white/[0.04] border-white/[0.06] text-foreground/50 backdrop-blur-xl"
@@ -323,8 +345,7 @@ export function PokemonDetailClient({
             title={t('detail.shiny')}
             aria-label={showShiny ? t('detail.show_normal') || 'Show normal version' : t('detail.show_shiny') || 'Show shiny version'}
           >
-            <Star className={cn("w-3.5 h-3.5", showShiny && "fill-current")} />
-            {t('detail.shiny')}
+            <Star className={cn("w-5 h-5", showShiny && "fill-current")} />
           </Button>
 
           <Button

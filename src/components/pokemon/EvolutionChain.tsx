@@ -222,32 +222,79 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
   const { language, systemLanguage } = usePrimeDexStore();
   const resolvedLang = language === 'auto' ? systemLanguage : language;
 
-  const { data: speciesData, isLoading, isError } = useQuery({
+  const { data: speciesData, isLoading: speciesLoading, isError: speciesError } = useQuery({
     queryKey: ['species-alternate-forms', speciesName, resolvedLang],
     queryFn: () => getPokemonSpecies(speciesName),
     staleTime: 24 * 60 * 60 * 1000,
     retry: 2,
   });
 
+  const { data: pokemonData, isLoading: pokemonLoading, isError: pokemonError } = useQuery({
+    queryKey: ['pokemon-alternate-forms', speciesName],
+    queryFn: () => getPokemonDetail(speciesName),
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: 2,
+  });
+
+  const isLoading = speciesLoading || pokemonLoading;
+  const isError = speciesError || pokemonError;
+
   const alternateForms: AlternateForm[] = (() => {
-    if (!speciesData?.varieties) return [];
-    return speciesData.varieties
-      .filter(v => {
-        if (v.is_default) return false;
-        const name = v.pokemon.name;
-        return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
-      })
-      .map(v => {
-        const name = v.pokemon.name;
-        let formType: AlternateForm['formType'] = 'mega';
-        if (name.includes('-primal')) formType = 'primal';
-        else if (name.includes('-ultra')) formType = 'ultra';
-        return {
-          name,
-          id: parseInt(v.pokemon.url.split('/').filter(Boolean).pop() || '0'),
-          formType,
-        };
-      });
+    const forms = new Map<string, AlternateForm>();
+
+    // Collect from species.varieties
+    if (speciesData?.varieties) {
+      const filtered = speciesData.varieties
+        .filter(v => {
+          if (v.is_default) return false;
+          const name = v.pokemon.name;
+          return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
+        });
+      console.log('[AlternateFormsSection] Filtered varieties:', filtered.map(v => v.pokemon.name));
+      
+      filtered
+        .forEach(v => {
+          const name = v.pokemon.name;
+          let formType: AlternateForm['formType'] = 'mega';
+          if (name.includes('-primal')) formType = 'primal';
+          else if (name.includes('-ultra')) formType = 'ultra';
+          forms.set(name, {
+            name,
+            id: parseInt(v.pokemon.url.split('/').filter(Boolean).pop() || '0'),
+            formType,
+          });
+        });
+    }
+
+    // Also collect from pokemon.forms (covers cases where varieties doesn't include mega forms)
+    if (pokemonData?.forms) {
+      const filteredForms = pokemonData.forms
+        .filter(f => {
+          const name = f.name;
+          return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
+        });
+      console.log('[AlternateFormsSection] Filtered forms:', filteredForms.map(f => f.name));
+      
+      filteredForms
+        .forEach(f => {
+          const name = f.name;
+          let formType: AlternateForm['formType'] = 'mega';
+          if (name.includes('-primal')) formType = 'primal';
+          else if (name.includes('-ultra')) formType = 'ultra';
+          // Extract ID from form URL
+          const formId = parseInt(f.url.split('/').filter(Boolean).pop() || '0');
+          if (!forms.has(name)) {
+            forms.set(name, {
+              name,
+              id: formId,
+              formType,
+            });
+          }
+        });
+    }
+
+    console.log('[AlternateFormsSection] Final forms:', Array.from(forms.values()));
+    return Array.from(forms.values());
   })();
 
   if (isLoading) {
