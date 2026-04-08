@@ -399,6 +399,8 @@
       customize: 'Personaliza tu desafío',
       correct: 'Correcto',
       wrong: 'Incorrecto',
+      errors: 'Errores',
+      game_over_wrong: '¡Demasiadas respuestas incorrectas!',
     },
     common: {
       prev: 'Anterior',
@@ -570,6 +572,14 @@
       learners_count: '{{count}} Pokémon',
       no_learners: 'No se encontraron Pokémon para este movimiento.',
       loading_learners: 'Cargando Pokémon compatibles...',
+      learn_methods: {
+        level_up: 'Aprendido por subida de nivel',
+        machine: 'Aprendido por MT',
+        technical_record: 'Aprendido por DT',
+        egg: 'Aprendido por cría',
+        tutor: 'Aprendido por tutor',
+        other: 'Otros métodos',
+      },
       physical: 'Físico',
       special: 'Especial',
       status: 'Estado',

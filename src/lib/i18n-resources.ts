@@ -425,6 +425,8 @@ export const resources = {
         customize: 'Customize your challenge',
         correct: 'Correct',
         wrong: 'Wrong',
+        errors: 'Errors',
+        game_over_wrong: 'Too many wrong answers!',
       },
       common: {
         home: 'Home',
@@ -1137,6 +1139,8 @@ export const resources = {
         customize: 'Personnaliser le défi',
         correct: 'Correct',
         wrong: 'Faux',
+        errors: 'Erreurs',
+        game_over_wrong: 'Trop de mauvaises réponses !',
       },
       common: {
         home: 'Accueil',
@@ -1650,6 +1654,8 @@ export const resources = {
         customize: 'Personaliza tu desafío',
         correct: 'Correcto',
         wrong: 'Incorrecto',
+        errors: 'Errores',
+        game_over_wrong: '¡Demasiadas respuestas incorrectas!',
       },
       common: {
         prev: 'Anterior',
@@ -2238,6 +2244,8 @@ export const resources = {
         customize: 'Herausforderung anpassen',
         correct: 'Richtig',
         wrong: 'Falsch',
+        errors: 'Fehler',
+        game_over_wrong: 'Zu viele falsche Antworten!',
       },
       common: {
         prev: 'Zurück',
@@ -2794,6 +2802,8 @@ export const resources = {
         customize: 'Personalizza sfida',
         correct: 'Corretto',
         wrong: 'Sbagliato',
+        errors: 'Errori',
+        game_over_wrong: 'Troppe risposte sbagliate!',
       },
       common: {
         prev: 'Precedente',

@@ -9,6 +9,11 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+const graphqlClient = axios.create({
+  baseURL: 'https://beta.pokeapi.co',
+  timeout: 60000,
+});
+
 axiosRetry(apiClient, {
   retries: 3,
   retryDelay: axiosRetry.exponentialDelay,
@@ -17,4 +22,13 @@ axiosRetry(apiClient, {
   },
 });
 
+axiosRetry(graphqlClient, {
+  retries: 2,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429;
+  },
+});
+
+export { graphqlClient };
 export default apiClient;

@@ -509,6 +509,8 @@ export default {
       customize: 'Personnaliser le défi',
       correct: 'Correct',
       wrong: 'Faux',
+      errors: 'Erreurs',
+      game_over_wrong: 'Trop de mauvaises réponses !',
     },
     common: {
       home: 'Accueil',
@@ -603,6 +605,14 @@ export default {
       learners_count: '{{count}} Pokémon',
       no_learners: 'Aucun Pokémon trouvé pour cette capacité.',
       loading_learners: 'Chargement des Pokémon compatibles...',
+      learn_methods: {
+        level_up: 'Appris par montée de niveau',
+        machine: 'Appris par CT',
+        technical_record: 'Appris par DT',
+        egg: 'Appris par reproduction',
+        tutor: 'Appris par tuteur de capacités',
+        other: 'Autres méthodes',
+      },
       physical: 'Physique',
       special: 'Spécial',
       status: 'Statut',

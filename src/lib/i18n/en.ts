@@ -425,6 +425,8 @@ export default {
       customize: 'Customize your challenge',
       correct: 'Correct',
       wrong: 'Wrong',
+      errors: 'Errors',
+      game_over_wrong: 'Too many wrong answers!',
     },
     common: {
       home: 'Home',
@@ -608,6 +610,14 @@ export default {
       learners_count: '{{count}} Pokémon',
       no_learners: 'No Pokémon found for this move.',
       loading_learners: 'Loading compatible Pokémon...',
+      learn_methods: {
+        level_up: 'Learned by level up',
+        machine: 'Learned by TM',
+        technical_record: 'Learned by TR',
+        egg: 'Learned by breeding',
+        tutor: 'Learned by tutor',
+        other: 'Other methods',
+      },
       physical: 'Physical',
       special: 'Special',
       status: 'Status',

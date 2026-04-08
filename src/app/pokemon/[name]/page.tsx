@@ -93,8 +93,8 @@ export default async function PokemonPage({ params, searchParams }: Props) {
   const lang = (sParams.lang as string) || 'en';
   const langId = lang === 'fr' ? 5 : 9;
 
-  // For mega/primal/ultra forms, derive the base species name
-  const baseName = name.split(/-(mega|primal|ultra)/)[0] || name;
+  // For alternate forms, derive the base species name
+  const baseName = name.split(/-(mega|primal|ultra|gmax|alola|galar|hisui|paldea)/)[0] || name;
 
   let pokemon: PokemonDetail;
   let species: PokemonSpecies | null = null;

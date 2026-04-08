@@ -115,12 +115,13 @@ export default function PokemonList() {
   });
 
   // 2. Detailed Data : Loaded ONLY if advanced filters are used
-  const { data: allDetailed, isLoading: isLoadingDetailed } = useQuery({
+  const { data: allDetailed, isLoading: isLoadingDetailed, isFetching: isFetchingDetailed, error: detailedError } = useQuery({
     queryKey: pokemonKeys.allDetailed(resolvedLang),
     queryFn: () => getAllPokemonDetailed(),
     enabled: isAdvancedFilterActive,
     staleTime: 24 * 60 * 60 * 1000,
     gcTime: 48 * 60 * 60 * 1000,
+    retry: 2,
   });
 
   // 3. Normal Mode : Infinite Scroll
@@ -184,26 +185,28 @@ export default function PokemonList() {
   };
 
   const transformedDetailed = useMemo(() => {
-    if (!allDetailed) return [];
-    return allDetailed.map((p: PokemonBasicData) => ({
-      name: p.name,
-      url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
-      id: p.id,
-      height: p.height ?? 0,
-      weight: p.weight ?? 0,
-      stats: p.pokemon_v2_pokemonstats?.map(s => s.base_stat) || [],
-      base_stat_total: p.pokemon_v2_pokemonstats?.reduce((acc, curr) => acc + curr.base_stat, 0) || 0,
-      is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
-      is_mythical: p.pokemon_v2_pokemonspecy?.is_mythical || false,
-      types: p.pokemon_v2_pokemontypes?.map(t => t.pokemon_v2_type.name) || [],
-      egg_groups: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonespeciesegggroups?.map(eg => eg.pokemon_v2_egggroup.name) || [],
-      color: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemoncolor?.name,
-      shape: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonshape?.name,
-      localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map(n => ({
-        language: n.pokemon_v2_language.name,
-        name: n.name
-      })) || []
-    }));
+    if (!allDetailed || !Array.isArray(allDetailed)) return [];
+    return allDetailed
+      .filter((p): boolean => !!p && typeof p === 'object')
+      .map((p: PokemonBasicData) => ({
+        name: p.name,
+        url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
+        id: p.id,
+        height: p.height ?? 0,
+        weight: p.weight ?? 0,
+        stats: p.pokemon_v2_pokemonstats?.map(s => s.base_stat) || [],
+        base_stat_total: p.pokemon_v2_pokemonstats?.reduce((acc, curr) => acc + curr.base_stat, 0) || 0,
+        is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
+        is_mythical: p.pokemon_v2_pokemonspecy?.is_mythical || false,
+        types: p.pokemon_v2_pokemontypes?.map(t => t.pokemon_v2_type.name) || [],
+        egg_groups: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonegggroups?.map(eg => eg.pokemon_v2_egggroup.name) || [],
+        color: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemoncolor?.name,
+        shape: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonshape?.name,
+        localizedNames: p.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.map(n => ({
+          language: n.pokemon_v2_language.name,
+          name: n.name
+        })) || []
+      }));
   }, [allDetailed]);
 
   const [displayLimit, setDisplayLimit] = useState(20);
@@ -233,8 +236,16 @@ export default function PokemonList() {
         selectedEggGroups.length > 0 || selectedColors.length > 0 ||
         selectedShapes.length > 0 || minBaseStats > 0 || minAttack > 0 ||
         minDefense > 0 || minSpeed > 0 || minHp > 0;
-      const sourceData = needsDetailedData ? transformedDetailed : transformedSummary;
-      if (!sourceData || sourceData.length === 0) return [];
+      
+      let sourceData: PokemonResultItem[] = needsDetailedData ? transformedDetailed : transformedSummary;
+      
+      if (!sourceData || !Array.isArray(sourceData) || sourceData.length === 0) {
+        if (needsDetailedData && isLoadingDetailed) return null;
+        return [];
+      }
+
+      sourceData = sourceData.filter((p): p is PokemonResultItem => p !== null && p !== undefined && typeof p === 'object' && 'id' in p && 'name' in p);
+      if (sourceData.length === 0) return [];
       results = [...sourceData];
 
       if (selectedTypes.length > 0) {
@@ -263,17 +274,37 @@ export default function PokemonList() {
       }
 
       if (needsDetailedData && transformedDetailed.length > 0) {
-        if (isLegendary === true) results = results.filter(p => p.is_legendary);
-        if (isMythical === true) results = results.filter(p => p.is_mythical);
-        if (selectedEggGroups.length > 0) results = results.filter(p => selectedEggGroups.some(eg => p.egg_groups?.includes(eg)));
-        if (selectedColors.length > 0) results = results.filter(p => p.color && selectedColors.includes(p.color));
-        if (selectedShapes.length > 0) results = results.filter(p => p.shape && selectedShapes.includes(p.shape));
-        if (minBaseStats > 0) results = results.filter(p => (p.base_stat_total || 0) >= minBaseStats);
-        if (minHp > 0) results = results.filter(p => p.stats && p.stats[0] >= minHp);
-        if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
-        if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
-        if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
+        const detailedMap = new Map(transformedDetailed.map(d => [d.id, d]));
+        results = results.map(p => {
+          const detailed = detailedMap.get(p.id);
+          if (detailed) {
+            return {
+              ...p,
+              is_legendary: detailed.is_legendary,
+              is_mythical: detailed.is_mythical,
+              egg_groups: detailed.egg_groups,
+              color: detailed.color,
+              shape: detailed.shape,
+              stats: detailed.stats,
+              base_stat_total: detailed.base_stat_total,
+            };
+          }
+          return p;
+        });
       }
+
+      if (isLegendary === true) results = results.filter(p => p.is_legendary);
+      else if (isLegendary === false) results = results.filter(p => !p.is_legendary);
+      if (isMythical === true) results = results.filter(p => p.is_mythical);
+      else if (isMythical === false) results = results.filter(p => !p.is_mythical);
+      if (selectedEggGroups.length > 0) results = results.filter(p => selectedEggGroups.some(eg => p.egg_groups?.includes(eg)));
+      if (selectedColors.length > 0) results = results.filter(p => p.color && selectedColors.includes(p.color));
+      if (selectedShapes.length > 0) results = results.filter(p => p.shape && selectedShapes.includes(p.shape));
+      if (minBaseStats > 0) results = results.filter(p => (p.base_stat_total || 0) >= minBaseStats);
+      if (minHp > 0) results = results.filter(p => p.stats && p.stats[0] >= minHp);
+      if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
+      if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
+      if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
 
       if (heightRange[0] > 0 || heightRange[1] < 25) {
         const minH = heightRange[0];
@@ -328,14 +359,15 @@ export default function PokemonList() {
     }
 
     return sortedResults;
-  }, [infiniteData, transformedSummary, transformedDetailed, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon]);
+  }, [infiniteData, transformedSummary, transformedDetailed, searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, favorites, sortBy, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, resolvedLang, showCaughtOnly, caughtPokemon, isLoadingDetailed]);
 
   const displayedPokemon = useMemo(() => {
+    if (!filteredAndSortedResults) return [];
     if (isBasicMode) return filteredAndSortedResults;
     return filteredAndSortedResults.slice(0, displayLimit);
   }, [filteredAndSortedResults, displayLimit, isBasicMode]);
 
-  const hasMoreFiltered = !isBasicMode && displayLimit < filteredAndSortedResults.length;
+  const hasMoreFiltered = !isBasicMode && filteredAndSortedResults !== null && displayLimit < filteredAndSortedResults.length;
 
   const handleLoadMore = () => {
     if (isBasicMode && hasNextPage) {
@@ -348,13 +380,40 @@ export default function PokemonList() {
 
   const isDataLoading = (isBasicMode && isLoadingInfinite) || 
                         (!isBasicMode && isAdvancedFilterActive && isLoadingDetailed) || 
-                        (!isBasicMode && !isAdvancedFilterActive && isLoadingSummary);
+                        (!isBasicMode && !isAdvancedFilterActive && isLoadingSummary) ||
+                        (!isBasicMode && filteredAndSortedResults === null);
 
   if (isDataLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2 mt-8">
         {Array.from({ length: 10 }).map((_, i) => <PokemonCardSkeleton key={i} />)}
       </div>
+    );
+  }
+
+  if (detailedError) {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+        <SearchX className="w-20 h-20 text-red-500/40" />
+        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.error_loading')}</h3>
+        <p className="text-sm text-foreground/40 max-w-md">{(detailedError as Error).message || t('list.error_desc')}</p>
+        <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
+          <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
+        </Button>
+      </motion.div>
+    );
+  }
+
+  if (detailedError) {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+        <SearchX className="w-20 h-20 text-red-500/40" />
+        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.error_loading')}</h3>
+        <p className="text-sm text-foreground/40 max-w-md">{(detailedError as Error).message || t('list.error_desc')}</p>
+        <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
+          <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
+        </Button>
+      </motion.div>
     );
   }
 
@@ -373,7 +432,7 @@ export default function PokemonList() {
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    numberOfItems: filteredAndSortedResults.length,
+    numberOfItems: filteredAndSortedResults?.length ?? 0,
     itemListElement: displayedPokemon.map((p, idx) => ({
       '@type': 'ListItem',
       position: idx + 1,
@@ -393,7 +452,7 @@ export default function PokemonList() {
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t('list.results')}</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
-              {filteredAndSortedResults.length}
+              {filteredAndSortedResults?.length ?? 0}
             </Badge>
           </div>
           <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 text-[9px] font-black uppercase tracking-widest gap-1.5">

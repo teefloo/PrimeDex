@@ -34,7 +34,12 @@ export default function SortSelector() {
       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/25 hidden sm:block">{t('sort.label')}</span>
       <Select value={sortBy} onValueChange={(val: SortValue | null) => val && setSortBy(val)}>
         <SelectTrigger className="w-[200px] rounded-full bg-white/[0.03] backdrop-blur-xl border-white/[0.06] text-[11px] font-bold uppercase tracking-wider h-10 focus:ring-primary/20 hover:border-white/[0.12] transition-all">
-          <SelectValue placeholder={t('sort.placeholder')} />
+          <SelectValue>
+            {(() => {
+              const current = options.find(o => o.value === sortBy);
+              return current ? current.label : t('sort.placeholder');
+            })()}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-background/95 backdrop-blur-2xl border-white/[0.08] rounded-2xl p-1 shadow-[0_16px_64px_rgba(0,0,0,0.3)]">
           {options.map((opt) => (

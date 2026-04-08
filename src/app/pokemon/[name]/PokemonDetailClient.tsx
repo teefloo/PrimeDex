@@ -27,7 +27,8 @@ import {
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, PokemonEncounterVersionDetail, PokemonEncounterDetail, TYPE_COLORS } from '@/types/pokemon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrimeDexStore } from '@/store/primedex';
-import { cn, formatId, formatName } from '@/lib/utils';
+import { cn, formatId, formatName, formatLocationName } from '@/lib/utils';
+import { getFormDisplayName } from '@/lib/form-names';
 import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useMounted } from '@/hooks/useMounted';
@@ -68,8 +69,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from '@/lib/i18n';
 import { getLocalizedPokemonData } from '@/lib/api';
 import { ABILITY_BATTLE_DESCRIPTIONS } from '@/lib/ability-battle-descriptions';
+import { HeldItem } from '@/lib/held-items';
 
 import Image from 'next/image';
+
+function ItemCard({ item, language }: { item: HeldItem; language: string }) {
+  const [imgError, setImgError] = useState(false);
+  const itemName = item.name[language as 'en' | 'fr'] || item.name.en;
+  const itemDesc = item.description[language as 'en' | 'fr'] || item.description.en;
+
+  return (
+    <div className="flex gap-3 p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:bg-secondary/40 transition-colors">
+      <div className="flex-shrink-0 w-12 h-12 bg-background/50 rounded-xl flex items-center justify-center p-2 border border-white/5 overflow-hidden">
+        {!imgError ? (
+          <img 
+            src={item.iconUrl} 
+            alt={itemName} 
+            className="w-full h-full object-contain filter group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-foreground/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col flex-1 min-w-0 justify-center">
+        <span className="font-black text-sm text-foreground/90 truncate group-hover:text-primary transition-colors">
+          {itemName}
+        </span>
+        <span className="text-[10px] text-foreground/60 leading-tight mt-1 line-clamp-2">
+          {itemDesc}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 const POKE_COLORS: Record<string, string> = {
   black: '#2E2E2E', blue: '#3B82F6', brown: '#92400E', gray: '#6B7280',
@@ -116,9 +151,10 @@ export function PokemonDetailClient({
     queryKey: ['pokemon-full-detail', name, resolvedLang],
     queryFn: async () => {
       const langId = usePrimeDexStore.getState().getLanguageId();
+      const baseName = name.split(/-(mega|primal|ultra|gmax|alola|galar|hisui|paldea)/)[0] || name;
       const [pokemon, species, localized] = await Promise.all([
         getPokemonDetail(name),
-        getPokemonSpecies(name).catch(() => null),
+        getPokemonSpecies(baseName).catch(() => null),
         getLocalizedPokemonData(name, langId).catch(() => null)
       ]);
       
@@ -216,32 +252,12 @@ export function PokemonDetailClient({
   const typeLabel = pokemon.types.map((typeItem) => t(`types.${typeItem.type.name}`)).join(' / ');
 
   const getLocalizedName = (name: string) => {
-    if (name.includes('-mega')) {
-      const baseName = name.replace('-mega-x', '').replace('-mega-y', '').replace('-mega', '');
-      const suffixX = name.includes('-mega-x') ? ' X' : name.includes('-mega-y') ? ' Y' : '';
-      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-        || species?.names?.find(n => n.language.name === resolvedLang)?.name
-        || species?.names?.find(n => n.language.name === 'en')?.name
-        || baseName;
-      return `${baseLocalizedName}-Méga${suffixX}`;
-    }
-    if (name.includes('-primal')) {
-      const baseName = name.replace('-primal', '');
-      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-        || species?.names?.find(n => n.language.name === resolvedLang)?.name
-        || species?.names?.find(n => n.language.name === 'en')?.name
-        || baseName;
-      return `${baseLocalizedName}-Primal`;
-    }
-    if (name.includes('-ultra')) {
-      const baseName = name.replace('-ultra', '').replace(/-\w+$/, '');
-      const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-        || species?.names?.find(n => n.language.name === resolvedLang)?.name
-        || species?.names?.find(n => n.language.name === 'en')?.name
-        || baseName;
-      return `Ultra-${baseLocalizedName}`;
-    }
-    return null;
+    const baseName = name.replace(/-(mega-x|mega-y|mega|primal|ultra).*/g, '');
+    const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+      || species?.names?.find(n => n.language.name === resolvedLang)?.name
+      || species?.names?.find(n => n.language.name === 'en')?.name
+      || baseName;
+    return getFormDisplayName(name, baseLocalizedName, resolvedLang);
   };
 
   const displayName = isAlternateForm 
@@ -602,20 +618,7 @@ export function PokemonDetailClient({
                         return <div className="col-span-full p-4 text-center text-xs text-foreground/50 bg-secondary/20 rounded-2xl border border-white/5">{t('detail.no_items')}</div>;
                       }
                       return items.map(item => (
-                        <div key={item.id} className="flex gap-3 p-4 bg-secondary/20 border border-white/5 rounded-2xl group hover:bg-secondary/40 transition-colors">
-                          <div className="flex-shrink-0 w-12 h-12 bg-background/50 rounded-xl flex items-center justify-center p-2 border border-white/5">
-                            {/* Using native img for external raw.githubusercontent.com domain to avoid next/image domain config issues */}
-                            <img src={item.iconUrl} alt={item.name[language as 'en' | 'fr'] || item.name.en} className="w-full h-full object-contain filter group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all" />
-                          </div>
-                          <div className="flex flex-col flex-1 min-w-0 justify-center">
-                            <span className="font-black text-sm text-foreground/90 truncate group-hover:text-primary transition-colors">
-                              {item.name[language as 'en' | 'fr'] || item.name.en}
-                            </span>
-                            <span className="text-[10px] text-foreground/60 leading-tight mt-1 line-clamp-2">
-                              {item.description[language as 'en' | 'fr'] || item.description.en}
-                            </span>
-                          </div>
-                        </div>
+                        <ItemCard key={item.id} item={item} language={language} />
                       ));
                     })()}
                   </div>
@@ -760,7 +763,7 @@ export function PokemonDetailClient({
               {species?.evolution_chain?.url ? (
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem]">
                   <h3 className="text-xl font-black mb-8 text-foreground/90 border-b border-white/10 pb-4 text-center">{t('detail.evolution_chain')}</h3>
-                  <EvolutionChain url={species.evolution_chain.url} speciesName={name.split(/-(mega|primal|ultra)/)[0] || name} />
+                  <EvolutionChain url={species.evolution_chain.url} currentSpeciesName={name.split('-')[0] || name} speciesData={species} />
                 </div>
               ) : (
                 <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] flex items-center justify-center min-h-[200px]">
@@ -918,7 +921,7 @@ export function PokemonDetailClient({
                             <MapPin className="w-4 h-4 text-primary" />
                           </div>
                           <span className="font-black text-base text-foreground/80 capitalize">
-                            {formatName(enc.location_area.name)}
+                            {formatLocationName(enc.location_area.name)}
                           </span>
                         </div>
                         

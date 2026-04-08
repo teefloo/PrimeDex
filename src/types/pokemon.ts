@@ -185,7 +185,7 @@ export interface PokemonBasicData {
     generation_id: number;
     pokemon_v2_pokemoncolor: { name: string } | null;
     pokemon_v2_pokemonshape: { name: string } | null;
-    pokemon_v2_pokemonespeciesegggroups: {
+    pokemon_v2_pokemonegggroups: {
       pokemon_v2_egggroup: { name: string };
     }[];
     pokemon_v2_pokemonspeciesnames: {
@@ -312,11 +312,24 @@ export interface MoveListItem {
   generation_id: number | null;
 }
 
+export type MoveLearnMethod = 'level-up' | 'machine' | 'tutor' | 'egg' | 'light-ball-roulette' | 'stadium-surfing-pikachu' | 'form-change' | 'zygarde-cube' | 'repel' | 'trade' | 'special' | 'event' | 'pikachu-pop-star' | 'pikachu-rock-star' | 'cosplay-pikachu' | null;
+
 export interface MovePokemonLearner {
   id: number;
   name: string;
   types: string[];
   localizedName: string;
+  learnMethods: MoveLearnMethod[];
+  level?: number;
+}
+
+export interface GroupedLearners {
+  levelUp: MovePokemonLearner[];
+  machine: MovePokemonLearner[];
+  technicalRecord: MovePokemonLearner[];
+  egg: MovePokemonLearner[];
+  tutor: MovePokemonLearner[];
+  other: MovePokemonLearner[];
 }
 
 export interface GraphQLMoveData {
@@ -337,6 +350,8 @@ export interface GraphQLMoveData {
 }
 
 export interface GraphQLMovePokemonData {
+  level: number | null;
+  pokemon_v2_movelearnmethod: { name: string } | null;
   pokemon_v2_pokemon: {
     id: number;
     name: string;

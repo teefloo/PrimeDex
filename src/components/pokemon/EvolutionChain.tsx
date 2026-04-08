@@ -1,21 +1,25 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { AlertCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
 
 import Image from 'next/image';
 
+import { REST_API_BASE } from '@/lib/api/client';
+import apiClient from '@/lib/api/client';
 import { usePrimeDexStore } from '@/store/primedex';
 import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
-import { formatId } from '@/lib/utils';
+import { cn, formatId } from '@/lib/utils';
+import { getFormDisplayName } from '@/lib/form-names';
 import { useTranslation } from '@/lib/i18n';
 
 interface EvolutionChainProps {
   url: string;
-  speciesName?: string;
+  currentSpeciesName?: string;
+  speciesData?: { varieties: { pokemon: { name: string; url: string } }[] } | null;
 }
 
 interface ChainLink {
@@ -30,20 +34,46 @@ interface ChainResponse {
 interface AlternateForm {
   name: string;
   id: number;
-  formType: 'mega' | 'primal' | 'ultra';
+  formType: string;
 }
 
-function EvolutionItem({ name }: { name: string }) {
+function getBaseSpeciesName(name: string): string {
+  return name.split(/-(mega|primal|ultra|gmax|alola|galar|hisui|paldea)/)[0] || name;
+}
+
+function collectAllSpeciesNames(node: ChainLink): string[] {
+  const baseName = getBaseSpeciesName(node.species.name);
+  const names = [baseName];
+  for (const child of node.evolves_to) {
+    names.push(...collectAllSpeciesNames(child));
+  }
+  return [...new Set(names)];
+}
+
+function detectFormType(formName: string): string {
+  const lower = formName.toLowerCase();
+  if (lower.includes('-mega')) return 'mega';
+  if (lower.includes('-gmax')) return 'gmax';
+  if (lower.includes('-primal')) return 'primal';
+  if (lower.includes('-ultra')) return 'ultra';
+  if (lower.includes('-alola')) return 'alola';
+  if (lower.includes('-galar')) return 'galar';
+  if (lower.includes('-hisui')) return 'hisui';
+  if (lower.includes('-paldea')) return 'paldea';
+  return 'standard';
+}
+
+function EvolutionItem({ name, isCurrent }: { name: string; isCurrent?: boolean }) {
   const { language, systemLanguage } = usePrimeDexStore();
   const resolvedLang = language === 'auto' ? systemLanguage : language;
 
-  const { data: pokemonData } = useQuery({
+  const { data: pokemonData, isError: pokemonError } = useQuery({
     queryKey: ['pokemon-evolution-item', name, resolvedLang],
     queryFn: () => getPokemonDetail(name),
     staleTime: Infinity,
   });
 
-  const { data: speciesData } = useQuery({
+  const { data: speciesData, isError: speciesError } = useQuery({
     queryKey: ['species-evolution-item', name, resolvedLang],
     queryFn: () => getPokemonSpecies(name),
     staleTime: Infinity,
@@ -54,16 +84,29 @@ function EvolutionItem({ name }: { name: string }) {
     || speciesData?.names?.find(n => n.language.name === 'en')?.name
     || name;
 
+  const hasError = pokemonError && speciesError;
+  const hasPartialData = pokemonData || speciesData;
+
   return (
     <Link href={`/pokemon/${name}`} className="relative z-10 hover:z-20">
       <motion.div
         whileHover={{ y: -5, scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex flex-col items-center cursor-pointer group"
+        className={cn(
+          "flex flex-col items-center cursor-pointer group",
+          isCurrent && "scale-110"
+        )}
       >
-        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center p-4 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all duration-500 relative overflow-hidden shadow-sm">
+        <div className={cn(
+          "w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center p-4 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all duration-500 relative overflow-hidden shadow-sm",
+          isCurrent && "bg-primary/10 border-primary/40 ring-2 ring-primary/30 shadow-lg shadow-primary/20"
+        )}>
           <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          {sprite ? (
+          {!hasPartialData && hasError ? (
+            <div className="text-center">
+              <span className="text-xs font-black capitalize text-foreground/60">{displayName}</span>
+            </div>
+          ) : sprite ? (
             <Image
               src={sprite}
               alt={displayName}
@@ -79,9 +122,17 @@ function EvolutionItem({ name }: { name: string }) {
           <span className="text-[10px] font-black text-foreground/30 uppercase tracking-[0.2em] block mb-0.5">
             {pokemonData ? formatId(pokemonData.id) : ''}
           </span>
-          <span className="text-sm font-black capitalize text-foreground/80 group-hover:text-primary transition-colors tracking-tight">
+          <span className={cn(
+            "text-sm font-black capitalize text-foreground/80 group-hover:text-primary transition-colors tracking-tight",
+            isCurrent && "text-primary font-black"
+          )}>
             {displayName}
           </span>
+          {isCurrent && (
+            <span className="text-[8px] font-black uppercase tracking-widest text-primary mt-1 block">
+              Current
+            </span>
+          )}
         </div>
       </motion.div>
     </Link>
@@ -93,13 +144,13 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
   const resolvedLang = store.language === 'auto' ? store.systemLanguage : store.language;
   const { t } = useTranslation();
 
-  const { data: pokemonData, isLoading } = useQuery({
+  const { data: pokemonData, isLoading, isError } = useQuery({
     queryKey: ['pokemon-alternate-form', form.name, resolvedLang],
     queryFn: () => getPokemonDetail(form.name),
     staleTime: Infinity,
   });
 
-  const baseName = form.name.split(/-(mega|primal|ultra)/)[0] || form.name;
+  const baseName = form.name.split('-')[0] || form.name;
   const { data: speciesData } = useQuery({
     queryKey: ['species-alternate-form', baseName, resolvedLang],
     queryFn: () => getPokemonSpecies(baseName),
@@ -113,20 +164,22 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
       || speciesData?.names?.find(n => n.language.name === 'en')?.name
       || baseName;
     
-    if (form.formType === 'mega') {
-      const suffix = form.name.includes('-mega-x') ? ' X' : form.name.includes('-mega-y') ? ' Y' : '';
-      return `${baseDisplayName}-Méga${suffix}`;
-    }
-    if (form.formType === 'primal') {
-      return `${baseDisplayName}-Primal`;
-    }
-    if (form.formType === 'ultra') {
-      return `Ultra-${baseDisplayName}`;
-    }
-    return baseDisplayName;
+    return getFormDisplayName(form.name, baseDisplayName, resolvedLang);
   })();
 
-  const formConfig = {
+  const formConfig: Record<string, {
+    badge: string;
+    gradient: string;
+    border: string;
+    borderHover: string;
+    shadow: string;
+    innerGradient: string;
+    dropShadow: string;
+    badgeBg: string;
+    badgeText: string;
+    badgeBorder: string;
+    textHover: string;
+  }> = {
     mega: {
       badge: t('detail.alternate_badge_mega'),
       gradient: 'from-purple-500/20 to-yellow-500/20',
@@ -166,9 +219,87 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
       badgeBorder: 'border-yellow-500/30',
       textHover: 'group-hover:text-yellow-400',
     },
+    gmax: {
+      badge: 'GMax',
+      gradient: 'from-pink-500/20 to-rose-500/20',
+      border: 'border-pink-400/30',
+      borderHover: 'group-hover:border-pink-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(244,63,94,0.3)]',
+      innerGradient: 'from-pink-400/10 to-rose-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]',
+      badgeBg: 'bg-pink-500/20',
+      badgeText: 'text-pink-400',
+      badgeBorder: 'border-pink-500/30',
+      textHover: 'group-hover:text-pink-400',
+    },
+    alola: {
+      badge: 'Alola',
+      gradient: 'from-teal-500/20 to-emerald-500/20',
+      border: 'border-teal-400/30',
+      borderHover: 'group-hover:border-teal-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(20,184,166,0.3)]',
+      innerGradient: 'from-teal-400/10 to-emerald-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(20,184,166,0.4)]',
+      badgeBg: 'bg-teal-500/20',
+      badgeText: 'text-teal-400',
+      badgeBorder: 'border-teal-500/30',
+      textHover: 'group-hover:text-teal-400',
+    },
+    galar: {
+      badge: 'Galar',
+      gradient: 'from-indigo-500/20 to-violet-500/20',
+      border: 'border-indigo-400/30',
+      borderHover: 'group-hover:border-indigo-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]',
+      innerGradient: 'from-indigo-400/10 to-violet-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(99,102,241,0.4)]',
+      badgeBg: 'bg-indigo-500/20',
+      badgeText: 'text-indigo-400',
+      badgeBorder: 'border-indigo-500/30',
+      textHover: 'group-hover:text-indigo-400',
+    },
+    hisui: {
+      badge: 'Hisui',
+      gradient: 'from-stone-500/20 to-neutral-500/20',
+      border: 'border-stone-400/30',
+      borderHover: 'group-hover:border-stone-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(168,162,158,0.3)]',
+      innerGradient: 'from-stone-400/10 to-neutral-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(168,162,158,0.4)]',
+      badgeBg: 'bg-stone-500/20',
+      badgeText: 'text-stone-400',
+      badgeBorder: 'border-stone-500/30',
+      textHover: 'group-hover:text-stone-400',
+    },
+    paldea: {
+      badge: 'Paldea',
+      gradient: 'from-orange-500/20 to-amber-500/20',
+      border: 'border-orange-400/30',
+      borderHover: 'group-hover:border-orange-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(249,115,22,0.3)]',
+      innerGradient: 'from-orange-400/10 to-amber-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(249,115,22,0.4)]',
+      badgeBg: 'bg-orange-500/20',
+      badgeText: 'text-orange-400',
+      badgeBorder: 'border-orange-500/30',
+      textHover: 'group-hover:text-orange-400',
+    },
+    standard: {
+      badge: 'Form',
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      border: 'border-blue-400/30',
+      borderHover: 'group-hover:border-blue-400/60',
+      shadow: 'group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]',
+      innerGradient: 'from-blue-400/10 to-cyan-400/10',
+      dropShadow: 'drop-shadow-[0_0_10px_rgba(59,130,246,0.4)]',
+      badgeBg: 'bg-blue-500/20',
+      badgeText: 'text-blue-400',
+      badgeBorder: 'border-blue-500/30',
+      textHover: 'group-hover:text-blue-400',
+    },
   };
 
-  const config = formConfig[form.formType];
+  const config = formConfig[form.formType] || formConfig.standard;
 
   if (isLoading) {
     return (
@@ -176,6 +307,19 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
         <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError || !pokemonData) {
+    return (
+      <div className="flex flex-col items-center">
+        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center">
+          <AlertCircle className="w-6 h-6 text-red-400/60" />
+        </div>
+        <span className="mt-2 text-[8px] font-black text-red-400/60 uppercase tracking-wider">
+          {t('detail.load_error', { defaultValue: 'Error' })}
+        </span>
       </div>
     );
   }
@@ -217,110 +361,21 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
   );
 }
 
-function AlternateFormsSection({ speciesName }: { speciesName: string }) {
+function AlternateFormsSection({ allForms, isLoading }: { allForms: AlternateForm[]; isLoading: boolean }) {
   const { t } = useTranslation();
-  const { language, systemLanguage } = usePrimeDexStore();
-  const resolvedLang = language === 'auto' ? systemLanguage : language;
-
-  const { data: speciesData, isLoading: speciesLoading, isError: speciesError } = useQuery({
-    queryKey: ['species-alternate-forms', speciesName, resolvedLang],
-    queryFn: () => getPokemonSpecies(speciesName),
-    staleTime: 24 * 60 * 60 * 1000,
-    retry: 2,
-  });
-
-  const { data: pokemonData, isLoading: pokemonLoading, isError: pokemonError } = useQuery({
-    queryKey: ['pokemon-alternate-forms', speciesName],
-    queryFn: () => getPokemonDetail(speciesName),
-    staleTime: 24 * 60 * 60 * 1000,
-    retry: 2,
-  });
-
-  const isLoading = speciesLoading || pokemonLoading;
-  const isError = speciesError || pokemonError;
-
-  const alternateForms: AlternateForm[] = (() => {
-    const forms = new Map<string, AlternateForm>();
-
-    // Collect from species.varieties
-    if (speciesData?.varieties) {
-      const filtered = speciesData.varieties
-        .filter(v => {
-          if (v.is_default) return false;
-          const name = v.pokemon.name;
-          return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
-        });
-      console.log('[AlternateFormsSection] Filtered varieties:', filtered.map(v => v.pokemon.name));
-      
-      filtered
-        .forEach(v => {
-          const name = v.pokemon.name;
-          let formType: AlternateForm['formType'] = 'mega';
-          if (name.includes('-primal')) formType = 'primal';
-          else if (name.includes('-ultra')) formType = 'ultra';
-          forms.set(name, {
-            name,
-            id: parseInt(v.pokemon.url.split('/').filter(Boolean).pop() || '0'),
-            formType,
-          });
-        });
-    }
-
-    // Also collect from pokemon.forms (covers cases where varieties doesn't include mega forms)
-    if (pokemonData?.forms) {
-      const filteredForms = pokemonData.forms
-        .filter(f => {
-          const name = f.name;
-          return name.includes('-mega') || name.includes('-primal') || name.includes('-ultra');
-        });
-      console.log('[AlternateFormsSection] Filtered forms:', filteredForms.map(f => f.name));
-      
-      filteredForms
-        .forEach(f => {
-          const name = f.name;
-          let formType: AlternateForm['formType'] = 'mega';
-          if (name.includes('-primal')) formType = 'primal';
-          else if (name.includes('-ultra')) formType = 'ultra';
-          // Extract ID from form URL
-          const formId = parseInt(f.url.split('/').filter(Boolean).pop() || '0');
-          if (!forms.has(name)) {
-            forms.set(name, {
-              name,
-              id: formId,
-              formType,
-            });
-          }
-        });
-    }
-
-    console.log('[AlternateFormsSection] Final forms:', Array.from(forms.values()));
-    return Array.from(forms.values());
-  })();
 
   if (isLoading) {
     return (
-      <div className="mt-12 pt-8 border-t border-white/10 flex justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
+      <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-center gap-3">
+        <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
+        <span className="text-sm font-bold text-foreground/40 uppercase tracking-wider">
+          {t('detail.loading_forms', { defaultValue: 'Loading alternate forms...' })}
+        </span>
       </div>
     );
   }
 
-  if (isError) {
-    return (
-      <div className="mt-12 pt-8 border-t border-white/10">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Sparkles className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
-            {t('detail.alternate_forms')}
-          </h3>
-          <Sparkles className="w-5 h-5 text-purple-400" />
-        </div>
-        <p className="text-center text-xs text-red-400">Error loading alternate forms</p>
-      </div>
-    );
-  }
-
-  if (alternateForms.length === 0) {
+  if (allForms.length === 0) {
     return null;
   }
 
@@ -334,7 +389,7 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
         <Sparkles className="w-5 h-5 text-purple-400" />
       </div>
       <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-        {alternateForms.map((form) => (
+        {allForms.map((form) => (
           <AlternateFormItem key={form.name} form={form} />
         ))}
       </div>
@@ -342,10 +397,18 @@ function AlternateFormsSection({ speciesName }: { speciesName: string }) {
   );
 }
 
-function ChainNode({ node }: { node: ChainLink }) {
+function ChainNode({ node, currentSpeciesName, allForms }: { node: ChainLink; currentSpeciesName?: string; allForms?: AlternateForm[] }) {
+  const isCurrent = currentSpeciesName ? node.species.name === currentSpeciesName : false;
+  const formType = allForms?.find(f => f.name === node.species.name)?.formType;
+  const isAlternateForm = !!formType && formType !== 'standard';
+  
   return (
     <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-      <EvolutionItem name={node.species.name} />
+      {isAlternateForm ? (
+        <AlternateFormItem form={{ name: node.species.name, id: 0, formType }} />
+      ) : (
+        <EvolutionItem name={node.species.name} isCurrent={isCurrent} />
+      )}
 
       {node.evolves_to.length > 0 && (
         <div className="flex flex-col gap-12 md:gap-16 relative">
@@ -356,7 +419,7 @@ function ChainNode({ node }: { node: ChainLink }) {
               <div className="p-3 bg-secondary/40 rounded-full border border-white/10 text-foreground/30 shadow-inner z-10 group-hover:text-primary/50 transition-colors">
                 <ArrowRight className="w-5 h-5 rotate-90 md:rotate-0" />
               </div>
-              <ChainNode node={evolution} />
+              <ChainNode node={evolution} currentSpeciesName={currentSpeciesName} allForms={allForms} />
             </div>
           ))}
         </div>
@@ -366,15 +429,92 @@ function ChainNode({ node }: { node: ChainLink }) {
 }
 
 
-export function EvolutionChain({ url, speciesName }: EvolutionChainProps) {
-  const { data, isLoading } = useQuery({
+export function EvolutionChain({ url, currentSpeciesName, speciesData }: EvolutionChainProps) {
+  const { t } = useTranslation();
+
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['evolutionChain', url],
     queryFn: async () => {
-      const { data } = await axios.get<ChainResponse>(url);
+      const path = url.replace(REST_API_BASE, '');
+      const { data } = await apiClient.get<ChainResponse>(path);
       return data;
     },
     staleTime: 30 * 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
+
+  const allSpeciesNames = useMemo(() => {
+    if (!data?.chain) return [];
+    return collectAllSpeciesNames(data.chain);
+  }, [data]);
+
+  const speciesQueries = useQueries({
+    queries: allSpeciesNames.map((baseName) => ({
+      queryKey: ['species-forms', baseName],
+      queryFn: () => getPokemonSpecies(baseName),
+      staleTime: Infinity,
+      enabled: allSpeciesNames.length > 0,
+    })),
+  });
+
+  const allFormsLoading = speciesQueries.some(q => q.isLoading);
+
+  const speciesQueryData = speciesQueries.map(q => q.data);
+
+  const allForms = useMemo(() => {
+    const collected: AlternateForm[] = [];
+
+    const addFormsFromSpecies = (species: { varieties?: { pokemon: { name: string; url: string } }[] } | null | undefined) => {
+      if (!species?.varieties) return;
+      for (const v of species.varieties) {
+        const formType = detectFormType(v.pokemon.name);
+        if (formType !== 'standard') {
+          collected.push({
+            name: v.pokemon.name,
+            id: parseInt(v.pokemon.url.split('/').filter(Boolean).pop() || '0'),
+            formType,
+          });
+        }
+      }
+    };
+
+    if (speciesData) addFormsFromSpecies(speciesData);
+    for (const queryData of speciesQueryData) {
+      if (queryData) addFormsFromSpecies(queryData);
+    }
+
+    const seen = new Set<string>();
+    return collected.filter((f) => {
+      if (seen.has(f.name)) return false;
+      seen.add(f.name);
+      return true;
+    });
+  }, [speciesData, speciesQueryData]);
+
+  const enhancedChain = useMemo(() => {
+    if (!data?.chain || allForms.length === 0) return data?.chain;
+
+    const traverse = (node: ChainLink): ChainLink => {
+      const newNode = { ...node, evolves_to: node.evolves_to.map(traverse) };
+      const baseName = getBaseSpeciesName(newNode.species.name);
+      const relevantForms = allForms.filter((f: AlternateForm) => {
+        const formBase = getBaseSpeciesName(f.name);
+        return formBase === baseName;
+      });
+      if (relevantForms.length > 0) {
+        newNode.evolves_to = [
+          ...newNode.evolves_to,
+          ...relevantForms.map((f: AlternateForm) => ({
+            species: { name: f.name, url: '' },
+            evolves_to: [],
+          })),
+        ];
+      }
+      return newNode;
+    };
+    return traverse(data.chain);
+  }, [data, allForms]);
 
   if (isLoading) {
     return (
@@ -384,15 +524,24 @@ export function EvolutionChain({ url, speciesName }: EvolutionChainProps) {
     );
   }
 
-  if (!data?.chain) return null;
+  if (isError || !enhancedChain) {
+    return (
+      <div className="p-12 min-h-[300px] flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="w-10 h-10 text-red-400/60" />
+        <p className="text-foreground/50 font-bold uppercase tracking-widest text-sm">
+          {t('detail.evolution_chain_error', { defaultValue: 'Failed to load evolution chain' })}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto pb-12 scrollbar-hide">
       <div className="flex flex-col items-center min-w-max px-8 py-4">
         <div className="flex justify-center w-full">
-          <ChainNode node={data.chain} />
+          <ChainNode node={enhancedChain} currentSpeciesName={currentSpeciesName} allForms={allForms} />
         </div>
-        {speciesName && <AlternateFormsSection speciesName={speciesName} />}
+        <AlternateFormsSection allForms={allForms} isLoading={allFormsLoading} />
       </div>
     </div>
   );

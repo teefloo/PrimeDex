@@ -3,14 +3,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '@/lib/i18n';
 import { motion } from 'framer-motion';
-import { Trophy, Target, Zap, Gauge, Info, Sparkles, Users } from 'lucide-react';
+import {
+  Trophy,
+  Target,
+  Zap,
+  Gauge,
+  Info,
+  Sparkles,
+  TrendingUp,
+  Cpu,
+  Disc,
+  Egg,
+  GraduationCap,
+  HelpCircle,
+  Users,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getMovePokemonLearners } from '@/lib/api/graphql';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TYPE_COLORS, MoveListItem, MovePokemonLearner } from '@/types/pokemon';
+import { TYPE_COLORS, MoveListItem, MovePokemonLearner, MoveLearnMethod, GroupedLearners } from '@/types/pokemon';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useState } from 'react';
 
@@ -20,29 +34,107 @@ interface MoveDetailModalProps {
   onClose: () => void;
 }
 
+function groupLearnersByMethod(learners: MovePokemonLearner[]): GroupedLearners {
+  const grouped: GroupedLearners = {
+    levelUp: [],
+    machine: [],
+    technicalRecord: [],
+    egg: [],
+    tutor: [],
+    other: [],
+  };
+
+  const pokemonMap = new Map<number, MovePokemonLearner>();
+
+  for (const learner of learners) {
+    if (!pokemonMap.has(learner.id)) {
+      pokemonMap.set(learner.id, { ...learner });
+    } else {
+      const existing = pokemonMap.get(learner.id)!;
+      for (const method of learner.learnMethods) {
+        if (!existing.learnMethods.includes(method)) {
+          existing.learnMethods.push(method);
+        }
+      }
+      if (learner.level !== undefined && learner.level > 0) {
+        existing.level = learner.level;
+      }
+    }
+  }
+
+  for (const pokemon of pokemonMap.values()) {
+    let assigned = false;
+
+    if (pokemon.learnMethods.includes('level-up')) {
+      grouped.levelUp.push(pokemon);
+      assigned = true;
+    }
+
+    if (!assigned && pokemon.learnMethods.includes('machine')) {
+      grouped.machine.push(pokemon);
+      assigned = true;
+    }
+
+    if (!assigned && pokemon.learnMethods.includes('tutor')) {
+      grouped.tutor.push(pokemon);
+      assigned = true;
+    }
+
+    if (!assigned && pokemon.learnMethods.includes('egg')) {
+      grouped.egg.push(pokemon);
+      assigned = true;
+    }
+
+    if (!assigned) {
+      grouped.other.push(pokemon);
+    }
+  }
+
+  const sortByName = (a: MovePokemonLearner, b: MovePokemonLearner) =>
+    a.localizedName.localeCompare(b.localizedName);
+
+  grouped.levelUp.sort(sortByName);
+  grouped.machine.sort(sortByName);
+  grouped.technicalRecord.sort(sortByName);
+  grouped.egg.sort(sortByName);
+  grouped.tutor.sort(sortByName);
+  grouped.other.sort(sortByName);
+
+  return grouped;
+}
+
 export default function MoveDetailModal({ move, open, onClose }: MoveDetailModalProps) {
   const { t } = useTranslation();
   const getLanguageId = usePrimeDexStore((s) => s.getLanguageId);
   const languageId = getLanguageId();
 
   const { data: learnersData, isLoading: learnersLoading } = useQuery({
-    queryKey: ['move-learners', move?.name, languageId],
+    queryKey: ['move-learners-v2', move?.name, languageId],
     queryFn: () => getMovePokemonLearners(move!.name, languageId),
     enabled: !!move && open,
     staleTime: 24 * 60 * 60 * 1000,
+    refetchOnMount: true,
   });
 
   const learners: MovePokemonLearner[] = (learnersData || [])
     .filter((entry) => entry.pokemon_v2_pokemon !== null)
     .map((entry) => {
       const pokemon = entry.pokemon_v2_pokemon!;
+      const methodName = entry.pokemon_v2_movelearnmethod?.name as MoveLearnMethod;
       return {
         id: pokemon.id,
         name: pokemon.name,
         types: pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name),
         localizedName: pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name,
+        learnMethods: methodName ? [methodName] : [],
+        level: entry.level ?? undefined,
       };
     });
+
+  const groupedLearners = groupLearnersByMethod(learners);
+  const totalLearners = learners.length > 0
+    ? new Map(learners.map(l => [l.id, l])).size
+    : 0;
 
   if (!move) return null;
 
@@ -139,7 +231,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
               </span>
               {!learnersLoading && (
                 <Badge variant="outline" className="text-[10px] border-white/10 text-foreground/50 ml-auto">
-                  {t('moves_page.learners_count', { count: learners.length })}
+                  {t('moves_page.learners_count', { count: totalLearners })}
                 </Badge>
               )}
             </div>
@@ -155,10 +247,62 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
                 {t('moves_page.no_learners')}
               </p>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                {learners.map((pokemon) => (
-                  <PokemonLearnerCard key={pokemon.id} pokemon={pokemon} onClose={onClose} />
-                ))}
+              <div className="space-y-6 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                {groupedLearners.levelUp.length > 0 && (
+                  <LearnerSection
+                    icon={<TrendingUp className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.level_up')}
+                    learners={groupedLearners.levelUp}
+                    color="#22c55e"
+                    onClose={onClose}
+                    showLevel
+                  />
+                )}
+                {groupedLearners.machine.length > 0 && (
+                  <LearnerSection
+                    icon={<Cpu className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.machine')}
+                    learners={groupedLearners.machine}
+                    color="#3b82f6"
+                    onClose={onClose}
+                  />
+                )}
+                {groupedLearners.technicalRecord.length > 0 && (
+                  <LearnerSection
+                    icon={<Disc className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.technical_record')}
+                    learners={groupedLearners.technicalRecord}
+                    color="#8b5cf6"
+                    onClose={onClose}
+                  />
+                )}
+                {groupedLearners.egg.length > 0 && (
+                  <LearnerSection
+                    icon={<Egg className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.egg')}
+                    learners={groupedLearners.egg}
+                    color="#f59e0b"
+                    onClose={onClose}
+                  />
+                )}
+                {groupedLearners.tutor.length > 0 && (
+                  <LearnerSection
+                    icon={<GraduationCap className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.tutor')}
+                    learners={groupedLearners.tutor}
+                    color="#ec4899"
+                    onClose={onClose}
+                  />
+                )}
+                {groupedLearners.other.length > 0 && (
+                  <LearnerSection
+                    icon={<HelpCircle className="w-4 h-4" />}
+                    title={t('moves_page.learn_methods.other')}
+                    learners={groupedLearners.other}
+                    color="#6b7280"
+                    onClose={onClose}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -168,7 +312,37 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
   );
 }
 
-function PokemonLearnerCard({ pokemon, onClose }: { pokemon: MovePokemonLearner; onClose: () => void }) {
+interface LearnerSectionProps {
+  icon: React.ReactNode;
+  title: string;
+  learners: MovePokemonLearner[];
+  color: string;
+  onClose: () => void;
+  showLevel?: boolean;
+}
+
+function LearnerSection({ icon, title, learners, color, onClose, showLevel }: LearnerSectionProps) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+          <div style={{ color }}>{icon}</div>
+        </div>
+        <span className="text-sm font-bold text-foreground/80">{title}</span>
+        <Badge variant="outline" className="text-[10px] border-white/10 text-foreground/50 ml-auto">
+          {learners.length}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        {learners.map((pokemon) => (
+          <PokemonLearnerCard key={pokemon.id} pokemon={pokemon} onClose={onClose} showLevel={showLevel} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PokemonLearnerCard({ pokemon, onClose, showLevel }: { pokemon: MovePokemonLearner; onClose: () => void; showLevel?: boolean }) {
   const [imgSrc, setImgSrc] = useState(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`);
   const fallbackImg = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
 
@@ -197,6 +371,11 @@ function PokemonLearnerCard({ pokemon, onClose }: { pokemon: MovePokemonLearner;
         <span className="text-[10px] font-bold text-foreground/60 truncate w-full text-center capitalize group-hover:text-foreground transition-colors">
           {pokemon.localizedName}
         </span>
+        {showLevel && pokemon.level !== undefined && (
+          <span className="text-[9px] font-bold text-green-400/70 mt-0.5">
+            Niv. {pokemon.level}
+          </span>
+        )}
         <div className="flex gap-0.5 mt-0.5">
           {pokemon.types.map((type) => (
             <div
