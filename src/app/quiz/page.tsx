@@ -462,7 +462,7 @@ function QuizPageContent() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2 text-left relative">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.generation')}</p>
+                        <p className="text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.generation')}</p>
                         <select 
                           value={selectedGen || ''} 
                           onChange={(e) => setSelectedGen(e.target.value || null)}
@@ -477,7 +477,7 @@ function QuizPageContent() {
                       </div>
 
                       <div className="space-y-2 text-left relative">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.types')}</p>
+                        <p className="text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.types')}</p>
                         <select 
                           value={selectedType || ''} 
                           onChange={(e) => setSelectedType(e.target.value || null)}
@@ -509,7 +509,7 @@ function QuizPageContent() {
                           {mode.icon}
                           {mode.name}
                         </div>
-                        <span className="text-[8px] md:text-[9px] opacity-40 font-bold tracking-wider">{mode.desc}</span>
+                        <span className="text-[11px] md:text-[10px] md:text-[10px] opacity-40 font-bold tracking-wider">{mode.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -519,7 +519,7 @@ function QuizPageContent() {
                       onClick={() => startGame(quizChallenge, 'time-attack')} 
                       className="glass-btn h-16 rounded-2xl flex flex-col items-center justify-center gap-1 group hover:border-primary/40 hover:bg-primary/5"
                     >
-                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[9px] md:text-[10px]">
+                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[11px] md:text-[10px]">
                         <Timer className="w-4 h-4 group-hover:text-primary transition-colors" />
                         {t('quiz.time_attack')} <span className="opacity-50 ml-1">(30s)</span>
                       </div>
@@ -529,7 +529,7 @@ function QuizPageContent() {
                       onClick={() => startGame(quizChallenge, 'survival')} 
                       className="glass-btn h-16 rounded-2xl flex flex-col items-center justify-center gap-1 group hover:border-red-500/40 hover:bg-red-500/5"
                     >
-                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[9px] md:text-[10px]">
+                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[11px] md:text-[10px]">
                         <Heart className="w-4 h-4 group-hover:text-red-500 transition-colors" />
                         {t('quiz.survival')} <span className="opacity-50 ml-1">(3 {t('quiz.lives')})</span>
                       </div>
@@ -539,15 +539,15 @@ function QuizPageContent() {
                   {quizHighScores && (
                     <div className="pt-8 border-t border-white/5 grid grid-cols-3 gap-2 sm:gap-4 mt-8">
                       <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.classic')}</p>
+                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.classic')}</p>
                         <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.classic}</p>
                       </div>
                       <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.silhouette')}</p>
+                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.silhouette')}</p>
                         <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.silhouette}</p>
                       </div>
                       <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.stats_mode')}</p>
+                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.stats_mode')}</p>
                         <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.stats}</p>
                       </div>
                     </div>
@@ -593,10 +593,10 @@ function QuizPageContent() {
                           {badge.icon}
                         </div>
                         <div className="space-y-1">
-                          <div className={cn("text-[9px] font-black uppercase tracking-[0.1em]", isUnlocked ? "text-primary" : "text-foreground/30")}>
+                          <div className={cn("text-[11px] md:text-[10px] font-black uppercase tracking-[0.1em]", isUnlocked ? "text-primary" : "text-foreground/30")}>
                             {badge.name}
                           </div>
-                          {isUnlocked && <div className="text-[8px] font-bold opacity-60 leading-relaxed text-foreground min-h-[2.5rem] flex items-center justify-center">{badge.desc}</div>}
+                          {isUnlocked && <div className="text-[11px] md:text-[10px] font-bold opacity-60 leading-relaxed text-foreground min-h-[2.5rem] flex items-center justify-center">{badge.desc}</div>}
                         </div>
                       </div>
                     );
@@ -616,7 +616,7 @@ function QuizPageContent() {
                     <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {gameMode === 'marathon' ? <Flame className="w-5 h-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" /> : <Trophy className="w-5 h-5 text-yellow-500 shadow-yellow-500" />}
                     <div className="flex flex-col items-start leading-[1.1]">
-                      <span className="text-[7px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_current')}</span>
+                      <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_current')}</span>
                       <span className="font-black text-xl md:text-2xl tabular-nums text-white drop-shadow-md">{score}</span>
                     </div>
                   </div>
@@ -624,7 +624,7 @@ function QuizPageContent() {
                   <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-white/5 opacity-80 min-w-[100px] md:min-w-[120px] backdrop-blur-sm">
                     <Gamepad2 className="w-5 h-5 text-primary/70" />
                     <div className="flex flex-col items-start leading-[1.1]">
-                      <span className="text-[7px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_high')}</span>
+                      <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_high')}</span>
                       <span className="font-black text-xl md:text-2xl tabular-nums text-foreground/80">{isDaily ? '-' : quizHighScores[quizChallenge]}</span>
                     </div>
                   </div>
@@ -636,7 +636,7 @@ function QuizPageContent() {
                     )}>
                       <Timer className={cn("w-5 h-5", timeLeft < 10 ? "animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-blue-400")} />
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[7px] font-black uppercase tracking-[0.2em] opacity-60">Timer</span>
+                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Timer</span>
                         <span className="font-black text-xl md:text-2xl tabular-nums tracking-tighter">{timeLeft}s</span>
                       </div>
                     </div>
@@ -658,7 +658,7 @@ function QuizPageContent() {
                   {gameMode === 'marathon' && (
                     <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-white/5 backdrop-blur-sm">
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[7px] font-black text-red-400/60 uppercase tracking-[0.2em]">{t('quiz.errors')}</span>
+                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-red-400/60 uppercase tracking-[0.2em]">{t('quiz.errors')}</span>
                         <span className="font-black text-xl md:text-2xl tabular-nums text-red-400">{wrongAnswers}<span className="text-sm text-foreground/30">/5</span></span>
                       </div>
                     </div>
@@ -667,7 +667,7 @@ function QuizPageContent() {
                   {isDaily && (
                     <div className="bg-orange-500/10 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-orange-500/20 backdrop-blur-sm">
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[7px] font-black text-orange-500/80 uppercase tracking-[0.2em]">{t('quiz.progress')}</span>
+                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-orange-500/80 uppercase tracking-[0.2em]">{t('quiz.progress')}</span>
                         <span className="font-black text-xl md:text-2xl tabular-nums text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">{dailyIndex}<span className="text-sm text-orange-500/40">/10</span></span>
                       </div>
                     </div>
@@ -716,7 +716,7 @@ function QuizPageContent() {
                             { label: t('stats.speed_short'), val: currentPokemon.stats[5].base_stat, color: '#FF6B81' },
                           ].map(s => (
                             <div key={s.label} className="space-y-1.5">
-                              <div className="flex justify-between text-[9px] md:text-[10px] font-black uppercase tracking-widest text-foreground/80">
+                              <div className="flex justify-between text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/80">
                                 <span>{s.label}</span>
                                 <span className={gameState === 'answered' ? 'text-primary drop-shadow-[0_0_5px_rgba(227,53,13,0.5)]' : 'opacity-30'}>
                                   {gameState === 'answered' ? s.val : '???'}

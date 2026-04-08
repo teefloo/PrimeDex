@@ -166,7 +166,7 @@ export default function AdvancedFilters() {
                       )}
                     >
                       <span className="text-xs font-black">{label}</span>
-                      <span className="text-[9px] font-medium opacity-60 uppercase">{regionLabel}</span>
+                      <span className="text-[11px] md:text-[10px] font-medium opacity-60 uppercase">{regionLabel}</span>
                     </button>
                   );
                 })}
@@ -330,7 +330,7 @@ export default function AdvancedFilters() {
                 step={10}
                 className="py-4"
               />
-              <div className="flex justify-between text-[9px] font-black text-foreground/20 uppercase tracking-widest">
+              <div className="flex justify-between text-[11px] md:text-[10px] font-black text-foreground/20 uppercase tracking-widest">
                 <span>0</span>
                 <span>400 ({t('filters.avg')})</span>
                 <span>800</span>

@@ -139,7 +139,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
               <tr>
                 {/* Corner cell: ATK \ DEF */}
                 <th className="p-1 sticky left-0 z-20 bg-background/90 backdrop-blur-sm">
-                  <div className="w-full h-full flex items-center justify-center text-[8px] md:text-[9px] font-black text-foreground/30 uppercase tracking-wider">
+                  <div className="w-full h-full flex items-center justify-center text-[11px] md:text-[10px] md:text-[10px] font-black text-foreground/30 uppercase tracking-wider">
                     <span className="text-primary/60">{t('types_page.atk_label')}</span>
                     <span className="mx-0.5 text-foreground/20">╲</span>
                     <span className="text-foreground/40">{t('types_page.def_label')}</span>
@@ -166,7 +166,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                         className="w-3 h-3 md:w-4 md:h-4 rounded-full shadow-sm"
                         style={{ backgroundColor: TYPE_COLORS[defType] }}
                       />
-                      <span className="text-[6px] md:text-[7px] font-black uppercase tracking-tight text-foreground/50 leading-none">
+                      <span className="text-[6px] md:text-[11px] md:text-[10px] font-black uppercase tracking-tight text-foreground/50 leading-none">
                         {t(`types.${defType}`).slice(0, 3)}
                       </span>
                     </button>
@@ -194,7 +194,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                         className="w-3 h-3 md:w-4 md:h-4 rounded-full shadow-sm flex-shrink-0"
                         style={{ backgroundColor: TYPE_COLORS[atkType] }}
                       />
-                      <span className="text-[6px] md:text-[8px] font-black uppercase tracking-tight text-foreground/60 leading-none truncate">
+                      <span className="text-[6px] md:text-[11px] md:text-[10px] font-black uppercase tracking-tight text-foreground/60 leading-none truncate">
                         {t(`types.${atkType}`).slice(0, 4)}
                       </span>
                     </button>
@@ -215,7 +215,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                             'w-full aspect-square rounded-[4px] md:rounded-md flex items-center justify-center transition-all duration-150',
                             style.bg,
                             style.text,
-                            'text-[8px] md:text-[10px]',
+                            'text-[11px] md:text-[10px] md:text-[10px]',
                             hoveredCell?.atk === atkType && hoveredCell?.def === defType
                               ? 'ring-2 ring-primary/60 scale-110 z-10 relative shadow-lg'
                               : 'hover:scale-105',

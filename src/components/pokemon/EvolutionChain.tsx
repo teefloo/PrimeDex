@@ -129,7 +129,7 @@ function EvolutionItem({ name, isCurrent }: { name: string; isCurrent?: boolean 
             {displayName}
           </span>
           {isCurrent && (
-            <span className="text-[8px] font-black uppercase tracking-widest text-primary mt-1 block">
+            <span className="text-[11px] md:text-[10px] font-black uppercase tracking-widest text-primary mt-1 block">
               Current
             </span>
           )}
@@ -317,7 +317,7 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
         <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center">
           <AlertCircle className="w-6 h-6 text-red-400/60" />
         </div>
-        <span className="mt-2 text-[8px] font-black text-red-400/60 uppercase tracking-wider">
+        <span className="mt-2 text-[11px] md:text-[10px] font-black text-red-400/60 uppercase tracking-wider">
           {t('detail.load_error', { defaultValue: 'Error' })}
         </span>
       </div>
@@ -346,7 +346,7 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
           )}
         </div>
         <div className="mt-3 text-center">
-          <span className={`px-2 py-0.5 ${config.badgeBg} ${config.badgeText} text-[8px] font-black uppercase tracking-wider rounded-full border ${config.badgeBorder} mb-1 inline-block`}>
+          <span className={`px-2 py-0.5 ${config.badgeBg} ${config.badgeText} text-[11px] md:text-[10px] font-black uppercase tracking-wider rounded-full border ${config.badgeBorder} mb-1 inline-block`}>
             {config.badge}
           </span>
           <span className="text-[10px] font-black text-foreground/30 uppercase tracking-[0.2em] block mb-0.5">

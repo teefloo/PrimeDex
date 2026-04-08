@@ -27,7 +27,7 @@ export default function CompareBar() {
   if (compareList.length === 0) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl">
+    <div className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl">
       <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -65,10 +65,10 @@ export default function CompareBar() {
                   </div>
                   <button 
                     onClick={() => removeFromCompare(id)}
-                    className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    className="absolute -top-3 -right-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                     aria-label={t('card.remove_compare')}
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-4 h-4" />
                   </button>
                 </motion.div>
               );
@@ -87,7 +87,7 @@ export default function CompareBar() {
             variant="ghost" 
             size="icon" 
             onClick={clearCompare}
-            className="hover:bg-destructive/10 hover:text-destructive rounded-full"
+            className="hover:bg-destructive/10 hover:text-destructive rounded-full min-w-[44px] min-h-[44px]"
             aria-label={t('compare.clear')}
             title={t('compare.clear')}
           >

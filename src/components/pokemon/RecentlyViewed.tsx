@@ -62,7 +62,7 @@ export default function RecentlyViewed() {
                 />
               </div>
               <div className="space-y-0.5">
-                <p className="text-[8px] font-black text-foreground/30">{formatId(p.id)}</p>
+                <p className="text-[11px] md:text-[10px] font-black text-foreground/30">{formatId(p.id)}</p>
                 <p className="text-[10px] font-black capitalize truncate max-w-full text-foreground/70 group-hover:text-primary transition-colors">{p.name}</p>
               </div>
             </motion.div>

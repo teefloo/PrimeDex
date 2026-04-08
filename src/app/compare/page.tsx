@@ -341,7 +341,7 @@ export default function ComparePage() {
                             <Swords className="w-3 h-3" /> {t('compare.stats')}
                           </h4>
                           <div className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
+                            "px-2 py-0.5 rounded-full text-[11px] md:text-[10px] font-black uppercase tracking-tighter",
                             isOverallBest ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" : "bg-secondary/50 text-foreground/40"
                           )}>
                             {t('compare.total')}: {totalStats} {isOverallBest ? t('compare.best') : ''}
@@ -352,7 +352,7 @@ export default function ComparePage() {
                             const isBest = bestStats[s.stat.name]?.index === idx;
                             return (
                               <div key={s.stat.name} className="space-y-1">
-                                <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
+                                <div className="flex justify-between items-center text-[11px] md:text-[10px] font-bold uppercase tracking-wider">
                                   <span className={cn(isBest ? "text-primary" : "text-foreground/40")}>
                                     {statLabels[s.stat.name]}
                                   </span>
@@ -386,7 +386,7 @@ export default function ComparePage() {
                               className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
                             >
                               {a.ability.name.replace('-', ' ')}
-                              {a.is_hidden && <span className="ml-1 opacity-40 text-[8px]">{t('detail.hidden')}</span>}
+                              {a.is_hidden && <span className="ml-1 opacity-40 text-[11px] md:text-[10px]">{t('detail.hidden')}</span>}
                             </div>
                           ))}
                         </div>

@@ -25,7 +25,7 @@ export default function CaughtFilter() {
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowCaughtOnly(mode.id)}
           className={cn(
-            "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-400",
+            "flex items-center justify-center gap-1.5 px-4 min-h-[44px] rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-400",
             showCaughtOnly === mode.id
               ? "bg-primary text-white shadow-[0_4px_16px_-4px_rgba(227,53,13,0.4)]" 
               : "text-foreground/35 hover:text-foreground/60"

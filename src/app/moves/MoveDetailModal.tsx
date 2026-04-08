@@ -371,7 +371,7 @@ function PokemonLearnerCard({ pokemon, onClose, showLevel }: { pokemon: MovePoke
           {pokemon.localizedName}
         </span>
         {showLevel && pokemon.level !== undefined && (
-          <span className="text-[9px] font-bold text-green-400/70 mt-0.5">
+          <span className="text-[11px] md:text-[10px] font-bold text-green-400/70 mt-0.5">
             Niv. {pokemon.level}
           </span>
         )}

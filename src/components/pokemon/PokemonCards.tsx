@@ -131,7 +131,7 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
             <div className="absolute -bottom-2 -left-2 -right-2 bg-background/80 backdrop-blur-md rounded-xl p-3 border border-white/10 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 z-[60] shadow-xl pointer-events-none">
               <p className="text-xs font-black truncate text-foreground/90">{card.name}</p>
               <div className="flex items-center justify-between mt-1">
-                <p className="text-[9px] font-bold text-foreground/60 truncate uppercase tracking-widest">#{card.localId} ({card.id.split('-')[0].toUpperCase()})</p>
+                <p className="text-[11px] md:text-[10px] font-bold text-foreground/60 truncate uppercase tracking-widest">#{card.localId} ({card.id.split('-')[0].toUpperCase()})</p>
               </div>
             </div>
           </motion.div>

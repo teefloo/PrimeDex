@@ -11,7 +11,9 @@ import {
   Languages,
   Sparkles,
   Swords,
-  Search
+  Search,
+  Menu,
+  ArrowLeftRight
 } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
 import SettingsModal from './SettingsModal';
@@ -30,6 +32,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from '@/components/ui/sheet';
 import { useMounted } from '@/hooks/useMounted';
 
 interface HeaderLinkProps extends LinkProps {
@@ -180,7 +190,7 @@ export default function Header() {
                     <>
                       <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
                       <div className="flex items-center gap-1">
-                        <span className="text-[7px] font-black uppercase tracking-[0.2em] text-foreground/35">
+                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/35">
                           {caughtCount} / 1025
                         </span>
                         <div className="w-12 h-[3px] rounded-full bg-white/10 overflow-hidden">
@@ -350,10 +360,66 @@ export default function Header() {
                   <Settings className="w-4 h-4 md:w-[18px] md:h-[18px]" />
                 </motion.button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs font-bold">
+                <TooltipContent side="bottom" className="text-xs font-bold">
                 {t('settings.title')}
               </TooltipContent>
             </Tooltip>
+
+            {/* ── MOBILE MENU ── */}
+            <div className="flex lg:hidden items-center">
+              <Sheet>
+                <SheetTrigger render={
+                  <motion.button
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.92 }}
+                    className="p-2.5 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] text-foreground/60 hover:text-foreground hover:bg-white/[0.08] hover:border-white/[0.12] transition-all duration-300 shadow-sm min-w-[42px] flex items-center justify-center gap-1.5"
+                    aria-label={t('header.open_menu') || 'Menu'}
+                  >
+                    <Menu className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                  </motion.button>
+                } />
+                <SheetContent side="right" className="w-[85vw] max-w-[350px] p-0 bg-background/95 backdrop-blur-3xl border-l border-white/10">
+                  <SheetHeader className="p-6 border-b border-white/5">
+                    <SheetTitle className="text-left font-black tracking-tighter flex items-center text-2xl">
+                      <span className="gradient-text-primary">Prime</span>
+                      <span className="text-foreground">Dex</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col p-4 gap-2">
+                    <SheetClose render={
+                      <Link href="/" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <PrimeDexLogo className="w-5 h-5 flex-shrink-0" /> {t('header.home_aria')}
+                      </Link>
+                    } />
+                    <SheetClose render={
+                      <Link href="/team" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <Users className="w-5 h-5 flex-shrink-0" /> {t('nav.team')}
+                      </Link>
+                    } />
+                    <SheetClose render={
+                      <Link href="/compare" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <ArrowLeftRight className="w-5 h-5 flex-shrink-0" /> {t('nav.compare')}
+                      </Link>
+                    } />
+                    <SheetClose render={
+                      <Link href="/types" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <Sparkles className="w-5 h-5 flex-shrink-0" /> {t('nav.types')}
+                      </Link>
+                    } />
+                    <SheetClose render={
+                      <Link href="/moves" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <Swords className="w-5 h-5 flex-shrink-0" /> {t('nav.moves')}
+                      </Link>
+                    } />
+                    <SheetClose render={
+                      <Link href="/quiz" className="flex items-center gap-4 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-foreground/70 hover:text-primary hover:bg-white/5 transition-all">
+                        <BrainCircuit className="w-5 h-5 flex-shrink-0" /> {t('nav.quiz')}
+                      </Link>
+                    } />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </motion.div>
       </header>

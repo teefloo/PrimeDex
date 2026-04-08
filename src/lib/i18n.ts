@@ -42,8 +42,8 @@ export const loadLanguage = async (lang: string): Promise<void> => {
   if (hasResourceBundle) return;
 
   try {
-    const module = await languageResources[lang]();
-    i18n.addResourceBundle(lang, 'translation', module.default.translation, true, true);
+    const langModule = await languageResources[lang]();
+    i18n.addResourceBundle(lang, 'translation', langModule.default.translation, true, true);
   } catch (error) {
     console.error(`Failed to load language: ${lang}`, error);
   }

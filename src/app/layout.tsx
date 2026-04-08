@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import Providers from "./providers";
 import "./globals.css";
@@ -24,6 +24,13 @@ const bodyFont = Manrope({
   display: "swap",
   preload: true,
 });
+
+export const viewport: Viewport = {
+  themeColor: '#e94560',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://primedex.vercel.app"),
@@ -151,7 +158,7 @@ export default function RootLayout({
               {children}
             </div>
           </AppContent>
-          {process.env.NODE_ENV === "development" && <Agentation />}
+           {/* {process.env.NODE_ENV === "development" && <Agentation />} */}
           <Analytics />
         </Providers>
       </body>

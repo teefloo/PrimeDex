@@ -455,7 +455,7 @@ export default function PokemonList() {
               {filteredAndSortedResults?.length ?? 0}
             </Badge>
           </div>
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 text-[9px] font-black uppercase tracking-widest gap-1.5">
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 text-[11px] md:text-[10px] font-black uppercase tracking-widest gap-1.5">
             <RotateCcw className="w-3 h-3" /> {t('filters.clear_all')}
           </Button>
         </div>

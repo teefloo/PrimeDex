@@ -33,7 +33,7 @@ export default function RegionFilter() {
         {/* Region label */}
         <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/8 rounded-full border border-primary/15 shrink-0">
           <Map className="w-3.5 h-3.5 text-primary/70" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
+          <span className="text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
         </div>
 
         <AnimatePresence mode="popLayout">

@@ -223,7 +223,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
         <button
           onClick={handleToggleCaught}
           className={cn(
-            "absolute bottom-6 left-6 z-20 transition-all duration-500 hover:scale-110 active:scale-90",
+            "absolute bottom-4 left-4 min-w-[44px] min-h-[44px] flex items-center justify-center z-20 transition-all duration-500 hover:scale-110 active:scale-90",
             caught ? "opacity-100 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" : "opacity-15 grayscale hover:opacity-40"
           )}
           title={caught ? t('card.caught') : t('card.mark_caught')}
@@ -253,7 +253,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               onClick={toggleTeam} disabled={!isTeam && teamFull}
               aria-label={isTeam ? t('card.remove_team') : t('card.add_team')}
               className={cn(
-                "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
+                "p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-xl transition-all duration-300 border",
                 isTeam
                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]",
@@ -268,7 +268,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               onClick={toggleCompare} disabled={!isComp && compareFull}
               aria-label={isComp ? t('card.remove_compare') : t('card.add_compare')}
               className={cn(
-                "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
+                "p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-xl transition-all duration-300 border",
                 isComp
                   ? "bg-primary/15 text-primary border-primary/20 shadow-[0_0_12px_rgba(227,53,13,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]",
@@ -283,7 +283,7 @@ export const PokemonCard = memo(function PokemonCard({ name, url, index = 0, ini
               onClick={toggleFavorite}
               aria-label={isFav ? t('card.remove_favorite') : t('card.add_favorite')}
               className={cn(
-                "p-2 rounded-full backdrop-blur-xl transition-all duration-300 border",
+                "p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-xl transition-all duration-300 border",
                 isFav
                   ? "bg-rose-500/15 text-rose-400 border-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.2)]"
                   : "bg-white/[0.03] text-foreground/30 border-white/[0.06] hover:text-foreground/70 hover:bg-white/[0.06]"
