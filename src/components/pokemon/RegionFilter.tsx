@@ -29,9 +29,9 @@ export default function RegionFilter() {
       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
       className="w-full pb-4 pt-2"
     >
-      <div className="flex flex-wrap lg:flex-nowrap gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide">
+      <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide">
         {/* Region label */}
-        <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/8 rounded-full border border-primary/15">
+        <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/8 rounded-full border border-primary/15 shrink-0">
           <Map className="w-3.5 h-3.5 text-primary/70" />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
         </div>
@@ -43,10 +43,10 @@ export default function RegionFilter() {
               animate={{ scale: 1, opacity: 1, width: 'auto' }}
               exit={{ scale: 0.8, opacity: 0, width: 0 }}
               onClick={() => setSelectedGeneration(null)}
-              className="flex items-center gap-1 bg-destructive/10 border border-destructive/20 px-4 py-2 rounded-full text-xs text-destructive hover:bg-destructive/20 transition-all duration-300 whitespace-nowrap overflow-hidden backdrop-blur-xl"
+              className="flex items-center justify-center shrink-0 gap-1 bg-destructive/10 border border-destructive/20 px-4 py-2 rounded-full text-xs text-destructive hover:bg-destructive/20 transition-all duration-300 whitespace-nowrap backdrop-blur-xl"
               aria-label={t('filters.reset')}
             >
-              <X className="w-3 h-3" />
+              <X className="w-3 h-3 shrink-0" />
               <span className="font-bold uppercase tracking-wider text-[10px]">{t('filters.reset')}</span>
             </motion.button>
           )}
@@ -79,7 +79,7 @@ export default function RegionFilter() {
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
               )}
               
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center justify-center gap-2">
                 {label}
               </span>
             </motion.button>

@@ -43,14 +43,21 @@ export default function SearchBar() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
-        e.preventDefault();
-        inputRef.current?.focus();
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
+        if (document.activeElement !== inputRef.current) {
+          e.preventDefault();
+          inputRef.current?.focus();
+        } else if (e.key === 'k') {
+          // If already in input, still prevent default browser action for Cmd+K / Ctrl+K
+          e.preventDefault();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const isMac = mounted && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   return (
     <motion.div
@@ -89,7 +96,7 @@ export default function SearchBar() {
         {/* Keyboard shortcut badge */}
         <div className={`absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-1.5 transition-opacity duration-300 pointer-events-none ${localSearch ? 'opacity-0' : 'opacity-100'}`}>
           <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] font-bold text-foreground/30 tracking-wide">
-            <Command className="w-3 h-3" /> K
+            {isMac ? <Command className="w-3 h-3" /> : <span className="px-0.5">Ctrl</span>} K
           </kbd>
         </div>
       </div>

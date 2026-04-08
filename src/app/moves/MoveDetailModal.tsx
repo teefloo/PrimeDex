@@ -44,49 +44,30 @@ function groupLearnersByMethod(learners: MovePokemonLearner[]): GroupedLearners 
     other: [],
   };
 
-  const pokemonMap = new Map<number, MovePokemonLearner>();
+  for (const pokemon of learners) {
+    const hasLevelUp = pokemon.learnMethods.includes('level-up');
+    const hasMachine = pokemon.learnMethods.includes('machine');
+    const hasTechnicalRecord = pokemon.learnMethods.includes('technical-record');
+    const hasTutor = pokemon.learnMethods.includes('tutor');
+    const hasEgg = pokemon.learnMethods.includes('egg');
 
-  for (const learner of learners) {
-    if (!pokemonMap.has(learner.id)) {
-      pokemonMap.set(learner.id, { ...learner });
-    } else {
-      const existing = pokemonMap.get(learner.id)!;
-      for (const method of learner.learnMethods) {
-        if (!existing.learnMethods.includes(method)) {
-          existing.learnMethods.push(method);
-        }
-      }
-      if (learner.level !== undefined && learner.level > 0) {
-        existing.level = learner.level;
-      }
+    if (hasLevelUp) {
+      grouped.levelUp.push({ ...pokemon, id: pokemon.id * 10 + 1 });
     }
-  }
-
-  for (const pokemon of pokemonMap.values()) {
-    let assigned = false;
-
-    if (pokemon.learnMethods.includes('level-up')) {
-      grouped.levelUp.push(pokemon);
-      assigned = true;
+    if (hasMachine) {
+      grouped.machine.push({ ...pokemon, id: pokemon.id * 10 + 2 });
     }
-
-    if (!assigned && pokemon.learnMethods.includes('machine')) {
-      grouped.machine.push(pokemon);
-      assigned = true;
+    if (hasTechnicalRecord) {
+      grouped.technicalRecord.push({ ...pokemon, id: pokemon.id * 10 + 3 });
     }
-
-    if (!assigned && pokemon.learnMethods.includes('tutor')) {
-      grouped.tutor.push(pokemon);
-      assigned = true;
+    if (hasTutor) {
+      grouped.tutor.push({ ...pokemon, id: pokemon.id * 10 + 4 });
     }
-
-    if (!assigned && pokemon.learnMethods.includes('egg')) {
-      grouped.egg.push(pokemon);
-      assigned = true;
+    if (hasEgg) {
+      grouped.egg.push({ ...pokemon, id: pokemon.id * 10 + 5 });
     }
-
-    if (!assigned) {
-      grouped.other.push(pokemon);
+    if (!hasLevelUp && !hasMachine && !hasTechnicalRecord && !hasTutor && !hasEgg) {
+      grouped.other.push({ ...pokemon, id: pokemon.id * 10 + 6 });
     }
   }
 
@@ -116,20 +97,38 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
     refetchOnMount: true,
   });
 
-  const learners: MovePokemonLearner[] = (learnersData || [])
-    .filter((entry) => entry.pokemon_v2_pokemon !== null)
-    .map((entry) => {
-      const pokemon = entry.pokemon_v2_pokemon!;
+  const learners: MovePokemonLearner[] = (() => {
+    const map = new Map<number, MovePokemonLearner>();
+    
+    for (const entry of (learnersData || [])) {
+      if (!entry.pokemon_v2_pokemon) continue;
+      
+      const pokemon = entry.pokemon_v2_pokemon;
       const methodName = entry.pokemon_v2_movelearnmethod?.name as MoveLearnMethod;
-      return {
-        id: pokemon.id,
-        name: pokemon.name,
-        types: pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name),
-        localizedName: pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name,
-        learnMethods: methodName ? [methodName] : [],
-        level: entry.level ?? undefined,
-      };
-    });
+      const id = pokemon.id;
+      
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          name: pokemon.name,
+          types: pokemon.pokemon_v2_pokemontypes.map((t) => t.pokemon_v2_type.name),
+          localizedName: pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name,
+          learnMethods: methodName ? [methodName] : [],
+          level: entry.level ?? undefined,
+        });
+      } else {
+        const existing = map.get(id)!;
+        if (methodName && !existing.learnMethods.includes(methodName)) {
+          existing.learnMethods.push(methodName);
+        }
+        if (entry.level !== undefined && entry.level > 0) {
+          existing.level = entry.level;
+        }
+      }
+    }
+    
+    return Array.from(map.values());
+  })();
 
   const groupedLearners = groupLearnersByMethod(learners);
   const totalLearners = learners.length > 0

@@ -312,7 +312,7 @@ export interface MoveListItem {
   generation_id: number | null;
 }
 
-export type MoveLearnMethod = 'level-up' | 'machine' | 'tutor' | 'egg' | 'light-ball-roulette' | 'stadium-surfing-pikachu' | 'form-change' | 'zygarde-cube' | 'repel' | 'trade' | 'special' | 'event' | 'pikachu-pop-star' | 'pikachu-rock-star' | 'cosplay-pikachu' | null;
+export type MoveLearnMethod = 'level-up' | 'machine' | 'tutor' | 'egg' | 'technical-record' | 'light-ball-roulette' | 'stadium-surfing-pikachu' | 'form-change' | 'zygarde-cube' | 'repel' | 'trade' | 'special' | 'event' | 'pikachu-pop-star' | 'pikachu-rock-star' | 'cosplay-pikachu' | null;
 
 export interface MovePokemonLearner {
   id: number;

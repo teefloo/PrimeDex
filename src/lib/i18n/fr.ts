@@ -112,7 +112,7 @@ export default {
     filters: {
       button: 'Filtres',
       title: 'Filtres avancés',
-      reset: 'Réinitialiser tous les filtres',
+      reset: 'Réinitialiser filtre',
       clear_all: 'Tout effacer',
       generation: 'Génération & Région',
       types: 'Sélection des types (logique ET)',
