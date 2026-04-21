@@ -25,6 +25,7 @@ export default function CompareLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
   return (
     <>
       <script
@@ -37,7 +38,7 @@ export default function CompareLayout({
             applicationCategory: 'GameApplication',
             operatingSystem: 'All',
             description: 'Compare Pokémon stats, types, abilities, and movesets side-by-side.',
-            url: 'https://primedex.vercel.app/compare',
+            url: `${baseUrl}/compare`,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
           }),
         }}

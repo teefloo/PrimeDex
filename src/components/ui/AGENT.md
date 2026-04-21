@@ -1,34 +1,18 @@
-## Components
+# UI Components
 
-| Component | Purpose |
-|-----------|---------|
-| `badge.tsx` | Status/label badge |
-| `button.tsx` | Button with variants |
-| `card.tsx` | Card container with slots |
-| `command.tsx` | Command palette (cmdk) |
-| `dialog.tsx` | Modal/dialog |
-| `input.tsx` | Text input |
-| `input-group.tsx` | Input wrapper for addons |
-| `scroll-area.tsx` | Custom scrollable area |
-| `select.tsx` | Dropdown select |
-| `sheet.tsx` | Slide-over panel |
-| `skeleton.tsx` | Loading placeholder |
-| `slider.tsx` | Range control |
-| `sonner.tsx` | Toast provider |
-| `switch.tsx` | Toggle switch |
-| `tabs.tsx` | Tab navigation |
-| `textarea.tsx` | Multi-line input |
-| `tooltip.tsx` | Hover tooltip |
-
-## Branding
-
-| Component | Purpose |
-|-----------|---------|
-| `PokeballIcon.tsx` | Custom SVG icon |
-| `PrimeDexLogo.tsx` | Branding logo |
+## Scope
+- `badge.tsx`, `button.tsx`, `card.tsx`, `command.tsx`, `dialog.tsx`
+- `input.tsx`, `input-group.tsx`, `scroll-area.tsx`, `select.tsx`, `sheet.tsx`
+- `skeleton.tsx`, `slider.tsx`, `sonner.tsx`, `switch.tsx`, `tabs.tsx`
+- `textarea.tsx`, `tooltip.tsx`
+- `PokeballIcon.tsx`, `PrimeDexLogo.tsx`
 
 ## Conventions
+- Keep these components presentational and free of business logic.
+- Style with Tailwind CSS only.
+- Use `cn()` from `@/lib/utils` for conditional classes.
+- Preserve accessibility defaults in primitives.
 
-- No business logic — pure presentational primitives
-- Style via Tailwind CSS only
-- Use `cn()` from `@/lib/utils` for conditional classes
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

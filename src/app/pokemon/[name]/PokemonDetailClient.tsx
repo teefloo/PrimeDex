@@ -27,8 +27,8 @@ import {
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, PokemonEncounterVersionDetail, PokemonEncounterDetail, TYPE_COLORS } from '@/types/pokemon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrimeDexStore } from '@/store/primedex';
-import { cn, formatId, formatName, formatLocationName } from '@/lib/utils';
-import { getFormDisplayName } from '@/lib/form-names';
+import { cn, formatId, formatName, formatLocationName, formatPokemonSlugName } from '@/lib/utils';
+import { getBaseSpeciesName } from '@/lib/form-names';
 import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useMounted } from '@/hooks/useMounted';
@@ -72,6 +72,7 @@ import { ABILITY_BATTLE_DESCRIPTIONS } from '@/lib/ability-battle-descriptions';
 import { HeldItem } from '@/lib/held-items';
 
 import Image from 'next/image';
+import { ShinyIcon } from '@/components/ui/ShinyIcon';
 
 function ItemCard({ item, language }: { item: HeldItem; language: string }) {
   const [imgError, setImgError] = useState(false);
@@ -134,7 +135,14 @@ export function PokemonDetailClient({
   const router = useRouter();
   const [showShiny, setShowShiny] = useState(false);
   const [playingCry, setPlayingCry] = useState<'latest' | 'legacy' | null>(null);
-  const { isFavorite, addFavorite, removeFavorite, addToHistory, language, systemLanguage } = usePrimeDexStore();
+  const { 
+    isFavorite, addFavorite, removeFavorite, 
+    toggleCaught, isCaught, 
+    addToCompare, removeFromCompare, isInCompare,
+    addToTeam, removeFromTeam, isInTeam,
+    addToHistory, language, systemLanguage, team,
+    soundEnabled
+  } = usePrimeDexStore();
   const mounted = useMounted();
 
   const resolvedLang = mounted 
@@ -154,7 +162,7 @@ export function PokemonDetailClient({
     queryKey: ['pokemon-full-detail', name, resolvedLang],
     queryFn: async () => {
       const langId = usePrimeDexStore.getState().getLanguageId();
-      const baseName = name.split(/-(mega|primal|ultra|gmax|alola|galar|hisui|paldea)/)[0] || name;
+      const baseName = getBaseSpeciesName(name);
       const [pokemon, species, localized] = await Promise.all([
         getPokemonDetail(name),
         getPokemonSpecies(baseName).catch(() => null),
@@ -249,26 +257,15 @@ export function PokemonDetailClient({
   const isFav = pokemon ? isFavorite(pokemon.id) : false;
   const mainType = pokemon.types[0].type.name;
   const color = TYPE_COLORS[mainType] || '#A8A77A';
-
-  const isAlternateForm = pokemon.name.includes('-mega') || pokemon.name.includes('-primal') || pokemon.name.includes('-ultra');
   
   const typeLabel = pokemon.types.map((typeItem) => t(`types.${typeItem.type.name}`)).join(' / ');
-
-  const getLocalizedName = (name: string) => {
-    const baseName = name.replace(/-(mega-x|mega-y|mega|primal|ultra).*/g, '');
-    const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-      || species?.names?.find(n => n.language.name === resolvedLang)?.name
-      || species?.names?.find(n => n.language.name === 'en')?.name
-      || baseName;
-    return getFormDisplayName(name, baseLocalizedName, resolvedLang);
-  };
-
-  const displayName = isAlternateForm 
-    ? getLocalizedName(pokemon.name) || pokemon.name
-    : localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
-      || species?.names?.find(n => n.language.name === resolvedLang)?.name
-      || species?.names?.find(n => n.language.name === 'en')?.name
-      || pokemon.name;
+  const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name 
+    || species?.names?.find(n => n.language.name === resolvedLang)?.name
+    || species?.names?.find(n => n.language.name === 'en')?.name
+    || getBaseSpeciesName(pokemon.name);
+  const displayName = pokemon.name.includes('-')
+    ? formatPokemonSlugName(pokemon.name)
+    : baseLocalizedName;
 
   const flavorText = localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ')
     || species?.flavor_text_entries.find((entry) => entry.language.name === resolvedLang)?.flavor_text.replace(/\f/g, ' ')
@@ -281,17 +278,38 @@ export function PokemonDetailClient({
   )?.genus;
 
   const totalStats = pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
+  const gameIndices = pokemon.game_indices || [];
+  const heldItems = pokemon.held_items || [];
+  const forms = pokemon.forms || [];
+  const genderRate = species?.gender_rate ?? null;
+  const femaleGenderRate = genderRate === null || genderRate === -1 ? null : (genderRate / 8) * 100;
+  const maleGenderRate = femaleGenderRate === null ? null : 100 - femaleGenderRate;
 
   const artwork = showShiny 
     ? (pokemon.sprites.other['official-artwork'].front_shiny || pokemon.sprites.front_shiny)
     : (pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default);
 
-  const playCry = (type: 'latest' | 'legacy') => {
-    if (!pokemon?.cries?.[type]) return;
+  const playCry = async (type: 'latest' | 'legacy') => {
+    if (!soundEnabled) return;
+    const cryUrl = pokemon?.cries?.[type];
+    if (!cryUrl) {
+      console.warn(`No cry data for type: ${type}`);
+      return;
+    }
     setPlayingCry(type);
-    const audio = new Audio(pokemon.cries[type]);
-    audio.onended = () => setPlayingCry(null);
-    audio.play().catch(console.error);
+    try {
+      const audio = new Audio();
+      audio.onended = () => setPlayingCry(null);
+      audio.onerror = () => {
+        console.error(`Failed to load/play cry: ${type}`, cryUrl);
+        setPlayingCry(null);
+      };
+      audio.src = cryUrl;
+      await audio.play();
+    } catch (err) {
+      console.error('Audio playback failed:', err);
+      setPlayingCry(null);
+    }
   };
 
   const handleShare = async () => {
@@ -339,7 +357,8 @@ export function PokemonDetailClient({
           <ArrowLeft className="w-6 h-6" />
         </button>
 
-        <div className="fixed top-1/2 -translate-y-1/2 right-4 md:right-8 z-50 flex flex-col items-center gap-3">
+      {/* Floating Action Buttons — sidebar on desktop, hidden on mobile */}
+      <div className="hidden md:flex fixed right-8 top-1/2 -translate-y-1/2 z-50 flex-col items-center justify-center gap-3" >
           <Button
             variant="outline"
             size="icon"
@@ -364,7 +383,7 @@ export function PokemonDetailClient({
             title={t('detail.shiny')}
             aria-label={showShiny ? t('detail.show_normal') || 'Show normal version' : t('detail.show_shiny') || 'Show shiny version'}
           >
-            <Star className={cn("w-5 h-5", showShiny && "fill-current")} />
+            <ShinyIcon className={cn("w-5 h-5", showShiny && "fill-current")} />
           </Button>
 
           <Button
@@ -511,18 +530,39 @@ export function PokemonDetailClient({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="max-w-4xl mx-auto"
-        >
-          <Tabs defaultValue="about" className="w-full">
-            <TabsList className="flex overflow-x-auto scrollbar-hide w-full mb-8 h-auto rounded-2xl bg-secondary/30 p-1 border border-white/5 gap-1 justify-start md:grid md:grid-cols-8">
-              <TabsTrigger value="about" aria-label={t('detail.about')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.about')}</TabsTrigger>
-              <TabsTrigger value="stats" aria-label={t('detail.stats')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.stats')}</TabsTrigger>
-              <TabsTrigger value="moves" aria-label={t('detail.moveset')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.moveset')}</TabsTrigger>
-              <TabsTrigger value="evolution" aria-label={t('detail.evolution')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.evolution')}</TabsTrigger>
-              <TabsTrigger value="locations" aria-label={t('detail.where_to_find')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.where_to_find')}</TabsTrigger>
-              <TabsTrigger value="builds" aria-label={t('detail.builds')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.builds')}</TabsTrigger>
-              <TabsTrigger value="infos" aria-label={t('detail.infos')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.infos')}</TabsTrigger>
-              <TabsTrigger value="cards" aria-label={t('detail.cards')} className="flex-1 whitespace-nowrap px-4 rounded-xl font-bold uppercase tracking-wider text-[11px] md:text-xs py-2.5 md:py-0">{t('detail.cards')}</TabsTrigger>
-            </TabsList>
+        >          <Tabs defaultValue="about" className="w-full relative">
+            <div className="relative mb-8 -mx-4 px-4 md:mx-0 md:px-0 pb-4 overflow-visible">
+              <TabsList className="flex overflow-x-visible scrollbar-hide w-full min-h-[3.5rem] rounded-2xl bg-secondary/30 p-1 border border-white/5 gap-1 justify-start md:grid md:grid-cols-4 lg:grid-cols-8 overflow-x-scroll">
+                <TabsTrigger value="about" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.about')}
+                </TabsTrigger>
+                <TabsTrigger value="stats" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.stats')}
+                </TabsTrigger>
+                <TabsTrigger value="evolution" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.evolution')}
+                </TabsTrigger>
+                <TabsTrigger value="moves" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.moveset')}
+                </TabsTrigger>
+                <TabsTrigger value="breeding" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.breeding')}
+                </TabsTrigger>
+                <TabsTrigger value="builds" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.builds')}
+                </TabsTrigger>
+                <TabsTrigger value="locations" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.where_to_find')}
+                </TabsTrigger>
+                <TabsTrigger value="cards" className="whitespace-nowrap px-6 py-2.5 md:flex-1 rounded-xl text-[10px] md:text-xs font-black uppercase transition-all data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t('detail.cards')}
+                </TabsTrigger>
+              </TabsList>
+              {/* Mobile scroll indicator */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none md:hidden z-10 opacity-40">
+                <div className="w-1 h-8 bg-gradient-to-b from-transparent via-primary to-transparent rounded-full" />
+              </div>
+            </div>
             
             {/* About Tab */}
             <TabsContent value="about" className="space-y-6">
@@ -551,10 +591,91 @@ export function PokemonDetailClient({
 
                 <div className="mt-8 pt-6 border-t border-white/10">
                   <h3 className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" /> {t('detail.pokedex_data')}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-secondary/20 border border-white/5 p-4 rounded-2xl flex flex-col gap-2">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest">{t('detail.order')}</p>
+                      <p className="text-lg font-black text-foreground/90">#{pokemon.order}</p>
+                    </div>
+                    <div className="bg-secondary/20 border border-white/5 p-4 rounded-2xl flex flex-col gap-2">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest">{t('detail.default_form')}</p>
+                      <p className="text-lg font-black text-foreground/90">{pokemon.is_default ? t('detail.yes') : t('detail.no')}</p>
+                    </div>
+                    <div className="bg-secondary/20 border border-white/5 p-4 rounded-2xl md:col-span-2 flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest">{t('detail.forms')}</p>
+                        <span className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">{forms.length}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {forms.map((form) => (
+                          <span
+                            key={form.name}
+                            className="px-3 py-1.5 rounded-xl bg-background/40 border border-white/5 text-xs font-black text-foreground/80"
+                          >
+                            {formatName(form.name)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-secondary/20 border border-white/5 p-4 rounded-2xl md:col-span-2 flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest">{t('detail.game_indices')}</p>
+                        <span className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">
+                          {gameIndices.length} {t('detail.game_appearances')}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                        {gameIndices.map((entry) => (
+                          <span
+                            key={`${entry.version.name}-${entry.game_index}`}
+                            className="px-3 py-1.5 rounded-xl bg-background/40 border border-white/5 text-xs font-black text-foreground/80"
+                          >
+                            {formatName(entry.version.name)} · #{entry.game_index}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-secondary/20 border border-white/5 p-4 rounded-2xl md:col-span-2 flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest">{t('detail.held_items')}</p>
+                        <span className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">{heldItems.length}</span>
+                      </div>
+                      {heldItems.length > 0 ? (
+                        <div className="space-y-3">
+                          {heldItems.map((heldItem) => (
+                            <div key={heldItem.item.name} className="rounded-2xl border border-white/5 bg-background/35 p-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm font-black text-foreground/85">{formatName(heldItem.item.name)}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {heldItem.version_details.map((detail) => (
+                                  <span
+                                    key={`${heldItem.item.name}-${detail.version.name}`}
+                                    className="px-2.5 py-1 rounded-lg bg-secondary/40 text-[11px] font-bold text-foreground/70 border border-white/5"
+                                  >
+                                    {formatName(detail.version.name)} · {detail.rarity}%
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-white/10 bg-background/20 p-4 text-center text-xs text-foreground/50">
+                          {t('detail.no_held_items')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <h3 className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-primary" /> {t('detail.abilities')}
                   </h3>
                   <div className="grid grid-cols-1 gap-3">
-                    {pokemon.abilities.map((a, idx) => {
+                    {[...pokemon.abilities].sort((a, b) => a.ability.name.localeCompare(b.ability.name)).map((a, idx) => {
                       const abilityData = abilityQueries[idx]?.data;
                       let description = t('detail.no_ability_desc');
                       let localizedName = formatName(a.ability.name);
@@ -775,6 +896,57 @@ export function PokemonDetailClient({
               )}
             </TabsContent>
 
+            {/* Breeding Tab */}
+            <TabsContent value="breeding" className="space-y-6">
+              {species ? (
+                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] space-y-6">
+                  <h3 className="text-xl font-black mb-4 text-foreground/90 border-b border-white/10 pb-4">{t('detail.breeding')}</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.egg_groups')}</p>
+                      <p className="text-sm font-black text-foreground/90">
+                        {species.egg_groups?.map(g => t(`egg_groups.${g.name}`)).join(', ') || t('detail.no_evolution')}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.gender_ratio')}</p>
+                      <p className="text-sm font-black text-foreground/90">
+                        {genderRate !== null ? (
+                          genderRate === -1 
+                            ? t('detail.genderless')
+                            : `♂ ${maleGenderRate?.toFixed(1)}% / ♀ ${femaleGenderRate?.toFixed(1)}%`
+                        ) : '-'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.catch_rate')}</p>
+                      <p className="text-sm font-black text-foreground/90">{species.capture_rate || '-'}</p>
+                    </div>
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.base_happiness')}</p>
+                      <p className="text-sm font-black text-foreground/90">{species.base_happiness || '-'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.growth_rate')}</p>
+                      <p className="text-sm font-black text-foreground/90">{species.growth_rate ? t(`growth_rates.${species.growth_rate.name}`) : '-'}</p>
+                    </div>
+                    <div className="bg-secondary/30 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[10px] text-foreground/50 uppercase font-bold tracking-widest mb-2">{t('detail.base_exp')}</p>
+                      <p className="text-sm font-black text-foreground/90">{pokemon.base_experience || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="glass-panel p-6 md:p-8 rounded-[2.5rem] flex items-center justify-center min-h-[200px]">
+                  <p className="text-foreground/50 font-bold uppercase tracking-widest text-sm">{t('detail.no_evolution')}</p>
+                </div>
+              )}
+            </TabsContent>
+
             {/* Builds Tab */}
             <TabsContent value="builds" className="space-y-6">
               <PokemonBuilds pokemon={pokemon} />
@@ -874,7 +1046,7 @@ export function PokemonDetailClient({
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">{t('detail.offensive_tips')}</p>
+                        <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground/40 mb-1">{t('detail.growth_rate')}</p>
                         <ul className="space-y-2">
                           <li className="text-[11px] text-foreground/60 flex items-start gap-2">
                             <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
@@ -937,7 +1109,7 @@ export function PokemonDetailClient({
                               <div className="flex flex-col gap-2">
                                 {(() => {
                                   return vd.encounter_details.map((ed: PokemonEncounterDetail, ei: number) => {
-                                    const actualChance = vd.max_chance > 0 ? Math.round((ed.chance / vd.max_chance) * 100) : 0;
+                                    const actualChance = ed.chance;
                                     return (
                                       <div key={ei} className="flex flex-col gap-1 pb-2 border-b border-white/5 last:border-0 last:pb-0">
                                         <div className="flex justify-between items-center text-xs">
@@ -989,6 +1161,107 @@ export function PokemonDetailClient({
             </TabsContent>
           </Tabs>
         </motion.div>
+      </div>
+      {/* Mobile Fixed Bottom Action Bar */}
+      <div className="sm:hidden fixed bottom-6 left-4 right-4 z-[100] animate-in fade-in slide-in-from-bottom-10 duration-700">
+        <div className="bg-background/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-2 flex items-center justify-between gap-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {/* Catch Toggle */}
+          <Button
+            variant="outline"
+            size="default"
+            onClick={(e) => { e.stopPropagation(); if (pokemon?.id) toggleCaught(pokemon.id); }}
+            className={cn(
+              "flex-1 h-12 rounded-[1.5rem] transition-all gap-2 border-0",
+              pokemon?.id && isCaught(pokemon.id)
+                ? "bg-primary text-white shadow-[0_4px_16px_rgba(227,53,13,0.4)]"
+                : "bg-white/5 text-foreground/70"
+            )}
+          >
+            <Zap className={cn("w-4 h-4", pokemon?.id && isCaught(pokemon.id) && "fill-current")} />
+            <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+              {pokemon?.id && isCaught(pokemon.id) ? t('card.caught') : t('card.mark_caught')}
+            </span>
+          </Button>
+
+          {/* Favorite Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (pokemon?.id) {
+                if (isFavorite(pokemon.id)) {
+                  removeFavorite(pokemon.id);
+                } else {
+                  addFavorite(pokemon.id);
+                }
+              }
+            }}
+            className={cn(
+              "h-12 w-12 rounded-[1.5rem] transition-all border-0",
+              pokemon?.id && isFavorite(pokemon.id)
+                ? "bg-rose-500/15 text-rose-400"
+                : "bg-white/5 text-foreground/40"
+            )}
+            aria-label={pokemon?.id && isFavorite(pokemon.id) ? t('card.remove_favorite') : t('card.add_favorite')}
+            aria-pressed={!!(pokemon?.id && isFavorite(pokemon.id))}
+          >
+            <Heart className={cn("w-5 h-5", pokemon?.id && isFavorite(pokemon.id) && "fill-current")} />
+          </Button>
+
+          {/* Compare Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (pokemon?.id) {
+                if (isInCompare(pokemon.id)) {
+                  removeFromCompare(pokemon.id);
+                } else {
+                  addToCompare(pokemon.id);
+                }
+              }
+            }}
+            className={cn(
+              "h-12 w-12 rounded-[1.5rem] transition-all border-0",
+              pokemon?.id && isInCompare(pokemon.id)
+                ? "bg-blue-500/15 text-blue-400"
+                : "bg-white/5 text-foreground/40"
+            )}
+            aria-label={pokemon?.id && isInCompare(pokemon.id) ? t('card.remove_compare') : t('card.add_compare')}
+            aria-pressed={!!(pokemon?.id && isInCompare(pokemon.id))}
+          >
+            <Swords className={cn("w-5 h-5", pokemon?.id && isInCompare(pokemon.id) && "fill-current")} />
+          </Button>
+
+          {/* Team Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!!(pokemon?.id && !isInTeam(pokemon.id) && team.length >= 6)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (pokemon?.id) {
+                if (isInTeam(pokemon.id)) {
+                  removeFromTeam(pokemon.id);
+                } else {
+                  addToTeam(pokemon.id);
+                }
+              }
+            }}
+            className={cn(
+              "h-12 w-12 rounded-[1.5rem] transition-all border-0",
+              pokemon?.id && isInTeam(pokemon.id)
+                ? "bg-amber-500/15 text-amber-400"
+                : "bg-white/5 text-foreground/40"
+            )}
+            aria-label={pokemon?.id && isInTeam(pokemon.id) ? t('card.remove_team') : t('card.add_team')}
+            aria-pressed={!!(pokemon?.id && isInTeam(pokemon.id))}
+          >
+            <Star className={cn("w-5 h-5", pokemon?.id && isInTeam(pokemon.id) && "fill-current")} />
+          </Button>
+        </div>
       </div>
     </div>
   );

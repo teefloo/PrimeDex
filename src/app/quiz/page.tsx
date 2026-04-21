@@ -1,9 +1,10 @@
 'use client';
 
 import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  getAllPokemonSummary,
+  getAllPokemonSearchIndex,
   getPokemonDetail, 
   getPokemonByGeneration, 
   getPokemonByType 
@@ -26,7 +27,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { PokemonDetail } from '@/types/pokemon';
 import { useTranslation } from '@/lib/i18n';
@@ -34,7 +34,9 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { useMounted } from '@/hooks/useMounted';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { resolveLanguage } from '@/lib/languages';
 
 type GameMode = 'time-attack' | 'survival' | 'marathon';
 type QuizChallenge = 'classic' | 'silhouette' | 'stats';
@@ -57,7 +59,6 @@ const TYPES = [
   'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'
 ];
 
-// Simple seeded random
 const seededRandom = (seed: string) => {
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -99,17 +100,14 @@ function QuizPageContent() {
   const [dailyIndex, setDailyIndex] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState(0);
   
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { language, systemLanguage, quizHighScores, updateQuizHighScore, addBadge, badges } = usePrimeDexStore();
-  const mounted = useMounted();
 
-  const resolvedLang = mounted 
-    ? (language === 'auto' ? systemLanguage : language) 
-    : i18n.language || 'en';
+  const resolvedLang = resolveLanguage(language, systemLanguage);
 
   const { data: allNames } = useQuery({
-    queryKey: ['allPokemonSummary'],
-    queryFn: getAllPokemonSummary,
+    queryKey: ['allPokemonSearchIndex'],
+    queryFn: getAllPokemonSearchIndex,
     staleTime: 30 * 60 * 1000,
   });
 
@@ -123,9 +121,8 @@ function QuizPageContent() {
     return localized?.name || internalName;
   }, [allNames, resolvedLang]);
 
-  // Handle target pokemon from query params
   useEffect(() => {
-    if (mounted && targetPokemon && gameState === 'idle' && allNames) {
+    if (targetPokemon && gameState === 'idle' && allNames) {
       const startTargetQuiz = async () => {
         setGameState('loading');
         setQuizChallenge('classic');
@@ -152,7 +149,7 @@ function QuizPageContent() {
       };
       startTargetQuiz();
     }
-  }, [mounted, targetPokemon, allNames, gameState, t]);
+  }, [targetPokemon, allNames, gameState, t]);
 
   const getNextPokemon = useCallback(() => {
     const basePool = filteredPool.length > 0 ? filteredPool : (allNames || []);
@@ -190,7 +187,6 @@ function QuizPageContent() {
     const otherOptions: string[] = [];
     const mainPool = allNames || [];
     
-    // For Daily Challenge, seeded options too
     const today = new Date().toISOString().split('T')[0];
     const rngSeed = isDaily ? `${today}-${dailyIndex}` : Math.random().toString();
     const rng = seededRandom(`options-${rngSeed}`);
@@ -278,7 +274,6 @@ function QuizPageContent() {
       setScore(s => {
         const newScore = s + (gameMode === 'time-attack' ? 10 : 1);
         
-        // Badge logic
         if (newScore >= 10 && gameMode === 'marathon') addBadge('quiz-novice');
         if (newScore >= 50 && gameMode === 'marathon') addBadge('quiz-master');
         if (newScore >= 100 && gameMode === 'time-attack') addBadge('speed-demon');
@@ -349,254 +344,217 @@ function QuizPageContent() {
     }
   }, [gameState, gameMode]);
 
-  if (!mounted) return null;
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
-  
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
-  };
-
   return (
-    <div className="min-h-screen bg-transparent relative overflow-x-hidden pb-20">
+    <div className="app-page relative overflow-x-hidden pb-20">
       <Header />
       
-      {/* Decorative background orbs like HeroSection */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none z-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-primary/15 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute top-1/3 left-1/3 w-[200px] h-[100px] bg-indigo-500/10 rounded-full blur-[80px] animate-pulse-glow" style={{ animationDelay: '-1.5s' }} />
-        <div className="absolute top-2/3 right-1/4 w-[150px] h-[80px] bg-purple-500/8 rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: '-3s' }} />
+      {/* Decorative background - PrimeDex brand colors */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-primary/15 rounded-full blur-[120px] animate-pulse-glow" />
+        <div className="absolute top-1/3 right-1/4 w-[200px] h-[100px] bg-violet-500/10 rounded-full blur-[80px] animate-pulse-glow" style={{ animationDelay: '-3s' }} />
+        <div className="absolute top-2/3 left-1/4 w-[150px] h-[80px] bg-amber-500/8 rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: '-2s' }} />
       </div>
       
-      <main className="container mx-auto px-4 py-8 relative z-10 max-w-4xl text-center">
+      <main className="page-shell py-8 relative z-10 max-w-4xl">
         {gameState === 'idle' || gameState === 'finished' ? (
-          <motion.section 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="mb-12 pt-14 flex flex-col items-center"
-          >
-            {/* Pill badge */}
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] backdrop-blur-xl mb-6 shadow-[0_0_15px_rgba(227,53,13,0.1)]">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-foreground/40">
-                PrimeDex Challenge
-              </span>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="inline-block p-4 bg-primary/10 rounded-3xl border border-primary/20 mb-6 relative group">
-              <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Gamepad2 className="w-10 h-10 text-primary relative z-10" />
-            </motion.div>
-            <motion.h2 variants={itemVariants} className="text-5xl md:text-7xl font-black tracking-tighter mb-4 leading-[0.9]">
-              <span className="gradient-text-hero uppercase italic px-2">{t('quiz.title')}</span>
-            </motion.h2>
-            <motion.p variants={itemVariants} className="text-foreground/40 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs">
-              {t('quiz.subtitle')}
-            </motion.p>
-            
-            {/* Decorative line */}
-            <motion.div variants={itemVariants} className="flex items-center justify-center gap-4 mt-8 w-full">
-              <div className="h-px w-16 bg-gradient-to-r from-transparent to-primary/30" />
-              <div className="w-2 h-2 rounded-full bg-primary/40" />
-              <div className="h-px w-16 bg-gradient-to-l from-transparent to-primary/30" />
-            </motion.div>
-          </motion.section>
+          <PageHeader
+            icon={Gamepad2}
+            title={t('quiz.title')}
+            subtitle={t('quiz.subtitle')}
+            eyebrow={t('quiz.eyebrow', { defaultValue: 'PrimeDex' })}
+            className="mt-16 md:mt-20"
+          />
         ) : null}
 
         <div className="max-w-3xl mx-auto pt-4 relative">
           {gameState === 'idle' || gameState === 'finished' ? (
             <div className="space-y-8">
               <motion.div 
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-panel p-6 md:p-12 rounded-[3rem] space-y-8 relative overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="page-surface p-6 md:p-8 rounded-[2.5rem] space-y-8 relative overflow-hidden"
               >
-                {/* Inner glows */}
+                {/* Inner decorative line */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[100px] pointer-events-none rounded-full" />
 
                 {gameState === 'finished' && (
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1, transition: { type: 'spring', bounce: 0.5 } }}
-                    className="space-y-4 relative z-10"
+                    className="space-y-4 relative z-10 text-center"
                   >
                     <div className="flex justify-center">
-                      <div className="p-6 bg-yellow-500/10 rounded-full border border-yellow-500/30 animate-pulse relative hover:scale-110 transition-transform cursor-default">
-                        <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full" />
-                        <Trophy className="w-16 h-16 text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] relative z-10" />
+                      <div className="p-5 bg-yellow-500/10 rounded-full border border-yellow-500/30 relative hover:scale-105 transition-transform">
+                        <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-xl" />
+                        <Trophy className="w-14 h-14 text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] relative z-10" />
                       </div>
                     </div>
-                    <h3 className="text-4xl font-black gradient-text-primary uppercase tracking-tighter">{t('quiz.game_over')}</h3>
-                    <p className="text-sm font-black uppercase tracking-[0.2em] text-foreground/50">
+                    <h3 className="text-3xl md:text-4xl font-black gradient-text-primary uppercase tracking-tighter">{t('quiz.game_over')}</h3>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-foreground/50">
                       {isDaily ? t('quiz.daily_score') : t('quiz.final_score')} 
                     </p>
-                    <p className="text-6xl font-black text-foreground drop-shadow-lg">{score}</p>
+                    <p className="text-5xl md:text-6xl font-black text-foreground drop-shadow-lg">{score}</p>
                   </motion.div>
                 )}
 
                 <div className="relative z-10 space-y-8">
-                  {/* Daily Challenge */}
-                  <button 
+                  {/* Daily Challenge - Premium styled button */}
+                  <Button
                     onClick={() => startGame('classic', 'marathon', true)}
-                    className="w-full h-20 rounded-2xl font-black uppercase tracking-[0.2em] text-sm md:text-lg bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 border-none shadow-[0_0_30px_rgba(249,115,22,0.3)] hover:shadow-[0_0_40px_rgba(249,115,22,0.5)] text-white hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 overflow-hidden relative group"
+                    className="w-full h-18 rounded-2xl font-black uppercase tracking-[0.15em] text-sm md:text-base bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 border-none shadow-[0_8px_32px_rgba(227,53,13,0.25)] hover:shadow-[0_8px_40px_rgba(227,53,13,0.35)] text-white transition-all duration-300"
                   >
-                    <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-0 transition-transform duration-300 pointer-events-none mix-blend-overlay" />
-                    <Calendar className="w-6 h-6" />
+                    <Calendar className="w-5 h-5 mr-2" />
                     {t('quiz.daily')}
-                  </button>
+                  </Button>
 
-                  {/* Filters */}
-                  <div className="space-y-6 bg-black/20 p-6 md:p-8 rounded-[2rem] border border-white/5 text-center relative overflow-hidden backdrop-blur-md">
-                    <div className="flex items-center gap-2 mb-2 justify-center">
+                  {/* Filters Section */}
+                  <div className="space-y-4 bg-white/[0.03] dark:bg-white/[0.02] p-5 md:p-6 rounded-[1.5rem] border border-white/[0.06] dark:border-white/[0.04] backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-3 justify-center">
                       <Filter className="w-4 h-4 text-primary" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">{t('quiz.customize')}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/50">{t('quiz.customize')}</span>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2 text-left relative">
-                        <p className="text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.generation')}</p>
-                        <select 
-                          value={selectedGen || ''} 
-                          onChange={(e) => setSelectedGen(e.target.value || null)}
-                          className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:bg-white/10"
-                        >
-                          <option value="">{t('quiz.all_generations')}</option>
-                          {GENERATIONS.map(gen => (
-                            <option key={gen.id} value={gen.id} className="bg-background text-foreground">{gen.name}</option>
-                          ))}
-                        </select>
-                        <div className="absolute right-4 bottom-4 pointer-events-none text-foreground/30 text-xs">▼</div>
+                        <label htmlFor="quiz-gen-select" className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-foreground/50 ml-2">{t('filters.generation')}</label>
+                        <Select value={selectedGen || ''} onValueChange={(value) => setSelectedGen(value || null)}>
+                          <SelectTrigger id="quiz-gen-select" className="w-full h-11 rounded-xl bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.08] dark:border-white/[0.05] px-4 text-sm font-semibold focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:bg-white/[0.05] [&>span]:text-foreground/70 [&>span]:font-medium">
+                            <SelectValue placeholder={t('quiz.all_generations')} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.08] dark:border-white/[0.05] backdrop-blur-3xl rounded-xl overflow-hidden">
+                            <SelectItem value="" className="focus:bg-white/[0.05]">{t('quiz.all_generations')}</SelectItem>
+                            {GENERATIONS.map(gen => (
+                              <SelectItem key={gen.id} value={gen.id} className="focus:bg-white/[0.05]">{gen.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2 text-left relative">
-                        <p className="text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/40 ml-2">{t('filters.types')}</p>
-                        <select 
-                          value={selectedType || ''} 
-                          onChange={(e) => setSelectedType(e.target.value || null)}
-                          className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-sm font-bold appearance-none cursor-pointer focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:bg-white/10"
-                        >
-                          <option value="">{t('quiz.all_types')}</option>
-                          {TYPES.map(type => (
-                            <option key={type} value={type} className="bg-background text-foreground">{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-                          ))}
-                        </select>
-                        <div className="absolute right-4 bottom-4 pointer-events-none text-foreground/30 text-xs">▼</div>
+                        <label htmlFor="quiz-type-select" className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-foreground/50 ml-2">{t('filters.types')}</label>
+                        <Select value={selectedType || ''} onValueChange={(value) => setSelectedType(value || null)}>
+                          <SelectTrigger id="quiz-type-select" className="w-full h-11 rounded-xl bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.08] dark:border-white/[0.05] px-4 text-sm font-semibold focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all hover:bg-white/[0.05] [&>span]:text-foreground/70 [&>span]:font-medium">
+                            <SelectValue placeholder={t('quiz.all_types')} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.08] dark:border-white/[0.05] backdrop-blur-3xl rounded-xl overflow-hidden">
+                            <SelectItem value="" className="focus:bg-white/[0.05]">{t('quiz.all_types')}</SelectItem>
+                            {TYPES.map(type => (
+                              <SelectItem key={type} value={type} className="focus:bg-white/[0.05]">{type.charAt(0).toUpperCase() + type.slice(1)}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Challenge Type Selection */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
-                      { id: 'classic' as QuizChallenge, name: t('quiz.classic'), icon: <Gamepad2 className="w-5 h-5 group-hover:text-primary transition-colors" />, desc: t('quiz.classic_desc') || 'Show image' },
-                      { id: 'silhouette' as QuizChallenge, name: t('quiz.silhouette'), icon: <EyeOff className="w-5 h-5 group-hover:text-primary transition-colors" />, desc: t('quiz.silhouette_desc') || 'Who\'s that?' },
-                      { id: 'stats' as QuizChallenge, name: t('quiz.stats_mode'), icon: <BarChart3 className="w-5 h-5 group-hover:text-primary transition-colors" />, desc: t('quiz.stats_desc') || 'Base stats' }
+                      { id: 'classic' as QuizChallenge, name: t('quiz.classic'), icon: <Gamepad2 className="w-4 h-4" />, desc: t('quiz.classic_desc') },
+                      { id: 'silhouette' as QuizChallenge, name: t('quiz.silhouette'), icon: <EyeOff className="w-4 h-4" />, desc: t('quiz.silhouette_desc') },
+                      { id: 'stats' as QuizChallenge, name: t('quiz.stats_mode'), icon: <BarChart3 className="w-4 h-4" />, desc: t('quiz.stats_desc') }
                     ].map((mode) => (
-                      <button 
+                      <motion.button 
                         key={mode.id}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => startGame(mode.id)} 
-                        className="glass-btn h-24 md:h-28 rounded-2xl flex flex-col items-center justify-center gap-2 group hover:border-primary/40 relative overflow-hidden"
+                        className="h-24 md:h-26 rounded-2xl flex flex-col items-center justify-center gap-2 group bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 backdrop-blur-sm relative overflow-hidden"
                       >
-                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                        <div className="flex items-center gap-2 font-black uppercase tracking-[0.15em] text-[10px] md:text-xs">
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-[0.12em] text-[10px] md:text-xs text-foreground/60 group-hover:text-primary transition-colors">
                           {mode.icon}
                           {mode.name}
                         </div>
-                        <span className="text-[11px] md:text-[10px] md:text-[10px] opacity-40 font-bold tracking-wider">{mode.desc}</span>
-                      </button>
+                        <span className="text-[10px] sm:text-[11px] opacity-40 font-semibold tracking-wider">{mode.desc}</span>
+                      </motion.button>
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button 
-                      onClick={() => startGame(quizChallenge, 'time-attack')} 
-                      className="glass-btn h-16 rounded-2xl flex flex-col items-center justify-center gap-1 group hover:border-primary/40 hover:bg-primary/5"
+                  {/* Game Mode Selection */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => startGame(quizChallenge, 'time-attack')}
+                      className="h-14 rounded-2xl flex items-center justify-center gap-2 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px] border-white/[0.06] dark:border-white/[0.04] hover:border-primary/30 hover:bg-primary/5"
                     >
-                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[11px] md:text-[10px]">
-                        <Timer className="w-4 h-4 group-hover:text-primary transition-colors" />
-                        {t('quiz.time_attack')} <span className="opacity-50 ml-1">(30s)</span>
-                      </div>
-                    </button>
+                      <Timer className="w-4 h-4 text-blue-400" />
+                      {t('quiz.time_attack')} <span className="opacity-50 ml-1">(30s)</span>
+                    </Button>
 
-                    <button 
-                      onClick={() => startGame(quizChallenge, 'survival')} 
-                      className="glass-btn h-16 rounded-2xl flex flex-col items-center justify-center gap-1 group hover:border-red-500/40 hover:bg-red-500/5"
+                    <Button
+                      variant="outline"
+                      onClick={() => startGame(quizChallenge, 'survival')}
+                      className="h-14 rounded-2xl flex items-center justify-center gap-2 font-bold uppercase tracking-[0.1em] text-[10px] sm:text-[11px] border-white/[0.06] dark:border-white/[0.04] hover:border-red-500/30 hover:bg-red-500/5"
                     >
-                      <div className="flex items-center gap-2 font-black uppercase tracking-[0.1em] text-[11px] md:text-[10px]">
-                        <Heart className="w-4 h-4 group-hover:text-red-500 transition-colors" />
-                        {t('quiz.survival')} <span className="opacity-50 ml-1">(3 {t('quiz.lives')})</span>
-                      </div>
-                    </button>
+                      <Heart className="w-4 h-4 text-red-400" />
+                      {t('quiz.survival')} <span className="opacity-50 ml-1">(3 {t('quiz.lives')})</span>
+                    </Button>
                   </div>
 
+                  {/* High Scores */}
                   {quizHighScores && (
-                    <div className="pt-8 border-t border-white/5 grid grid-cols-3 gap-2 sm:gap-4 mt-8">
-                      <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.classic')}</p>
-                        <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.classic}</p>
+                    <div className="pt-6 border-t border-white/[0.06] dark:border-white/[0.04] grid grid-cols-3 gap-3">
+                      <div className="bg-white/[0.03] dark:bg-white/[0.02] rounded-xl p-3 text-center border border-white/[0.06] dark:border-white/[0.04] hover:border-white/[0.1] transition-colors">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/50 mb-1">{t('quiz.classic')}</p>
+                        <p className="text-xl md:text-2xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.classic}</p>
                       </div>
-                      <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.silhouette')}</p>
-                        <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.silhouette}</p>
+                      <div className="bg-white/[0.03] dark:bg-white/[0.02] rounded-xl p-3 text-center border border-white/[0.06] dark:border-white/[0.04] hover:border-white/[0.1] transition-colors">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/50 mb-1">{t('quiz.silhouette')}</p>
+                        <p className="text-xl md:text-2xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.silhouette}</p>
                       </div>
-                      <div className="bg-black/20 rounded-xl p-3 text-center border border-white/5 hover:border-white/10 transition-colors">
-                        <p className="text-[11px] md:text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">{t('quiz.stats_mode')}</p>
-                        <p className="text-lg md:text-xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.stats}</p>
+                      <div className="bg-white/[0.03] dark:bg-white/[0.02] rounded-xl p-3 text-center border border-white/[0.06] dark:border-white/[0.04] hover:border-white/[0.1] transition-colors">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/50 mb-1">{t('quiz.stats_mode')}</p>
+                        <p className="text-xl md:text-2xl font-black text-primary drop-shadow-[0_0_8px_rgba(227,53,13,0.3)]">{quizHighScores.stats}</p>
                       </div>
                     </div>
                   )}
                 </div>
               </motion.div>
 
-              {/* Badges Section */}
+              {/* Achievements Section */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-panel p-6 md:p-10 rounded-[3rem] space-y-8 relative overflow-hidden"
+                transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] shadow-[0_8px_40px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-3xl p-6 md:p-8 rounded-[2.5rem] space-y-6 relative overflow-hidden"
               >
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 <h3 className="text-xs md:text-sm font-black uppercase tracking-[0.25em] flex items-center justify-center gap-3 text-foreground/60">
                   <div className="w-6 md:w-8 h-px bg-gradient-to-r from-transparent to-yellow-500/50" />
                   <Trophy className="w-4 h-4 text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
                   {t('quiz.achievements')}
                   <div className="w-6 md:w-8 h-px bg-gradient-to-l from-transparent to-yellow-500/50" />
                 </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                   {[
-                    { id: 'quiz-novice', name: t('quiz.badge_novice'), icon: <Gamepad2 className="w-6 h-6" />, desc: t('quiz.badge_novice_desc') },
-                    { id: 'quiz-master', name: t('quiz.badge_master'), icon: <Trophy className="w-6 h-6" />, desc: t('quiz.badge_master_desc') },
-                    { id: 'speed-demon', name: t('quiz.badge_speed_demon'), icon: <Zap className="w-6 h-6" />, desc: t('quiz.badge_speed_demon_desc') },
-                    { id: 'eagle-eye', name: t('quiz.badge_eagle_eye'), icon: <EyeOff className="w-6 h-6" />, desc: t('quiz.badge_eagle_eye_desc') },
-                    { id: 'professor', name: t('quiz.badge_professor'), icon: <BrainCircuit className="w-6 h-6" />, desc: t('quiz.badge_professor_desc') },
+                    { id: 'quiz-novice', name: t('quiz.badge_novice'), icon: <Gamepad2 className="w-5 h-5" />, desc: t('quiz.badge_novice_desc') },
+                    { id: 'quiz-master', name: t('quiz.badge_master'), icon: <Trophy className="w-5 h-5" />, desc: t('quiz.badge_master_desc') },
+                    { id: 'speed-demon', name: t('quiz.badge_speed_demon'), icon: <Zap className="w-5 h-5" />, desc: t('quiz.badge_speed_demon_desc') },
+                    { id: 'eagle-eye', name: t('quiz.badge_eagle_eye'), icon: <EyeOff className="w-5 h-5" />, desc: t('quiz.badge_eagle_eye_desc') },
+                    { id: 'professor', name: t('quiz.badge_professor'), icon: <BrainCircuit className="w-5 h-5" />, desc: t('quiz.badge_professor_desc') },
                   ].map(badge => {
                     const isUnlocked = badges.includes(badge.id);
                     return (
                       <div 
                         key={badge.id}
                         className={cn(
-                          "relative p-4 md:p-5 rounded-[1.5rem] md:rounded-3xl border transition-all duration-500 flex flex-col items-center gap-3 text-center overflow-hidden group",
+                          "relative p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 text-center overflow-hidden group",
                           isUnlocked 
-                            ? "bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary shadow-[inset_0_0_20px_rgba(227,53,13,0.05)] hover:shadow-[inset_0_0_30px_rgba(227,53,13,0.1)]" 
-                            : "bg-black/20 border-white/5 text-foreground/20 hover:bg-black/30"
+                            ? "bg-primary/5 border-primary/20 text-primary shadow-[inset_0_0_20px_rgba(227,53,13,0.05)] hover:bg-primary/10" 
+                            : "bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] text-foreground/30 hover:bg-white/[0.05]"
                         )}
                       >
-                        {isUnlocked && <div className="absolute top-0 right-0 w-8 h-8 bg-primary/20 blur-[15px] rounded-full pointer-events-none" />}
-                        <div className={cn("p-3 rounded-2xl transition-transform duration-500", isUnlocked ? "bg-primary/20 shadow-[0_0_15px_rgba(227,53,13,0.3)] group-hover:scale-110 group-hover:-rotate-3" : "bg-white/5 grayscale")}>
+                        {isUnlocked && <div className="absolute top-0 right-0 w-6 h-6 bg-primary/20 blur-[12px] rounded-full pointer-events-none" />}
+                        <div className={cn("p-2.5 rounded-xl transition-all duration-300", isUnlocked ? "bg-primary/20 shadow-[0_0_12px_rgba(227,53,13,0.25)] group-hover:scale-110" : "bg-white/[0.05] dark:bg-white/[0.03] grayscale")}>
                           {badge.icon}
                         </div>
-                        <div className="space-y-1">
-                          <div className={cn("text-[11px] md:text-[10px] font-black uppercase tracking-[0.1em]", isUnlocked ? "text-primary" : "text-foreground/30")}>
+                        <div className="space-y-0.5">
+                          <div className={cn("text-[10px] font-bold uppercase tracking-[0.08em]", isUnlocked ? "text-primary" : "text-foreground/30")}>
                             {badge.name}
                           </div>
-                          {isUnlocked && <div className="text-[11px] md:text-[10px] font-bold opacity-60 leading-relaxed text-foreground min-h-[2.5rem] flex items-center justify-center">{badge.desc}</div>}
+                          {isUnlocked && <div className="text-[9px] font-medium opacity-50 leading-tight text-foreground/60">{badge.desc}</div>}
                         </div>
                       </div>
                     );
@@ -607,68 +565,79 @@ function QuizPageContent() {
           ) : (
             <div className="space-y-6 md:space-y-8 animate-fade-in-up">
               {/* Game HUD */}
-              <div className="glass-panel px-4 md:px-6 py-4 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-black/20 border-white/10 relative overflow-hidden">
-                {/* HUD ambient glow */}
+              <div className="page-surface px-4 md:px-6 py-4 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" />
                 
-                <div className="flex gap-2 sm:gap-4 flex-wrap w-full lg:w-auto overflow-hidden justify-center lg:justify-start">
-                  <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-white/5 min-w-[100px] md:min-w-[120px] backdrop-blur-sm relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {gameMode === 'marathon' ? <Flame className="w-5 h-5 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" /> : <Trophy className="w-5 h-5 text-yellow-500 shadow-yellow-500" />}
+                <div className="flex gap-2 sm:gap-3 flex-wrap w-full lg:w-auto overflow-hidden justify-center lg:justify-start">
+                  {/* Current Score */}
+                  <div className="flex items-center gap-2 bg-white/[0.05] dark:bg-white/[0.03] px-4 py-2.5 rounded-[1rem] border border-white/[0.06] dark:border-white/[0.04] min-w-[100px] md:min-w-[120px] relative">
+                    {gameMode === 'marathon' ? <Flame className="w-5 h-5 text-orange-500" /> : <Trophy className="w-5 h-5 text-yellow-500" />}
                     <div className="flex flex-col items-start leading-[1.1]">
-                      <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_current')}</span>
-                      <span className="font-black text-xl md:text-2xl tabular-nums text-white drop-shadow-md">{score}</span>
+                      <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-[0.15em]">{t('quiz.score_current')}</span>
+                      <span className="font-black text-xl md:text-2xl tabular-nums text-foreground drop-shadow-md">{score}</span>
                     </div>
                   </div>
 
-                  <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-white/5 opacity-80 min-w-[100px] md:min-w-[120px] backdrop-blur-sm">
+                  {/* High Score */}
+                  <div className="flex items-center gap-2 bg-white/[0.05] dark:bg-white/[0.03] px-4 py-2.5 rounded-[1rem] border border-white/[0.06] dark:border-white/[0.04] min-w-[100px] md:min-w-[120px] opacity-70">
                     <Gamepad2 className="w-5 h-5 text-primary/70" />
                     <div className="flex flex-col items-start leading-[1.1]">
-                      <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-foreground/50 uppercase tracking-[0.2em]">{t('quiz.score_high')}</span>
-                      <span className="font-black text-xl md:text-2xl tabular-nums text-foreground/80">{isDaily ? '-' : quizHighScores[quizChallenge]}</span>
+                      <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-[0.15em]">{t('quiz.score_high')}</span>
+                      <span className="font-black text-xl md:text-2xl tabular-nums text-foreground/70">{isDaily ? '-' : quizHighScores[quizChallenge]}</span>
                     </div>
                   </div>
                   
+                  {/* Timer (Time Attack) */}
                   {gameMode === 'time-attack' && (
                     <div className={cn(
-                      "bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border transition-colors min-w-[100px] md:min-w-[120px] backdrop-blur-sm",
-                      timeLeft < 10 ? "border-red-500/50 bg-red-500/10 text-red-500 shadow-[inset_0_0_15px_rgba(239,68,68,0.2)]" : "border-white/5"
+                      "flex items-center gap-2 px-4 py-2.5 rounded-[1rem] border min-w-[100px] md:min-w-[120px] transition-all duration-300",
+                      timeLeft < 10 
+                        ? "bg-red-500/10 border-red-500/30 text-red-500 animate-pulse" 
+                        : "bg-white/[0.05] dark:bg-white/[0.03] border border-white/[0.06] dark:border-white/[0.04]"
                     )}>
-                      <Timer className={cn("w-5 h-5", timeLeft < 10 ? "animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-blue-400")} />
+                      <Timer className={cn("w-5 h-5", timeLeft < 10 ? "text-red-500" : "text-blue-400")} />
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Timer</span>
-                        <span className="font-black text-xl md:text-2xl tabular-nums tracking-tighter">{timeLeft}s</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] opacity-60">{t('quiz.timer')}</span>
+                        <span className="font-black text-xl md:text-2xl tabular-nums tracking-tight">{timeLeft}s</span>
                       </div>
                     </div>
                   )}
 
+                  {/* Lives (Survival) */}
                   {gameMode === 'survival' && (
-                    <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center border border-white/5 h-full backdrop-blur-sm min-h-[52px]">
+                    <div className="flex items-center gap-2 bg-white/[0.05] dark:bg-white/[0.03] px-4 py-2.5 rounded-[1rem] border border-white/[0.06] dark:border-white/[0.04] h-full min-h-[52px]">
                       <div className="flex gap-1.5 items-center">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <Heart 
                             key={i} 
-                            className={cn("w-4 h-4 md:w-5 md:h-5 transition-all duration-300", i < lives ? "text-red-500 fill-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]" : "text-white/10 scale-90")} 
+                            className={cn(
+                              "w-4 h-4 md:w-5 md:h-5 transition-all duration-300", 
+                              i < lives 
+                                ? "text-red-500 fill-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
+                                : "text-white/10 scale-90"
+                            )} 
                           />
                         ))}
                       </div>
                     </div>
                   )}
 
+                  {/* Errors (Marathon) */}
                   {gameMode === 'marathon' && (
-                    <div className="bg-black/40 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-white/5 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-white/[0.05] dark:bg-white/[0.03] px-4 py-2.5 rounded-[1rem] border border-white/[0.06] dark:border-white/[0.04]">
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-red-400/60 uppercase tracking-[0.2em]">{t('quiz.errors')}</span>
+                        <span className="text-[10px] font-bold text-red-400/60 uppercase tracking-[0.15em]">{t('quiz.errors')}</span>
                         <span className="font-black text-xl md:text-2xl tabular-nums text-red-400">{wrongAnswers}<span className="text-sm text-foreground/30">/5</span></span>
                       </div>
                     </div>
                   )}
 
+                  {/* Daily Progress */}
                   {isDaily && (
-                    <div className="bg-orange-500/10 px-4 py-2.5 md:py-3 rounded-[1.25rem] flex items-center gap-3 border border-orange-500/20 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-orange-500/10 px-4 py-2.5 rounded-[1rem] border border-orange-500/20">
                       <div className="flex flex-col items-start leading-[1.1]">
-                        <span className="text-[11px] md:text-[11px] md:text-[10px] font-black text-orange-500/80 uppercase tracking-[0.2em]">{t('quiz.progress')}</span>
-                        <span className="font-black text-xl md:text-2xl tabular-nums text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">{dailyIndex}<span className="text-sm text-orange-500/40">/10</span></span>
+                        <span className="text-[10px] font-bold text-orange-500/80 uppercase tracking-[0.15em]">{t('quiz.progress')}</span>
+                        <span className="font-black text-xl md:text-2xl tabular-nums text-orange-400">{dailyIndex}<span className="text-sm text-orange-500/40">/10</span></span>
                       </div>
                     </div>
                   )}
@@ -676,24 +645,24 @@ function QuizPageContent() {
               </div>
 
               {/* Main Game Stage */}
-              <div className="relative min-h-[22rem] md:min-h-[26rem] flex flex-col items-center justify-center p-6 md:p-8 rounded-[3rem] border border-white/[0.08] overflow-hidden group">
+              <div className="page-surface relative min-h-[20rem] md:min-h-[24rem] flex flex-col items-center justify-center p-6 md:p-8 rounded-[2.5rem] overflow-hidden">
                 {/* Stage background */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent backdrop-blur-[2px]" />
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 {/* Stage spotlight */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-primary/10 blur-[100px] rounded-full pointer-events-none transition-all duration-1000 group-hover:scale-110 group-hover:bg-primary/15" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-primary/10 blur-[80px] rounded-full pointer-events-none transition-all duration-1000 group-hover:scale-110 group-hover:bg-primary/15" />
                 
                 <AnimatePresence mode="wait">
                   {gameState === 'loading' ? (
                     <motion.div 
                       key="loading"
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
                       className="flex flex-col items-center gap-4 relative z-10"
                     >
-                      <Loader2 className="w-16 h-16 animate-spin text-primary/40 drop-shadow-[0_0_15px_rgba(227,53,13,0.3)]" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40 animate-pulse">Loading Stage...</span>
+                      <Loader2 className="w-14 h-14 animate-spin text-primary/50 drop-shadow-[0_0_15px_rgba(227,53,13,0.3)]" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-foreground/40 animate-pulse">{t('quiz.loading')}</span>
                     </motion.div>
                   ) : currentPokemon ? (
                     <motion.div
@@ -704,9 +673,9 @@ function QuizPageContent() {
                       className="w-full flex flex-col items-center relative z-10"
                     >
                       {quizChallenge === 'stats' ? (
-                        <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2rem] w-full max-w-[20rem] md:max-w-md space-y-4 md:space-y-5 shadow-2xl relative">
+                        <div className="bg-background/90 backdrop-blur-xl border border-white/[0.08] dark:border-white/[0.05] p-5 md:p-6 rounded-[1.5rem] w-full max-w-[18rem] md:max-w-md space-y-4 shadow-2xl relative">
                           <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
-                          <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-foreground/60 mb-4 md:mb-6 text-center">{t('quiz.who_stats')}</p>
+                          <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-foreground/60 mb-4 text-center">{t('quiz.who_stats')}</p>
                           {[
                             { label: t('stats.hp_short'), val: currentPokemon.stats[0].base_stat, color: '#FF4757' },
                             { label: t('stats.attack_short'), val: currentPokemon.stats[1].base_stat, color: '#FFA502' },
@@ -716,29 +685,29 @@ function QuizPageContent() {
                             { label: t('stats.speed_short'), val: currentPokemon.stats[5].base_stat, color: '#FF6B81' },
                           ].map(s => (
                             <div key={s.label} className="space-y-1.5">
-                              <div className="flex justify-between text-[11px] md:text-[10px] font-black uppercase tracking-widest text-foreground/80">
+                              <div className="flex justify-between text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-foreground/80">
                                 <span>{s.label}</span>
                                 <span className={gameState === 'answered' ? 'text-primary drop-shadow-[0_0_5px_rgba(227,53,13,0.5)]' : 'opacity-30'}>
                                   {gameState === 'answered' ? s.val : '???'}
                                 </span>
                               </div>
-                              <div className="w-full h-1.5 md:h-2 bg-white/5 rounded-full overflow-hidden shadow-inner">
+                              <div className="w-full h-1.5 bg-secondary/50 rounded-full overflow-hidden shadow-inner">
                                 <motion.div 
                                   initial={{ width: 0 }}
                                   animate={{ width: `${(s.val / 255) * 100}%` }}
                                   transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                                   className="h-full rounded-full"
-                                  style={{ backgroundColor: s.color, boxShadow: `0 0 10px ${s.color}80` }}
+                                  style={{ backgroundColor: s.color, boxShadow: `0 0 8px ${s.color}80` }}
                                 />
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="relative w-56 h-56 md:w-80 md:h-80 drop-shadow-2xl flex items-center justify-center float-particle">
+                        <div className="relative w-52 h-52 md:w-72 md:h-72 drop-shadow-2xl flex items-center justify-center float-particle">
                           <div className={cn(
-                            "absolute inset-0 bg-primary/20 blur-[60px] rounded-full transition-opacity duration-700",
-                            gameState === 'answered' && isCorrect ? "opacity-100 bg-green-500/30" : "opacity-0"
+                            "absolute inset-0 bg-primary/15 blur-[50px] rounded-full transition-opacity duration-700",
+                            gameState === 'answered' && isCorrect ? "opacity-100 bg-emerald-500/20" : "opacity-0"
                           )} />
                           <Image 
                             src={currentPokemon.sprites.other['official-artwork'].front_default || currentPokemon.sprites.front_default} 
@@ -746,7 +715,7 @@ function QuizPageContent() {
                             fill
                             className={cn(
                               "object-contain transition-all duration-700 ease-out",
-                              gameState === 'playing' && quizChallenge === 'silhouette' ? "brightness-0 contrast-100 opacity-90 drop-shadow-[0_0_15px_rgba(0,0,0,1)]" : "brightness-100 drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)]"
+                              gameState === 'playing' && quizChallenge === 'silhouette' ? "brightness-0 contrast-100 opacity-90 drop-shadow-[0_0_15px_rgba(0,0,0,1)]" : "brightness-100 drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
                             )}
                           />
                         </div>
@@ -760,11 +729,11 @@ function QuizPageContent() {
                             transition={{ type: 'spring', bounce: 0.5 }}
                           >
                             {isCorrect ? (
-                              <div className="bg-green-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-full shadow-[0_10px_30px_rgba(34,197,94,0.3)] flex items-center gap-2 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs border border-green-400">
+                              <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-5 md:px-6 py-2.5 md:py-3 rounded-full shadow-[0_8px_24px_rgba(34,197,94,0.2)] flex items-center gap-2 font-bold uppercase tracking-[0.15em] text-[10px] md:text-xs">
                                 <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> {t('quiz.correct')}
                               </div>
                             ) : (
-                              <div className="bg-red-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-full shadow-[0_10px_30px_rgba(239,68,68,0.3)] flex items-center gap-2 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs border border-red-400">
+                              <div className="bg-red-500/20 border border-red-500/40 text-red-400 px-5 md:px-6 py-2.5 md:py-3 rounded-full shadow-[0_8px_24px_rgba(239,68,68,0.2)] flex items-center gap-2 font-bold uppercase tracking-[0.15em] text-[10px] md:text-xs">
                                 <AlertCircle className="w-4 h-4 md:w-5 md:h-5" /> {t('quiz.wrong')}
                               </div>
                             )}
@@ -783,31 +752,30 @@ function QuizPageContent() {
                   const isActualAnswer = option === currentPokemon?.name;
                   const isRevealed = gameState === 'answered';
                   
-                  let buttonStateClass = "glass-btn border-white/10 hover:border-primary/40 hover:bg-primary/10 active:scale-[0.98] shadow-lg";
+                  let buttonClass = "h-14 md:h-16 rounded-xl font-bold uppercase tracking-[0.15em] text-xs md:text-sm transition-all duration-300 border-2 relative overflow-hidden bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] hover:border-primary/30 hover:bg-primary/5 active:scale-[0.98] shadow-lg backdrop-blur-sm";
                   
                   if (isRevealed) {
                     if (isActualAnswer) {
-                      buttonStateClass = "bg-green-500/20 border-green-500 text-green-400 shadow-[0_0_20px_rgba(34,197,94,0.2)]";
+                      buttonClass = "h-14 md:h-16 rounded-xl font-black uppercase tracking-[0.15em] text-xs md:text-sm transition-all duration-300 border-2 relative overflow-hidden bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.15)]";
                     } else if (isSelected) {
-                      buttonStateClass = "bg-red-500/20 border-red-500 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.2)]";
+                      buttonClass = "h-14 md:h-16 rounded-xl font-black uppercase tracking-[0.15em] text-xs md:text-sm transition-all duration-300 border-2 relative overflow-hidden bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.15)]";
                     } else {
-                      buttonStateClass = "bg-black/30 border-white/5 opacity-40 grayscale pointer-events-none";
+                      buttonClass = "h-14 md:h-16 rounded-xl font-black uppercase tracking-[0.15em] text-xs md:text-sm transition-all duration-300 border-2 relative overflow-hidden bg-secondary/10 border-white/5 text-foreground/30 cursor-default opacity-50";
                     }
                   }
 
                   return (
                     <motion.button
                       key={option}
-                      initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
-                      animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.1, duration: 0.5, ease: "easeOut" } }}
+                      initial={{ opacity: 0, x: idx % 2 === 0 ? -15 : 15 }}
+                      animate={{ opacity: 1, x: 0, transition: { delay: idx * 0.08, duration: 0.4, ease: "easeOut" } }}
                       disabled={gameState !== 'playing'}
                       onClick={() => handleAnswer(option)}
-                      className={cn(
-                        "h-16 md:h-20 rounded-[1.25rem] md:rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs md:text-sm transition-all duration-300 border-2 relative overflow-hidden group",
-                        buttonStateClass
-                      )}
+                      className={buttonClass}
                     >
-                      {!isRevealed && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />}
+                      {!isRevealed && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out pointer-events-none" />
+                      )}
                       <span className="relative z-10 drop-shadow-md">{getLocalizedName(option)}</span>
                     </motion.button>
                   );

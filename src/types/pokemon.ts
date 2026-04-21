@@ -13,6 +13,8 @@ export interface PokemonListItem {
 export interface PokemonDetail {
   id: number;
   name: string;
+  order: number;
+  is_default: boolean;
   sprites: {
     front_default: string;
     back_default: string;
@@ -71,6 +73,26 @@ export interface PokemonDetail {
         url: string;
       };
       version_group: {
+        name: string;
+        url: string;
+      };
+    }[];
+  }[];
+  game_indices: {
+    game_index: number;
+    version: {
+      name: string;
+      url: string;
+    };
+  }[];
+  held_items: {
+    item: {
+      name: string;
+      url: string;
+    };
+    version_details: {
+      rarity: number;
+      version: {
         name: string;
         url: string;
       };
@@ -178,7 +200,12 @@ export interface PokemonBasicData {
   name: string;
   height: number;
   weight: number;
-  pokemon_v2_pokemonstats: { base_stat: number }[];
+  pokemon_v2_pokemonstats: {
+    base_stat: number;
+    pokemon_v2_stat?: {
+      name: string;
+    };
+  }[];
   pokemon_v2_pokemonspecy: { 
     is_legendary: boolean; 
     is_mythical: boolean;
@@ -234,6 +261,17 @@ export interface GraphQLPokemonSummary {
   pokemon_v2_pokemontypes: Array<{
     pokemon_v2_type: { name: string };
   }>;
+}
+
+export interface GraphQLPokemonSearchIndex {
+  id: number;
+  name: string;
+  pokemon_v2_pokemonspecy: {
+    pokemon_v2_pokemonspeciesnames: Array<{
+      name: string;
+      pokemon_v2_language: { name: string };
+    }>;
+  } | null;
 }
 
 export interface GraphQLPokemonMoveData {
@@ -360,4 +398,45 @@ export interface GraphQLMovePokemonData {
       pokemon_v2_pokemonspeciesnames: Array<{ name: string }>;
     } | null;
   } | null;
+}
+
+export interface GraphQLAbilityData {
+  id: number;
+  name: string;
+  generation_id: number | null;
+  is_main_series: boolean;
+  pokemon_v2_abilitynames: Array<{ name: string }>;
+  pokemon_v2_abilityeffecttexts: Array<{ effect: string; short_effect: string }>;
+  pokemon_v2_abilityflavortexts: Array<{ flavor_text: string; pokemon_v2_versiongroup: { name: string } | null }>;
+}
+
+export interface GraphQLAbilityPokemonData {
+  pokemon_v2_pokemon: {
+    id: number;
+    name: string;
+    pokemon_v2_pokemontypes: Array<{ pokemon_v2_type: { name: string } }>;
+    pokemon_v2_pokemonspecy: {
+      pokemon_v2_pokemonspeciesnames: Array<{ name: string }>;
+    } | null;
+  } | null;
+  is_hidden: boolean;
+  slot: number;
+}
+
+export interface AbilityListItem {
+  id: number;
+  name: string;
+  localizedName: string;
+  shortEffect: string;
+  generationId: number | null;
+  isMainSeries: boolean;
+}
+
+export interface AbilityPokemonLearner {
+  id: number;
+  name: string;
+  localizedName: string;
+  types: string[];
+  isHidden: boolean;
+  slot: number;
 }

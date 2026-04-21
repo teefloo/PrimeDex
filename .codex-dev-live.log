@@ -1,0 +1,84 @@
+
+> primedex@0.1.0 dev
+> next dev --webpack
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\estde\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\estde\Documents\GitHub\Site Web\Poke\package-lock.json
+
+▲ Next.js 16.1.6 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.2.203:3000
+
+✓ Starting...
+✓ Ready in 1795ms
+○ Compiling /pokemon/[name] ...
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 5.7s (compile: 4.6s, generate-params: 601ms, render: 1145ms)
+ GET /pokemon/xerneas 200 in 5.7s (compile: 4.7s, generate-params: 733ms, render: 1004ms)
+ GET /pokemon/xerneas 200 in 5.7s (compile: 4.9s, generate-params: 875ms, render: 864ms)
+ GET /pokemon-cards/cards.css 404 in 1654ms (compile: 1464ms, render: 189ms)
+ GET /pokemon-cards/cards.css 404 in 754ms (compile: 556ms, render: 198ms)
+ GET /pokemon-cards/cards.css 404 in 1527ms (compile: 1329ms, render: 199ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 785ms (compile: 62ms, generate-params: 9ms, render: 723ms)
+ GET /pokemon/xerneas 200 in 799ms (compile: 61ms, generate-params: 880µs, render: 737ms)
+ GET /pokemon/xerneas 200 in 804ms (compile: 65ms, generate-params: 1111µs, render: 739ms)
+ GET /manifest.webmanifest 200 in 373ms (compile: 355ms, render: 18ms)
+ GET /manifest.webmanifest 200 in 489ms (compile: 472ms, render: 18ms)
+ GET /pokemon/xerneas 200 in 321ms (compile: 44ms, generate-params: 5ms, render: 277ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 333ms (compile: 12ms, generate-params: 5ms, render: 322ms)
+ GET /pokemon/xerneas 200 in 331ms (compile: 7ms, generate-params: 111µs, render: 325ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 605ms (compile: 17ms, generate-params: 8ms, render: 588ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 569ms (compile: 12ms, generate-params: 7ms, render: 557ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 2.1s (compile: 178ms, generate-params: 8ms, render: 1926ms)
+ GET /pokemon/xerneas 200 in 2.1s (compile: 180ms, generate-params: 1499µs, render: 1927ms)
+ GET /pokemon/xerneas 200 in 2.1s (compile: 177ms, generate-params: 1339µs, render: 1928ms)
+ GET /manifest.webmanifest 200 in 248ms (compile: 220ms, render: 28ms)
+ GET /manifest.webmanifest 200 in 569ms (compile: 541ms, render: 28ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 947ms (compile: 106ms, generate-params: 1611µs, render: 840ms)
+ GET /pokemon/xerneas 200 in 951ms (compile: 108ms, generate-params: 1713µs, render: 843ms)
+ GET /pokemon/xerneas 200 in 952ms (compile: 107ms, generate-params: 7ms, render: 845ms)
+ GET /manifest.webmanifest 200 in 18ms (compile: 9ms, render: 9ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 6ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 996ms (compile: 135ms, generate-params: 8ms, render: 861ms)
+ GET /pokemon/xerneas 200 in 996ms (compile: 134ms, generate-params: 255µs, render: 862ms)
+ GET /pokemon/xerneas 200 in 999ms (compile: 136ms, generate-params: 333µs, render: 863ms)
+ GET /manifest.webmanifest 200 in 12ms (compile: 6ms, render: 6ms)
+ GET /manifest.webmanifest 200 in 8ms (compile: 3ms, render: 5ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 669ms (compile: 12ms, generate-params: 8ms, render: 657ms)
+ GET /pokemon/xerneas 200 in 512ms (compile: 15ms, generate-params: 7ms, render: 497ms)
+ GET /pokemon/xerneas 200 in 515ms (compile: 12ms, generate-params: 196µs, render: 503ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 573ms (compile: 14ms, generate-params: 7ms, render: 559ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 897ms (compile: 114ms, generate-params: 7ms, render: 784ms)
+ GET /pokemon/xerneas 200 in 917ms (compile: 115ms, generate-params: 1153µs, render: 802ms)
+ GET /pokemon/xerneas 200 in 917ms (compile: 113ms, generate-params: 1057µs, render: 804ms)
+ GET /manifest.webmanifest 200 in 26ms (compile: 12ms, render: 14ms)
+ GET /manifest.webmanifest 200 in 7ms (compile: 2ms, render: 5ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 651ms (compile: 13ms, generate-params: 7ms, render: 638ms)
+ GET /pokemon/xerneas 200 in 516ms (compile: 17ms, generate-params: 6ms, render: 499ms)
+ GET /pokemon/xerneas 200 in 518ms (compile: 10ms, generate-params: 189µs, render: 508ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 603ms (compile: 10ms, generate-params: 6ms, render: 593ms)
+ GET /pokemon/xerneas 200 in 570ms (compile: 11ms, generate-params: 6ms, render: 559ms)
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+🌐 i18next is made possible by our own product, Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+ GET /pokemon/xerneas 200 in 584ms (compile: 13ms, generate-params: 6ms, render: 570ms)
+^Cnpm error A complete log of this run can be found in: C:\Users\estde\AppData\Local\npm-cache\_logs\2026-04-16T12_16_56_474Z-debug-0.log

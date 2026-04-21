@@ -31,11 +31,11 @@ describe('usePrimeDexStore', () => {
   it('should update quiz high scores', () => {
     const { updateQuizHighScore } = usePrimeDexStore.getState();
     
-    updateQuizHighScore('survival', 50);
-    expect(usePrimeDexStore.getState().quizHighScores.survival).toBe(50);
+    updateQuizHighScore('classic', 50);
+    expect(usePrimeDexStore.getState().quizHighScores.classic).toBe(50);
     
-    updateQuizHighScore('survival', 30); // Should keep the highest
-    expect(usePrimeDexStore.getState().quizHighScores.survival).toBe(50);
+    updateQuizHighScore('classic', 30); // Should keep the highest
+    expect(usePrimeDexStore.getState().quizHighScores.classic).toBe(50);
   });
 
   it('should add badges and check for them', () => {

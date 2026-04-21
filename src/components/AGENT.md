@@ -1,14 +1,17 @@
-## Structure
+# Components
 
-| Directory | Purpose |
-|-----------|---------|
-| `ui/` | shadcn/ui primitives + branding (PokeballIcon, PrimeDexLogo) |
-| `pokemon/` | Domain-specific components (cards, filters, lists, charts) |
-| `layout/` | Global shell components (Header, Breadcrumbs, SettingsModal) |
+## Scope
+- `ui/`: primitives and branding.
+- `pokemon/`: domain components for cards, filters, lists, charts, and analysis.
+- `layout/`: shared shell, navigation, hero, and settings.
 
 ## Conventions
+- Use named exports.
+- Keep `ui/` presentational.
+- Let `pokemon/` own domain composition and interactivity.
+- Let `layout/` host cross-route UI.
+- Keep shared shells SSR-safe.
 
-- Named exports only (no default exports)
-- `ui/` primitives: no business logic, pure presentational
-- `pokemon/` components: compose `ui/` primitives, handle domain logic
-- `layout/` components: used across multiple routes
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

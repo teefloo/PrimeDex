@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 export function Breadcrumbs() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
 
   if (pathname === '/' || pathname.startsWith('/pokemon/')) return null;
 
@@ -31,14 +32,14 @@ export function Breadcrumbs() {
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: breadcrumbs.map((crumb, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: crumb.label,
-      item: `https://primedex.vercel.app${crumb.href}`,
-    })),
-  };
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: crumb.label,
+        item: `${baseUrl}${crumb.href}`,
+      })),
+    };
 
   return (
     <>

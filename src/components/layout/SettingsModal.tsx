@@ -47,7 +47,7 @@ export default function SettingsModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
             onClick={toggleSettings}
           />
 
@@ -62,11 +62,11 @@ export default function SettingsModal() {
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/20 blur-[50px] rounded-full" />
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/20 blur-[50px] rounded-full" />
 
-            <div className="relative z-10 flex justify-between items-center mb-8 pb-4 border-b border-white/10">
+            <div className="relative z-10 flex justify-between items-center mb-8 pb-4 border-b border-border/60">
               <h2 className="text-2xl font-black text-foreground tracking-tight">{t('settings.title')}</h2>
               <button
                 onClick={toggleSettings}
-                className="p-2 rounded-full text-foreground/50 hover:bg-white/10 hover:text-foreground transition-colors"
+                className="p-2 rounded-full border border-transparent text-foreground/50 hover:bg-muted/70 hover:text-foreground transition-colors"
                 aria-label={t('settings.close')}
                 title={t('settings.close')}
               >
@@ -76,16 +76,16 @@ export default function SettingsModal() {
 
             <div className="relative z-10 space-y-8">
               {/* Sound Toggle */}
-              <div className="flex justify-between items-center bg-secondary/30 p-4 rounded-2xl border border-white/5">
+              <div className="flex justify-between items-center bg-secondary/30 p-4 rounded-2xl border border-border/50">
                 <div className="flex items-center gap-4">
-                  <div className={`p-2.5 rounded-xl transition-colors ${soundEnabled ? 'text-primary bg-primary/20' : 'text-foreground/50 bg-white/5'}`}>
+                  <div className={`p-2.5 rounded-xl transition-colors ${soundEnabled ? 'text-primary bg-primary/15' : 'text-foreground/50 bg-muted/60'}`}>
                     {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
                   </div>
                   <span className="font-bold text-foreground/80">{t('settings.sound')}</span>
                 </div>
                 <button
                   onClick={toggleSound}
-                  className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${soundEnabled ? 'bg-primary' : 'bg-white/10'}`}
+                  className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${soundEnabled ? 'bg-primary' : 'bg-muted/70'}`}
                   aria-label={soundEnabled ? t('settings.sound_disable') : t('settings.sound_enable')}
                   role="switch"
                   aria-checked={soundEnabled}
@@ -97,19 +97,19 @@ export default function SettingsModal() {
               {/* Theme Selector */}
               <div className="space-y-4">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-white/5">
+                  <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-border/50">
                     <Monitor className="w-5 h-5" />
                   </div>
                   <span className="font-bold text-foreground/80">{t('settings.theme')}</span>
                 </div>
-                <div className="flex gap-3 bg-secondary/20 p-2 rounded-2xl border border-white/5">
+                <div className="flex gap-3 bg-secondary/20 p-2 rounded-2xl border border-border/50">
                   {themeOptions.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
                       onClick={() => setTheme(value)}
                       className={`flex-1 flex flex-col items-center gap-2 py-3 px-2 rounded-xl text-xs font-bold transition-all duration-300 ${theme === value
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-foreground/50 hover:bg-white/5 hover:text-foreground/80'
+                        : 'text-foreground/50 hover:bg-muted/70 hover:text-foreground/80'
                         }`}
                       aria-pressed={theme === value}
                     >
@@ -123,19 +123,19 @@ export default function SettingsModal() {
               {/* Language Selector */}
               <div className="space-y-4">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-white/5">
+                  <div className="p-2.5 rounded-xl text-foreground/70 bg-secondary/30 border border-border/50">
                     <Globe className="w-5 h-5" />
                   </div>
                   <span className="font-bold text-foreground/80">{t('settings.language')}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 bg-secondary/20 p-2 rounded-2xl border border-white/5">
+                <div className="grid grid-cols-3 gap-2 bg-secondary/20 p-2 rounded-2xl border border-border/50">
                   {languageOptions.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
                       className={`flex items-center justify-center gap-2 py-2 px-2 rounded-xl text-xs font-bold transition-all duration-300 ${language === lang.code
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'text-foreground/50 hover:bg-white/5 hover:text-foreground/80'
+                        : 'text-foreground/50 hover:bg-muted/70 hover:text-foreground/80'
                         }`}
                       title={lang.name}
                       aria-label={t('settings.language_option', { language: lang.name })}
@@ -147,7 +147,7 @@ export default function SettingsModal() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-white/5 text-center">
+              <div className="mt-8 pt-6 border-t border-border/50 text-center">
                 <p className="text-[10px] text-foreground/30 font-bold tracking-[0.2em] uppercase">
                   {t('settings.version')}
                 </p>

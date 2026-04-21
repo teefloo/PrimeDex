@@ -1,20 +1,17 @@
-## Structure
+# Public Assets
 
-| Entry | Purpose |
-|-------|---------|
-| `icon.svg` | Application icon |
-| `file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` | Next.js/Vercel placeholders |
-
-## `pokemon-cards/` Subdirectory
-
-| Directory | Contents |
-|-----------|----------|
-| `css/` | Global and card-specific stylesheets |
-| `css/cards/` | 23 per-rarity CSS files (basic, holo, v, v-max, etc.) |
-| `img/` | 27 background textures and effect images for TCG rendering |
+## Contents
+- Static assets only.
+- `icon.svg` application icon.
+- `file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg` placeholders.
+- `pokemon-cards/` card textures and TCG assets.
 
 ## Conventions
+- Files are served from the site root.
+- Keep this folder framework-agnostic.
+- Use `next/image` from app code when referencing these assets.
+- Do not add application code or config.
 
-- Files served at root URL path (e.g., `/icon.svg`)
-- Use `next/image` with `src="/path"` for images here
-- No application code or configuration
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

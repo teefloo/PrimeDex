@@ -25,6 +25,7 @@ export default function QuizLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
   return (
     <>
       <script
@@ -37,7 +38,7 @@ export default function QuizLayout({
             applicationCategory: 'GameApplication',
             operatingSystem: 'All',
             description: 'Test your Pokémon knowledge with classic, silhouette, and stats quiz modes.',
-            url: 'https://primedex.vercel.app/quiz',
+            url: `${baseUrl}/quiz`,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
           }),
         }}

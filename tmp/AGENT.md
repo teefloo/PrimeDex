@@ -1,18 +1,19 @@
-## Files
+# Tmp
 
-| File | Purpose |
-|------|---------|
-| `check-i18n.js` | Validates `t()` calls against i18n resource keys |
-| `invalid-keys.txt` | Output from `check-i18n.js` — empty = all valid |
+## Files
+- `check-i18n.js` validates `t()` calls against resource keys
+- `invalid-keys.txt` output from the check
 
 ## Usage
-
 ```bash
 node tmp/check-i18n.js
 ```
 
 ## Conventions
+- Maintenance scripts only.
+- No application code here.
+- Prefer short-lived helpers that can be deleted after use.
 
-- Excluded from build
-- Development/maintenance scripts only
-- No application code here
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

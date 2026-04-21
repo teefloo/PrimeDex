@@ -1,19 +1,20 @@
 'use client';
 
 import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import { TYPE_COLORS } from '@/types/pokemon';
 import { useQuery } from '@tanstack/react-query';
 import { getTypeRelations, getAllPokemonDetailed } from '@/lib/api';
 import { 
-  Zap, 
   ShieldCheck, 
-  ShieldAlert, 
+  ShieldAlert,
   Info,
   Flame,
   Target,
   Sword,
   Star
 } from 'lucide-react';
+import { TYPE_ICONS } from '@/lib/pokemon-utils';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -21,14 +22,22 @@ import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useMounted } from '@/hooks/useMounted';
 
 const TypeChart = dynamic(() => import('@/components/pokemon/TypeChart'), { ssr: false });
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } }
+};
 
 export default function TypesPage() {
   const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<string>('fire');
-  const mounted = useMounted();
 
   const { data: typeRels } = useQuery({
     queryKey: ['typeRelations', selectedType],
@@ -54,194 +63,278 @@ export default function TypesPage() {
       .slice(0, 6);
   }, [allPokemon, selectedType]);
 
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+    <div className="app-page text-foreground pb-20 overflow-x-hidden relative">
+      {/* Decorative background orbs */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none z-0 overflow-hidden">
+        <div 
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-[120px] animate-pulse-glow opacity-30"
+          style={{ backgroundColor: TYPE_COLORS[selectedType] }}
+        />
+        <div className="absolute top-1/3 right-1/4 w-[200px] h-[100px] bg-violet-500/10 rounded-full blur-[80px] animate-pulse-glow" style={{ animationDelay: '-3s' }} />
+        <div className="absolute top-2/3 left-1/4 w-[150px] h-[80px] bg-amber-500/8 rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: '-2s' }} />
+      </div>
+
       <Header />
       
-      <main className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
-        <section className="mb-12 pt-10 text-center">
-          <div className="inline-block p-4 bg-primary/10 rounded-3xl border border-primary/20 mb-6">
-            <Target className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-5xl font-black tracking-tight mb-2 uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">{t('types_page.title')}</h2>
-          <p className="text-foreground/40 font-bold uppercase tracking-widest text-sm">{t('types_page.subtitle')}</p>
-        </section>
+      <main className="page-shell py-8 relative z-10">
+        <PageHeader
+          icon={Target}
+          title={t('types_page.title')}
+          subtitle={t('types_page.subtitle')}
+          eyebrow={t('types_page.eyebrow', { defaultValue: 'PrimeDex' })}
+          className="mt-16 md:mt-20"
+        />
 
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* Full-width Type Chart Matrix */}
-          <div className="lg:col-span-12">
-            <TypeChart onTypeClick={(type) => setSelectedType(type)} />
-          </div>
-
-          {/* Type Selector Sidebar */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="glass-panel p-6 rounded-[2.5rem]">
-              <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4 flex items-center gap-3">
-                <div className="p-2 bg-secondary/30 rounded-xl">
-                  <Flame className="w-5 h-5 text-foreground/60" />
-                </div>
-                {t('types_page.select_type')}
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {Object.keys(TYPE_COLORS).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedType(type)}
-                    className={cn(
-                      "flex items-center gap-2 p-3 rounded-2xl border transition-all duration-300",
-                      selectedType === type 
-                        ? "bg-white/10 border-white/20 shadow-lg scale-[1.02]" 
-                        : "bg-secondary/20 border-white/5 opacity-60 hover:opacity-100 hover:bg-secondary/30"
-                    )}
-                  >
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: TYPE_COLORS[type] }} />
-                    <span className="text-[10px] font-black uppercase tracking-wider">{t(`types.${type}`)}</span>
-                  </button>
-                ))}
+        {/* Type Selector - Horizontal Pills */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="page-surface p-4 md:p-6 rounded-[2rem] relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-secondary/30 rounded-xl">
+                <Flame className="w-4 h-4 text-foreground/60" />
               </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/50">{t('types_page.select_type')}</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {Object.keys(TYPE_COLORS).map((type) => (
+                <motion.button
+                  key={type}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedType(type)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300",
+                    selectedType === type 
+                      ? "bg-white/10 border-white/20 shadow-lg" 
+                      : "bg-secondary/20 border-white/5 opacity-60 hover:opacity-100 hover:bg-secondary/30"
+                  )}
+                >
+                  <div 
+                    className="w-2.5 h-2.5 rounded-full shadow-sm" 
+                    style={{ backgroundColor: TYPE_COLORS[type] }} 
+                  />
+                  <span className="text-[10px] font-black uppercase tracking-wider">{t(`types.${type}`)}</span>
+                </motion.button>
+              ))}
             </div>
           </div>
+        </motion.div>
 
-          {/* Main Analysis Section */}
-          <div className="lg:col-span-8 space-y-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={selectedType}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-8"
-              >
-                {/* Type Header Card */}
-                <div className="glass-panel p-8 rounded-[3rem] relative overflow-hidden group">
+        {/* Full-width Type Chart Matrix */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-10"
+        >
+          <TypeChart onTypeClick={(type) => setSelectedType(type)} />
+        </motion.div>
+
+        {/* Main Analysis Section */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedType}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
+          >
+            {/* Type Header Card */}
+            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden group">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <div 
+                className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[80px] opacity-15 transition-all duration-700 group-hover:scale-110 group-hover:opacity-25"
+                style={{ backgroundColor: TYPE_COLORS[selectedType] }}
+              />
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-8">
                   <div 
-                    className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[80px] opacity-20 transition-all duration-700 group-hover:scale-110"
+                    className="p-4 rounded-2xl text-white shadow-xl"
                     style={{ backgroundColor: TYPE_COLORS[selectedType] }}
-                  />
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div 
-                        className="p-4 rounded-3xl text-white shadow-xl"
-                        style={{ backgroundColor: TYPE_COLORS[selectedType] }}
-                      >
-                        <Zap className="w-8 h-8 fill-current" />
-                      </div>
-                      <div>
-                        <h3 className="text-4xl font-black capitalize tracking-tight">{t(`types.${selectedType}`)}</h3>
-                        <p className="text-foreground/40 font-bold uppercase tracking-widest text-[10px]">{t('types_page.elemental_mastery')}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Offensive strengths */}
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500/60 flex items-center gap-2">
-                          <Sword className="w-3 h-3" /> {t('types_page.strong_against')}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {typeRels?.damage_relations.double_damage_to.map(t_rel => (
-                            <div key={t_rel.name} className="px-3 py-1.5 rounded-xl bg-yellow-500/5 border border-yellow-500/10 text-[10px] font-black uppercase" style={{ color: TYPE_COLORS[t_rel.name] }}>
-                              {t(`types.${t_rel.name}`)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Defensive strengths */}
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500/60 flex items-center gap-2">
-                          <ShieldCheck className="w-3 h-3" /> {t('types_page.resists')}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {typeRels?.damage_relations.half_damage_from.map(t_rel => (
-                            <div key={t_rel.name} className="px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-[10px] font-black uppercase" style={{ color: TYPE_COLORS[t_rel.name] }}>
-                              {t(`types.${t_rel.name}`)}
-                            </div>
-                          ))}
-                          {typeRels?.damage_relations.no_damage_from.map(t_rel => (
-                            <div key={t_rel.name} className="px-3 py-1.5 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] font-black uppercase text-blue-400">
-                              {t(`types.${t_rel.name}`)} ({t('types_page.immune')})
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                  >
+                    {(() => {
+                      const IconComponent = TYPE_ICONS[selectedType];
+                      return IconComponent ? <IconComponent className="w-7 h-7 fill-current" /> : null;
+                    })()}
+                  </div>
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-black capitalize tracking-tight">{t(`types.${selectedType}`)}</h3>
+                    <p className="text-foreground/40 font-bold uppercase tracking-widest text-[10px] mt-1">{t('types_page.elemental_mastery')}</p>
                   </div>
                 </div>
 
-                {/* Emblematic Pokemon */}
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-black px-4 flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-xl">
-                      <Star className="w-5 h-5 text-primary" />
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Offensive strengths */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500/60 flex items-center gap-2">
+                      <Sword className="w-3.5 h-3.5" /> {t('types_page.strong_against')}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {typeRels?.damage_relations.double_damage_to.map(t_rel => (
+                        <motion.div 
+                          key={t_rel.name}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.1 }}
+                          className="px-3 py-1.5 rounded-xl bg-yellow-500/5 border border-yellow-500/10 text-[10px] font-black uppercase hover:bg-yellow-500/10 transition-colors" 
+                          style={{ color: TYPE_COLORS[t_rel.name] }}
+                        >
+                          {t(`types.${t_rel.name}`)}
+                        </motion.div>
+                      ))}
                     </div>
-                    {t('types_page.emblematic')}
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {emblematicPokemon.map((p) => (
-                      <Link key={p.id} href={`/pokemon/${p.name}`}>
-                        <div className="glass-panel p-6 rounded-3xl flex flex-col items-center group hover:border-primary/30 transition-all active:scale-95">
-                          <div className="relative w-24 h-24 mb-4">
-                            <div 
-                              className="absolute inset-0 rounded-full blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"
-                              style={{ backgroundColor: TYPE_COLORS[selectedType] }}
-                            />
-                            <Image 
-                              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`} 
-                              alt={p.name}
-                              width={96}
-                              height={96}
-                              className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform"
-                            />
-                          </div>
-                          <span className="font-black capitalize text-base group-hover:text-primary transition-colors">{p.name}</span>
-                          <span className="text-[10px] font-bold text-foreground/40 mt-1 uppercase tracking-widest">{t('detail.total')}: {p.pokemon_v2_pokemonstats.reduce((s, curr) => s + curr.base_stat, 0)}</span>
-                        </div>
-                      </Link>
+                  </div>
+
+                  {/* Defensive strengths */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-green-500/60 flex items-center gap-2">
+                      <ShieldCheck className="w-3.5 h-3.5" /> {t('types_page.resists')}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {typeRels?.damage_relations.half_damage_from.map(t_rel => (
+                        <motion.div 
+                          key={t_rel.name}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.15 }}
+                          className="px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-[10px] font-black uppercase hover:bg-green-500/10 transition-colors" 
+                          style={{ color: TYPE_COLORS[t_rel.name] }}
+                        >
+                          {t(`types.${t_rel.name}`)}
+                        </motion.div>
+                      ))}
+                      {typeRels?.damage_relations.no_damage_from.map(t_rel => (
+                        <motion.div 
+                          key={t_rel.name}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="px-3 py-1.5 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] font-black uppercase hover:bg-blue-500/10 transition-colors text-blue-400"
+                        >
+                          {t(`types.${t_rel.name}`)} ({t('types_page.immune')})
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Weaknesses Warning */}
+            <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-4">
+              <div className="bg-red-500/5 border border-red-500/10 backdrop-blur-xl p-5 rounded-2xl flex gap-4 items-start">
+                <div className="p-2 bg-red-500/10 rounded-xl h-fit flex-shrink-0">
+                  <ShieldAlert className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500/60 mb-2">{t('types_page.weak_to')}</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {typeRels?.damage_relations.double_damage_from.map(t_rel => (
+                      <span key={t_rel.name} className="px-2.5 py-1 rounded-lg bg-red-500/5 border border-red-500/10 text-[10px] font-black uppercase" style={{ color: TYPE_COLORS[t_rel.name] }}>
+                        {t(`types.${t_rel.name}`)}
+                      </span>
                     ))}
                   </div>
                 </div>
-
-                {/* Learning Tips */}
-                <div className="glass-panel p-8 rounded-[3rem] bg-primary/5 border-primary/10">
-                  <h3 className="text-xl font-black mb-4 flex items-center gap-2">
-                    <Info className="w-5 h-5 text-primary" />
-                    {t('types_page.tips_title', { type: t(`types.${selectedType}`) })}
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
-                      <div className="p-2 bg-red-500/10 rounded-xl h-fit">
-                        <ShieldAlert className="w-4 h-4 text-red-500" />
-                      </div>
-                      <p className="text-xs text-foreground/60 leading-relaxed">
-                        {t('types_page.watch_out', { 
-                          types: typeRels?.damage_relations.double_damage_from.map(t_rel => t(`types.${t_rel.name}`)).join(', '),
-                          type: t(`types.${selectedType}`)
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
-                      <div className="p-2 bg-blue-500/10 rounded-xl h-fit">
-                        <Sword className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <p className="text-xs text-foreground/60 leading-relaxed">
-                        {t('types_page.not_effective', { 
-                          type: t(`types.${selectedType}`),
-                          types: typeRels?.damage_relations.half_damage_to.map(t_rel => t(`types.${t_rel.name}`)).join(', ')
-                        })}
-                      </p>
-                    </div>
+              </div>
+              <div className="bg-blue-500/5 border border-blue-500/10 backdrop-blur-xl p-5 rounded-2xl flex gap-4 items-start">
+                <div className="p-2 bg-blue-500/10 rounded-xl h-fit flex-shrink-0">
+                  <Sword className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/60 mb-2">{t('types_page.not_effective_against')}</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {typeRels?.damage_relations.half_damage_to.map(t_rel => (
+                      <span key={t_rel.name} className="px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 text-[10px] font-black uppercase" style={{ color: TYPE_COLORS[t_rel.name] }}>
+                        {t(`types.${t_rel.name}`)}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
+              </div>
+            </motion.div>
+
+            {/* Emblematic Pokemon */}
+            <motion.div variants={itemVariants} className="space-y-6">
+              <h3 className="text-xl font-black px-2 flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Star className="w-5 h-5 text-primary" />
+                </div>
+                {t('types_page.emblematic')}
+              </h3>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {emblematicPokemon.map((p, idx) => (
+                  <Link key={p.id} href={`/pokemon/${p.name}`}>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] p-4 rounded-2xl flex flex-col items-center group hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 active:scale-95 relative overflow-hidden"
+                    >
+                      <div 
+                        className="absolute -top-8 -right-8 w-16 h-16 rounded-full blur-[30px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                        style={{ backgroundColor: TYPE_COLORS[selectedType] }}
+                      />
+                      <div className="relative w-20 h-20 mb-3">
+                        <Image 
+                          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`} 
+                          alt={p.name}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <span className="font-black capitalize text-xs group-hover:text-primary transition-colors text-center truncate w-full">{p.name}</span>
+                      <span className="text-[9px] font-bold text-foreground/40 mt-0.5 uppercase tracking-widest">{p.pokemon_v2_pokemonstats.reduce((s, curr) => s + curr.base_stat, 0)}</span>
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Learning Tips */}
+            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+                <Info className="w-5 h-5 text-primary" />
+                {t('types_page.tips_title', { type: t(`types.${selectedType}`) })}
+              </h3>
+              <div className="space-y-3">
+                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
+                  <div className="p-2 bg-red-500/10 rounded-xl h-fit flex-shrink-0">
+                    <ShieldAlert className="w-4 h-4 text-red-500" />
+                  </div>
+                  <p className="text-xs text-foreground/60 leading-relaxed">
+                    {t('types_page.watch_out', { 
+                      types: typeRels?.damage_relations.double_damage_from.map(t_rel => t(`types.${t_rel.name}`)).join(', '),
+                      type: t(`types.${selectedType}`)
+                    })}
+                  </p>
+                </div>
+                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
+                  <div className="p-2 bg-blue-500/10 rounded-xl h-fit flex-shrink-0">
+                    <Sword className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <p className="text-xs text-foreground/60 leading-relaxed">
+                    {t('types_page.not_effective', { 
+                      type: t(`types.${selectedType}`),
+                      types: typeRels?.damage_relations.half_damage_to.map(t_rel => t(`types.${t_rel.name}`)).join(', ')
+                    })}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

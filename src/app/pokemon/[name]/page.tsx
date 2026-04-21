@@ -1,9 +1,11 @@
-import { Metadata, ResolvingMetadata } from 'next';
+import { Metadata } from 'next';
 import { getPokemonDetail, getPokemonSpecies, getLocalizedPokemonData, getPokemonEncounters } from '@/lib/api';
 import { PokemonDetailClient } from './PokemonDetailClient';
 import Header from '@/components/layout/Header';
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, LocalizedPokemonData } from '@/types/pokemon';
 import { t } from '@/lib/server-i18n';
+import { getBaseSpeciesName } from '@/lib/form-names';
+import { formatPokemonSlugName } from '@/lib/utils';
 
 // Route segment config for performance optimization
 export const revalidate = 3600; // Revalidate every hour
@@ -15,29 +17,33 @@ interface Props {
 }
 
 export async function generateMetadata(
-  { params, searchParams }: Props,
-  _parent: ResolvingMetadata
+  { params, searchParams }: Props
 ): Promise<Metadata> {
   const { name } = await params;
   const sParams = await searchParams;
   const lang = (sParams.lang as string) || 'en';
+  const baseName = getBaseSpeciesName(name);
   
   try {
-    const [pokemon] = await Promise.all([
+    const [pokemon, species] = await Promise.all([
       getPokemonDetail(name),
-      getPokemonSpecies(name),
+      getPokemonSpecies(baseName).catch(() => null),
     ]);
     
     // lang ID 5 is French, 9 is English in PokeAPI GraphQL
     const langId = lang === 'fr' ? 5 : 9;
     const localizedData = await getLocalizedPokemonData(name, langId).catch(() => null) as LocalizedPokemonData | null;
     
-    const localizedName = localizedData?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
+    const localizedName = localizedData?.pokemon_v2_pokemonspeciesnames?.[0]?.name
+      || species?.names?.find(n => n.language.name === lang)?.name
+      || species?.names?.find(n => n.language.name === 'en')?.name
+      || baseName;
+    const displayName = name.includes('-') ? formatPokemonSlugName(name) : localizedName;
     const flavorTexts = localizedData?.pokemon_v2_pokemonspeciesflavortexts || [];
     const description = flavorTexts[0]?.flavor_text?.replace(/\f/g, ' ') || '';
 
-    const title = `${localizedName.charAt(0).toUpperCase() + localizedName.slice(1)} | PrimeDex`;
-    const seoDescription = description || `Detailed information about ${localizedName}, including stats, abilities, types, and evolutions.`;
+    const title = `${displayName} | PrimeDex`;
+    const seoDescription = description || `Detailed information about ${displayName}, including stats, abilities, types, and evolutions.`;
 
     const image = pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default;
 
@@ -53,7 +59,7 @@ export async function generateMetadata(
             url: image,
             width: 475,
             height: 475,
-            alt: localizedName,
+            alt: displayName,
           },
         ],
       },
@@ -64,7 +70,7 @@ export async function generateMetadata(
         images: [image],
       },
       keywords: [
-        localizedName, 
+        displayName, 
         'Pokemon', 
         'Pokedex', 
         ...pokemon.types.map(t => t.type.name),
@@ -94,7 +100,7 @@ export default async function PokemonPage({ params, searchParams }: Props) {
   const langId = lang === 'fr' ? 5 : 9;
 
   // For alternate forms, derive the base species name
-  const baseName = name.split(/-(mega|primal|ultra|gmax|alola|galar|hisui|paldea)/)[0] || name;
+  const baseName = getBaseSpeciesName(name);
 
   let pokemon: PokemonDetail;
   let species: PokemonSpecies | null = null;
@@ -106,12 +112,11 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     pokemon = detailData;
     
     // Try species for the form name first, fall back to base name for mega/primal/ultra
-    const speciesName = name !== baseName ? name : baseName;
     const [speciesData, localizedData, encountersData, fallbackSpeciesData] = await Promise.all([
-      getPokemonSpecies(speciesName).catch(() => null),
+      getPokemonSpecies(baseName).catch(() => null),
       getLocalizedPokemonData(name, langId).catch(() => null) as Promise<LocalizedPokemonData | null>,
       getPokemonEncounters(detailData.id).catch(() => []),
-      name !== baseName ? getPokemonSpecies(baseName).catch(() => null) : Promise.resolve(null),
+      Promise.resolve(null),
     ]);
 
     species = speciesData || fallbackSpeciesData;
@@ -128,7 +133,11 @@ export default async function PokemonPage({ params, searchParams }: Props) {
     );
   }
 
-  const displayName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name || pokemon.name;
+  const baseLocalizedName = localized?.pokemon_v2_pokemonspeciesnames?.[0]?.name
+    || species?.names?.find(n => n.language.name === lang)?.name
+    || species?.names?.find(n => n.language.name === 'en')?.name
+    || baseName;
+  const displayName = name.includes('-') ? formatPokemonSlugName(name) : baseLocalizedName;
 
   // JSON-LD structured data for Pokemon
   const jsonLd = {

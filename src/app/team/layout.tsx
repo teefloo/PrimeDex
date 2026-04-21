@@ -25,6 +25,7 @@ export default function TeamLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
   return (
     <>
       <script
@@ -37,7 +38,7 @@ export default function TeamLayout({
             applicationCategory: 'GameApplication',
             operatingSystem: 'All',
             description: 'Build your ultimate Pokémon team with type coverage analysis, weakness detection, and synergy scores.',
-            url: 'https://primedex.vercel.app/team',
+            url: `${baseUrl}/team`,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
           }),
         }}

@@ -1,20 +1,22 @@
+# Store
+
 ## Files
+- `primedex.ts` main Zustand store
+- `primedex.test.ts` store tests
 
-| File | Purpose |
-|------|---------|
-| `primedex.ts` | Main Zustand store (favorites, teams, settings, caught, recently viewed) |
-| `primedex.test.ts` | Store unit tests |
-
-## Store Structure
-
-- **Favorites**: Favorite Pokémon IDs
-- **Teams**: Team compositions (max 6)
-- **Settings**: Language, theme, preferences
-- **Caught**: Caught/not-caught tracking
-- **Recently Viewed**: Browsing history
+## State
+- Favorites: Pokemon IDs
+- Teams: up to 6 members
+- Settings: language, theme, preferences
+- Caught: caught / not-caught tracking
+- Recently viewed: browsing history
 
 ## Conventions
+- Store IDs and primitives only.
+- Persist with `idb-keyval`.
+- Mutate through store actions.
+- Keep shape stable across upgrades.
 
-- Store only IDs and primitives — no large data blobs
-- Persistence via `idb-keyval`
-- All mutations through store actions, never direct manipulation
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

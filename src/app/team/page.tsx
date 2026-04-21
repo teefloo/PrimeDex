@@ -1,10 +1,11 @@
 'use client';
 
 import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQueries } from '@tanstack/react-query';
 import { getPokemonDetail, getPokemonSpecies, getTypeRelations, getAllPokemonDetailed } from '@/lib/api';
-import { PokemonDetail, PokemonSpecies, TYPE_COLORS } from '@/types/pokemon';
+import { TYPE_COLORS } from '@/types/pokemon';
 import { TypeRelations } from '@/lib/api/rest';
 import { 
   Users, 
@@ -23,11 +24,11 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useMemo, useEffect, useState, SVGProps } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { resolveLanguage } from '@/lib/languages';
 import { toast } from 'sonner';
 import { analyzeTeam, calculateSynergyScore } from '@/lib/team-analysis';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
-import { useMounted } from '@/hooks/useMounted';
 
 // Dynamic imports for heavy charting library
 const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
@@ -44,35 +45,30 @@ import Image from 'next/image';
 
 export default function TeamPage() {
   const { language, systemLanguage, team, addToTeam, removeFromTeam, clearTeam } = usePrimeDexStore();
-  const mounted = useMounted();
   const [isAutoCompleting, setIsAutoCompleting] = useState(false);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
-  const resolvedLang = mounted 
-    ? (language === 'auto' ? systemLanguage : language) 
-    : i18n.language || 'en';
+  const resolvedLang = resolveLanguage(language, systemLanguage);
 
   // Team sharing logic: Check for team code in URL
   useEffect(() => {
-    if (mounted) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const teamCode = urlParams.get('code');
-      if (teamCode && team.length === 0) {
-        const ids = teamCode.split('-').map(Number).filter(id => !isNaN(id));
-        if (ids.length > 0) {
-          ids.forEach(id => addToTeam(id));
-          toast.success(t('team.toast_loaded'));
-          // Clear URL param without reloading
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
-        }
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamCode = urlParams.get('code');
+    if (teamCode && team.length === 0) {
+      const ids = teamCode.split('-').map(Number).filter(id => !isNaN(id));
+      if (ids.length > 0) {
+        ids.forEach(id => addToTeam(id));
+        toast.success(t('team.toast_loaded'));
+        // Clear URL param without reloading
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
       }
     }
-  }, [mounted, addToTeam, team.length, t]);
+  }, [addToTeam, team.length, t]);
 
   const pokemonQueries = useQueries({
     queries: team.map(id => ({
-      queryKey: ['pokemon-team', id, resolvedLang],
+      queryKey: ['pokemon-team', id],
       queryFn: async () => {
         const [pokemon, species] = await Promise.all([
           getPokemonDetail(id.toString()),
@@ -84,9 +80,8 @@ export default function TeamPage() {
     }))
   });
 
-  const isLoading = pokemonQueries.some(q => q.isLoading);
-  const teamData = pokemonQueries.map(q => q.data).filter((d): d is { pokemon: PokemonDetail; species: PokemonSpecies | null } => !!d);
-  const pokemonData = teamData.map(d => d.pokemon);
+  const pokemonData = pokemonQueries.map(q => q.data).filter((d): d is { pokemon: NonNullable<typeof d>['pokemon']; species: NonNullable<typeof d>['species'] } => !!d?.pokemon).map(d => d.pokemon);
+  const teamData = pokemonQueries.map(q => q.data).filter((d): d is { pokemon: NonNullable<typeof d>['pokemon']; species: NonNullable<typeof d>['species'] } => !!d?.pokemon);
 
   // Type relations for the whole team
   const typeRelationsQueries = useQueries({
@@ -183,68 +178,54 @@ export default function TeamPage() {
 
   const scoreColor = synergyScore > 70 ? 'bg-green-500' : synergyScore > 40 ? 'bg-orange-500' : 'bg-red-500';
 
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+    <div className="app-page text-foreground pb-20 overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
-        <section className="mb-12 pt-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20">
-                <Users className="w-8 h-8 text-green-500" />
-              </div>
-              <div>
-                <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight">
-                  {t('team.title')}
-                </h2>
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs">
-                    {t('team.subtitle')} ({pokemonData.length}/6)
-                  </p>
-                  {team.length > 0 && team.length < 6 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleAutoComplete}
-                      disabled={isAutoCompleting}
-                      className="h-6 px-3 rounded-full text-[11px] md:text-[10px] font-black uppercase border-primary/20 text-primary hover:bg-primary/10"
-                    >
-                      {isAutoCompleting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5" />}
-                      {t('team.auto_complete')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
+      <main className="page-shell py-8 relative z-10">
+        <PageHeader
+          icon={Users}
+          title={t('team.title')}
+          subtitle={`${t('team.subtitle')} (${pokemonData.length}/6)`}
+          eyebrow={t('team.eyebrow', { defaultValue: 'PrimeDex' })}
+          className="mt-16 md:mt-20"
+          badge={(
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {team.length > 0 && team.length < 6 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoComplete}
+                  disabled={isAutoCompleting}
+                  className="rounded-full text-[10px] sm:text-[11px] font-black uppercase border-primary/20 text-primary hover:bg-primary/10"
+                >
+                  {isAutoCompleting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5" />}
+                  {t('team.auto_complete')}
+                </Button>
+              )}
               {pokemonData.length > 0 && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleShareTeam}
-                  className="rounded-xl font-black uppercase tracking-widest gap-2 bg-secondary/30 border-white/10"
+                  className="rounded-full font-black uppercase tracking-widest gap-2 bg-secondary/30 border-border/60"
                 >
                   <Share className="w-4 h-4" />
                   {t('detail.share')}
                 </Button>
               )}
               {pokemonData.length > 0 && (
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={clearTeam}
-                  className="rounded-xl font-black uppercase tracking-widest gap-2"
+                  className="rounded-full font-black uppercase tracking-widest gap-2"
                 >
                   <Trash2CustomIcon className="w-4 h-4" />
                   {t('team.disband')}
                 </Button>
               )}
             </div>
-          </div>
-          <div className="h-px w-full bg-gradient-to-r from-border via-border to-transparent" />
-        </section>
+          )}
+        />
 
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Team Slots */}
@@ -289,7 +270,7 @@ export default function TeamPage() {
                         {p.types.map((typeItem) => (
                           <span 
                             key={typeItem.type.name} 
-                            className="px-2 py-0.5 rounded-lg border border-white/5 text-[11px] md:text-[10px] font-black uppercase"
+                            className="px-2 py-0.5 rounded-lg border border-white/5 text-[10px] sm:text-[11px] font-black uppercase"
                             style={{ backgroundColor: `${TYPE_COLORS[typeItem.type.name]}cc`, color: 'white' }}
                           >
                             {t(`types.${typeItem.type.name}`)}
@@ -297,10 +278,11 @@ export default function TeamPage() {
                         ))}
                         </div>
                         
-                        <Link href={`/pokemon/${p.name}`} className="mt-auto w-full">
-                          <Button variant="ghost" className="w-full h-8 text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors">
-                            {t('team.details')}
-                          </Button>
+                        <Link
+                          href={`/pokemon/${p.name}`}
+                          className="mt-auto inline-flex w-full items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 hover:bg-primary/10 hover:text-primary h-8 text-[10px] font-black uppercase tracking-widest"
+                        >
+                          {t('team.details')}
                         </Link>
                       </motion.div>
                     ) : (
@@ -496,7 +478,7 @@ export default function TeamPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">{t('team.types_present')}</p>
                   <div className="flex flex-wrap gap-2">
                     {Array.from(analysis?.typeCoverage || []).map(t_name => (
-                      <span key={t_name} className="px-3 py-1 rounded-lg text-[11px] md:text-[10px] font-black uppercase text-white shadow-sm" style={{ backgroundColor: TYPE_COLORS[t_name] }}>
+                      <span key={t_name} className="px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-black uppercase text-white shadow-sm" style={{ backgroundColor: TYPE_COLORS[t_name] }}>
                         {t(`types.${t_name}`)}
                       </span>
                     ))}
@@ -508,11 +490,11 @@ export default function TeamPage() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 mb-3">{t('team.missing_types')}</p>
                   <div className="flex flex-wrap gap-2 opacity-40">
                     {analysis?.missingTypes.slice(0, 12).map(t_name => (
-                      <span key={t_name} className="px-2 py-1 rounded-lg border border-white/10 text-[11px] md:text-[10px] font-bold uppercase">
+                      <span key={t_name} className="px-2 py-1 rounded-lg border border-white/10 text-[10px] sm:text-[11px] font-bold uppercase">
                         {t(`types.${t_name}`)}
                       </span>
                     ))}
-                    {(analysis?.missingTypes.length || 0) > 12 && <span className="text-[11px] md:text-[10px] font-bold">...</span>}
+                    {(analysis?.missingTypes.length || 0) > 12 && <span className="text-[10px] sm:text-[11px] font-bold">...</span>}
                   </div>
                 </div>
 

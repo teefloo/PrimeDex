@@ -1,6 +1,7 @@
 'use client';
 
 import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import { usePrimeDexStore } from '@/store/primedex';
 import { useQuery } from '@tanstack/react-query';
 import { getAllPokemonNames } from '@/lib/api';
@@ -8,25 +9,11 @@ import { PokemonCard } from '@/components/pokemon/PokemonCard';
 import { Heart, Home, Ghost } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { useMemo, ButtonHTMLAttributes } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { useMounted } from '@/hooks/useMounted';
-
-interface FavoriteButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
-}
-
-function FavoriteButton({ children, className, ...props }: FavoriteButtonProps) {
-  return (
-    <button className={className} {...props}>
-      {children}
-    </button>
-  );
-}
 
 export default function FavoritesPage() {
   const { favorites } = usePrimeDexStore();
-  const mounted = useMounted();
   const { t } = useTranslation();
 
   const { data: allNames, isLoading } = useQuery({
@@ -36,41 +23,25 @@ export default function FavoritesPage() {
   });
 
   const favoritePokemon = useMemo(() => {
-    if (!allNames || !mounted) return [];
+    if (!allNames) return [];
     return allNames.filter(p => {
       const id = parseInt(p.url.split('/').filter(Boolean).pop() || '0');
       return favorites.includes(id);
     });
-  }, [allNames, favorites, mounted]);
-
-  if (!mounted) return null;
+  }, [allNames, favorites]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="app-page relative overflow-hidden">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 relative z-10">
-        <section className="mb-12 pt-14">
-          {/* Hero area */}
-          <div className="relative mb-8">
-            <div className="absolute top-0 right-0 w-[300px] h-[200px] bg-rose-500/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="flex items-center gap-5">
-              <div className="p-4 bg-rose-500/10 rounded-2xl border border-rose-500/15 backdrop-blur-xl">
-                <Heart className="w-8 h-8 text-rose-400 fill-current" />
-              </div>
-              <div>
-                <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">
-                  {t('favorites.title')}
-                </h2>
-                <p className="text-foreground/30 font-bold uppercase tracking-[0.2em] text-[10px] mt-1.5">
-                  {t('favorites.subtitle')} {mounted ? t('favorites.count', { count: favoritePokemon.length }) : ''}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="h-px w-full bg-gradient-to-r from-rose-500/20 via-white/[0.04] to-transparent" />
-        </section>
+      <main className="page-shell py-8 relative z-10">
+        <PageHeader
+          icon={Heart}
+          title={t('favorites.title')}
+          subtitle={`${t('favorites.subtitle')} ${t('favorites.count', { count: favoritePokemon.length })}`}
+          eyebrow={t('favorites.eyebrow', { defaultValue: 'PrimeDex' })}
+          className="mt-16 md:mt-20"
+        />
 
         {isLoading ? (
           <div className="flex flex-col justify-center items-center h-64 gap-4">
@@ -91,17 +62,18 @@ export default function FavoritesPage() {
             <p className="text-sm text-foreground/40 font-medium mb-8 text-center px-6 max-w-md">
               {t('favorites.empty_desc')}
             </p>
-            <Link href="/">
-              <FavoriteButton className="glass-btn px-8 py-4 flex items-center gap-2 hover:scale-105 transition-all">
-                <Home className="w-5 h-5" />
-                <span className="font-black uppercase tracking-[0.15em] text-sm">{t('favorites.back')}</span>
-              </FavoriteButton>
+            <Link
+              href="/"
+              className="glass-btn px-8 py-4 flex min-h-12 items-center gap-2 hover:scale-105 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Home className="w-5 h-5" />
+              <span className="font-black uppercase tracking-[0.15em] text-sm">{t('favorites.back')}</span>
             </Link>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {favoritePokemon.map((p) => (
-              <PokemonCard key={p.name} name={p.name} url={p.url} />
+              <PokemonCard key={p.name} name={p.name} />
             ))}
           </div>
         )}

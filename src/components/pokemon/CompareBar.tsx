@@ -32,7 +32,7 @@ export default function CompareBar() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="glass-panel p-4 rounded-[2rem] border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex items-center justify-between gap-4"
+        className="glass-panel p-4 rounded-[2rem] border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.22)] flex items-center justify-between gap-4"
       >
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
           <AnimatePresence mode="popLayout">
@@ -49,7 +49,7 @@ export default function CompareBar() {
                   exit={{ scale: 0.8, opacity: 0 }}
                   className="relative group shrink-0"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/50 border border-white/10 flex items-center justify-center p-2">
+                  <div className="w-14 h-14 rounded-2xl bg-secondary/50 border border-border/60 flex items-center justify-center p-2">
                     {q.isLoading ? (
                       <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     ) : p ? (
@@ -65,7 +65,7 @@ export default function CompareBar() {
                   </div>
                   <button 
                     onClick={() => removeFromCompare(id)}
-                    className="absolute -top-3 -right-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    className="absolute -top-3 -right-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-destructive text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-lg"
                     aria-label={t('card.remove_compare')}
                   >
                     <X className="w-4 h-4" />
@@ -76,7 +76,7 @@ export default function CompareBar() {
           </AnimatePresence>
           
           {compareList.length < 3 && (
-            <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center text-foreground/20">
+            <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center text-foreground/20">
               <span className="text-xs font-black">+{3 - compareList.length}</span>
             </div>
           )}
@@ -105,13 +105,12 @@ export default function CompareBar() {
               {t('nav.compare')}
             </Button>
           ) : (
-            <Link href="/compare">
-              <Button 
-                className="rounded-xl font-black uppercase tracking-widest gap-2 px-6 shadow-lg shadow-primary/20"
-              >
-                <ArrowLeftRight className="w-4 h-4" />
-                {t('nav.compare')}
-              </Button>
+            <Link
+              href="/compare"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 font-black uppercase tracking-widest gap-2 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+              {t('nav.compare')}
             </Link>
           )}
         </div>

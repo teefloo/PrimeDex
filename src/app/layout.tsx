@@ -1,17 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import Providers from "./providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Agentation } from "agentation";
 import { t } from '@/lib/server-i18n';
 import { AppContent } from "./AppContent";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { Analytics } from "@vercel/analytics/react";
+import SiteFooter from "@/components/layout/SiteFooter";
+import { getLanguageAlternates, languageToOpenGraphLocale } from "@/lib/languages";
 
-const displayFont = Space_Grotesk({
+const displayFont = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["600", "700", "800"],
   variable: "--font-display",
   display: "swap",
   preload: true,
@@ -19,14 +18,14 @@ const displayFont = Space_Grotesk({
 
 const bodyFont = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
   display: "swap",
   preload: true,
 });
 
 export const viewport: Viewport = {
-  themeColor: '#e94560',
+  themeColor: '#171924',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -47,6 +46,7 @@ export const metadata: Metadata = {
   category: "games",
   alternates: {
     canonical: "/",
+    languages: getLanguageAlternates("/"),
   },
   robots: {
     index: true,
@@ -72,8 +72,8 @@ export const metadata: Metadata = {
         alt: "PrimeDex — The Ultimate Online Pokédex",
       },
     ],
-    locale: "en_US",
-    alternateLocale: ["fr_FR"],
+    locale: languageToOpenGraphLocale.en,
+    alternateLocale: Object.values(languageToOpenGraphLocale).filter((locale) => locale !== languageToOpenGraphLocale.en),
   },
   twitter: {
     card: "summary_large_image",
@@ -120,7 +120,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-body", displayFont.variable, bodyFont.variable)}>
+      <html lang="en" suppressHydrationWarning className={cn("font-body", displayFont.variable, bodyFont.variable)}>
       <head>
         {/* DNS Prefetch & Preconnect for external APIs */}
         <link rel="preconnect" href="https://pokeapi.co" />
@@ -133,6 +133,25 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://beta.pokeapi.co" />
         <link rel="dns-prefetch" href="https://api.tcgdex.net" />
         <link rel="dns-prefetch" href="https://assets.tcgdex.net" />
+        {/* Deferred load for non-critical card CSS */}
+        <link rel="preload" href="/pokemon-cards/css/all-cards.css" as="style" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var l = document.createElement('link');
+                l.rel = 'stylesheet';
+                l.href = '/pokemon-cards/css/all-cards.css';
+                l.media = 'print';
+                l.onload = function() { this.media = 'all'; };
+                document.head.appendChild(l);
+              })();
+            `,
+          }}
+        />
+        <noscript>
+          <link rel="stylesheet" href="/pokemon-cards/css/all-cards.css" />
+        </noscript>
         <script
           id="website-jsonld"
           type="application/ld+json"
@@ -151,16 +170,15 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Providers>
-          <Breadcrumbs />
-          <AppContent>
-            <div id="main-content">
-              {children}
-            </div>
-          </AppContent>
-           {/* {process.env.NODE_ENV === "development" && <Agentation />} */}
-          <Analytics />
-        </Providers>
+         <Providers>
+           <AppContent>
+             <div id="main-content">
+               {children}
+             </div>
+             <SiteFooter />
+           </AppContent>
+           {/* <Analytics /> */}
+         </Providers>
       </body>
     </html>
   );

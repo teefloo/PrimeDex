@@ -1,17 +1,20 @@
-## Files
+# API
 
-| File | Purpose |
-|------|---------|
-| `client.ts` | Base Axios instance, interceptors, retry logic |
-| `rest.ts` | PokéAPI v2 REST endpoints |
-| `graphql.ts` | PokéAPI GraphQL endpoint |
-| `tcg.ts` | Pokémon TCG API client |
-| `cache.ts` | Caching layer utilities |
-| `keys.ts` | TanStack Query key factory — single source of truth |
+## Files
+- `client.ts` Axios base instance, interceptors, retry logic
+- `rest.ts` PokeAPI REST endpoints
+- `graphql.ts` GraphQL endpoint
+- `tcg.ts` Pokemon TCG client
+- `cache.ts` cache helpers
+- `keys.ts` TanStack Query key factory
 
 ## Conventions
+- Never call `fetch` or `axios` directly in components.
+- Build query keys from `keys.ts`.
+- Keep request and response types explicit.
+- Keep API concerns centralized here.
+- Store secrets only in environment variables.
 
-- Never call `fetch` or `axios` directly in components
-- Query keys from `keys.ts` only — never construct inline
-- API keys from environment variables only
-- Retry logic configured at client level
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

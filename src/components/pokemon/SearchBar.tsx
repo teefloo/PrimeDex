@@ -8,27 +8,24 @@ import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/lib/i18n';
 import { useQueryClient } from '@tanstack/react-query';
 import { pokemonKeys } from '@/lib/api/keys';
-import { getAllPokemonSummary } from '@/lib/api';
-import { useMounted } from '@/hooks/useMounted';
+import { getAllPokemonSearchIndex } from '@/lib/api';
 
 export default function SearchBar() {
-  const { searchTerm, setSearchTerm, language, systemLanguage } = usePrimeDexStore();
+  const { searchTerm, setSearchTerm } = usePrimeDexStore();
   const [localSearch, setLocalSearch] = useState(searchTerm);
-  const mounted = useMounted();
   const [isFocused, setIsFocused] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const resolvedLang = language === 'auto' ? systemLanguage : language;
-
   const prefetchIndex = useCallback(() => {
     queryClient.prefetchQuery({
-      queryKey: pokemonKeys.allSummary(resolvedLang),
-      queryFn: () => getAllPokemonSummary(),
+      queryKey: pokemonKeys.allSearchIndex(),
+      queryFn: () => getAllPokemonSearchIndex(),
       staleTime: 24 * 60 * 60 * 1000,
     });
-  }, [queryClient, resolvedLang]);
+  }, [queryClient]);
 
   useEffect(() => {
     setLocalSearch(searchTerm);
@@ -40,6 +37,10 @@ export default function SearchBar() {
     }, 300);
     return () => clearTimeout(timer);
   }, [localSearch, setSearchTerm]);
+
+  useEffect(() => {
+    setIsMac(typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -57,38 +58,36 @@ export default function SearchBar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const isMac = mounted && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-      className="relative flex items-center w-full max-w-2xl mx-auto my-8 px-4 group"
+      className="relative mx-auto my-6 flex w-full max-w-2xl items-center px-4 group"
     >
       {/* Glow effect behind search bar */}
       <div className={`absolute inset-0 -m-2 rounded-[2rem] transition-all duration-700 ${isFocused ? 'opacity-100' : 'opacity-0'}`}>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/10 to-primary/20 rounded-[2rem] blur-2xl" />
       </div>
 
-      {/* Search icon */}
-      <div className="absolute left-8 pointer-events-none z-10 transition-colors duration-300">
-        <Search className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-foreground/30'}`} />
-      </div>
-      
-      <div className="w-full relative">
+      <div className="relative w-full">
+        {/* Search icon */}
+        <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 transition-colors duration-300">
+          <Search className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-foreground/30'}`} />
+        </div>
+
         <Input
           ref={inputRef}
           type="text"
           placeholder={t('search.placeholder')}
-          value={mounted ? localSearch : ''}
+          value={localSearch}
           onFocus={() => { setIsFocused(true); prefetchIndex(); }}
           onBlur={() => setIsFocused(false)}
           onChange={(e) => {
             setLocalSearch(e.target.value);
             prefetchIndex();
           }}
-          className="w-full pl-12 pr-20 py-7 rounded-full bg-white/[0.04] dark:bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] dark:border-white/[0.06] text-foreground placeholder:text-foreground/30 text-lg font-medium shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-all duration-500 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/30 focus-visible:shadow-[0_8px_40px_rgba(227,53,13,0.1)] focus-visible:bg-white/[0.06]"
+          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] py-6 pl-12 pr-20 text-base font-medium text-foreground shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all duration-500 placeholder:text-foreground/30 focus-visible:border-primary/30 focus-visible:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:shadow-[0_8px_40px_rgba(227,53,13,0.1)] md:text-lg"
           aria-label={t('search.placeholder')}
           id="pokemon-search"
         />
@@ -112,7 +111,7 @@ export default function SearchBar() {
               setLocalSearch('');
               setSearchTerm('');
             }}
-            className="absolute right-6 p-2 rounded-full text-foreground/30 hover:text-primary hover:bg-primary/10 transition-all duration-300 focus:outline-none z-10"
+            className="absolute right-6 z-10 rounded-full p-2 text-foreground/30 transition-all duration-300 hover:bg-primary/10 hover:text-primary focus:outline-none"
             aria-label={t('search.clear')}
           >
             <X className="w-5 h-5" />

@@ -1,17 +1,21 @@
-## Structure
+# Src Instructions
 
-| Directory | Purpose |
-|-----------|---------|
-| `app/` | Next.js App Router pages, layouts, route handlers |
-| `components/` | React components (ui/, pokemon/, layout/) |
-| `hooks/` | Custom React hooks (camelCase) |
-| `lib/` | Utilities, i18n, API integration |
-| `store/` | Zustand state management with idb-keyval persistence |
-| `test/` | Vitest setup and fixtures |
-| `types/` | TypeScript type definitions |
+## Scope
+- `app/`: route segments, layouts, metadata, and route handlers.
+- `components/`: `ui/`, `pokemon/`, and `layout/`.
+- `hooks/`: custom hooks.
+- `lib/`: utilities, i18n, and API integration.
+- `store/`: persisted Zustand state.
+- `test/`: shared Vitest setup and fixtures.
+- `types/`: domain type definitions.
 
 ## Conventions
+- Use `@/` for internal imports.
+- Keep Server Components as the default.
+- Use `"use client"` only where interaction requires it.
+- Treat `src/types/pokemon.ts` as the source of truth.
+- Follow the closest `AGENT.md` for local rules.
 
-- All internal imports use `@/` alias
-- Server Components default; `"use client"` at interaction leaf nodes only
-- `types/pokemon.ts` is the source of truth for all Pokémon types
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

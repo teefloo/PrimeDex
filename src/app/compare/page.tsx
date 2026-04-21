@@ -1,9 +1,10 @@
 'use client';
 
 import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
 import { usePrimeDexStore } from '@/store/primedex';
-import { useQueries } from '@tanstack/react-query';
-import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { getAllPokemonSearchIndex, getPokemonDetail, getPokemonSpecies } from '@/lib/api';
 import { TYPE_COLORS, PokemonDetail, PokemonSpecies } from '@/types/pokemon';
 import { 
   ArrowLeft, 
@@ -12,19 +13,23 @@ import {
   Swords, 
   Ruler, 
   Weight,
+  Search,
+  Copy,
+  Plus,
   Sparkles,
   X,
   Trash2,
   Trophy
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn, formatId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { resolveLanguage } from '@/lib/languages';
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
-import { useMounted } from '@/hooks/useMounted';
 
 // Dynamic imports for heavy charting library
 const RadarChart = dynamic(
@@ -41,14 +46,88 @@ const STAT_KEYS = ['hp', 'attack', 'defense', 'special-attack', 'special-defense
 import Image from 'next/image';
 
 export default function ComparePage() {
-  const { language, systemLanguage, compareList, removeFromCompare, clearCompare } = usePrimeDexStore();
+  const { language, systemLanguage, compareList, addToCompare, removeFromCompare, clearCompare } = usePrimeDexStore();
   const router = useRouter();
-  const mounted = useMounted();
-  const { t, i18n } = useTranslation();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { t } = useTranslation();
+  const [compareSearch, setCompareSearch] = useState('');
 
-  const resolvedLang = mounted 
-    ? (language === 'auto' ? systemLanguage : language) 
-    : i18n.language || 'en';
+  const resolvedLang = resolveLanguage(language, systemLanguage);
+  const { data: allPokemon } = useQuery({
+    queryKey: ['compare-search-index'],
+    queryFn: getAllPokemonSearchIndex,
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const sharedCompareIds = useMemo(() => {
+    const raw = searchParams.get('ids');
+    if (!raw) return [];
+    return raw
+      .split(',')
+      .map((value) => Number.parseInt(value, 10))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .slice(0, 3);
+  }, [searchParams]);
+
+  const isSharedCompare = sharedCompareIds.length > 0;
+  const activeCompareIds = isSharedCompare ? sharedCompareIds : compareList;
+
+  const buildCompareUrl = useCallback((ids: number[]) => {
+    if (ids.length === 0) return pathname;
+    return `${pathname}?ids=${ids.join(',')}`;
+  }, [pathname]);
+
+  const copyCompareLink = useCallback(async () => {
+    try {
+      if (typeof window === 'undefined') return;
+      const url = `${window.location.origin}${buildCompareUrl(activeCompareIds)}`;
+      await navigator.clipboard.writeText(url);
+      toast.success(t('detail.copied'));
+    } catch (error) {
+      console.error('Failed to copy compare link:', error);
+    }
+  }, [activeCompareIds, buildCompareUrl, t]);
+
+  const handleAddToCompare = useCallback((id: number) => {
+    if (activeCompareIds.includes(id) || activeCompareIds.length >= 3) return;
+    if (isSharedCompare) {
+      router.replace(buildCompareUrl([...activeCompareIds, id]));
+      return;
+    }
+    addToCompare(id);
+  }, [activeCompareIds, addToCompare, buildCompareUrl, isSharedCompare, router]);
+
+  const handleRemoveFromCompare = useCallback((id: number) => {
+    if (isSharedCompare) {
+      router.replace(buildCompareUrl(activeCompareIds.filter((currentId) => currentId !== id)));
+      return;
+    }
+    removeFromCompare(id);
+  }, [activeCompareIds, buildCompareUrl, isSharedCompare, removeFromCompare, router]);
+
+  const handleClearCompare = useCallback(() => {
+    if (isSharedCompare) {
+      router.replace(pathname);
+      return;
+    }
+    clearCompare();
+  }, [clearCompare, isSharedCompare, pathname, router]);
+
+  const searchResults = useMemo(() => {
+    if (!allPokemon || !compareSearch.trim()) return [];
+    const term = compareSearch.toLowerCase();
+
+    return allPokemon
+      .filter((pokemon) => {
+        const speciesNames = pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
+        const localized = speciesNames.find((entry) => entry.pokemon_v2_language?.name === resolvedLang);
+        const displayName = (localized?.name || pokemon.name).toLowerCase();
+        return displayName.includes(term) || pokemon.name.includes(term) || pokemon.id.toString().includes(term);
+      })
+      .filter((pokemon) => !activeCompareIds.includes(pokemon.id))
+      .slice(0, 6);
+  }, [activeCompareIds, allPokemon, compareSearch, resolvedLang]);
 
   const statLabels: Record<string, string> = useMemo(() => ({
     'hp': t('stats.hp_short'),
@@ -60,8 +139,8 @@ export default function ComparePage() {
   }), [t]);
 
   const pokemonQueries = useQueries({
-    queries: compareList.map(id => ({
-      queryKey: ['pokemon-compare', id, resolvedLang],
+    queries: activeCompareIds.map(id => ({
+      queryKey: ['pokemon-compare', id],
       queryFn: async () => {
         const [pokemon, species] = await Promise.all([
           getPokemonDetail(id.toString()),
@@ -125,46 +204,119 @@ export default function ComparePage() {
     return stats;
   }, [compareData]);
 
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+    <div className="app-page text-foreground pb-20 overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
-        <section className="mb-12 pt-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+      <main className="page-shell py-8 relative z-10">
+        <PageHeader
+          icon={Scale}
+          title={t('compare.title')}
+          subtitle={t('compare.comparing', { count: activeCompareIds.length })}
+          eyebrow={t('compare.eyebrow', { defaultValue: 'PrimeDex' })}
+          className="mt-16 md:mt-20"
+          badge={(
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => router.back()}
-                className="rounded-full bg-secondary/30"
+                className="rounded-full bg-background/80 border border-border/70"
                 aria-label={t('common.back')}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div>
-                <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight flex items-center gap-3">
-                  <Scale className="w-8 h-8 text-primary" />
-                  {t('compare.title')}
-                </h2>
-                <p className="text-foreground/40 font-bold uppercase tracking-widest text-xs mt-1">
-                  {t('compare.comparing', { count: compareData.length })}
-                </p>
-              </div>
+              <Button
+                variant="destructive"
+                onClick={handleClearCompare}
+                className="rounded-full font-black uppercase tracking-widest gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('compare.clear')}
+              </Button>
             </div>
-            
-            <Button 
-              variant="destructive" 
-              onClick={clearCompare}
-              className="rounded-xl font-black uppercase tracking-widest gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('compare.clear')}
-            </Button>
+          )}
+        />
+
+        <section className="page-surface mb-8 rounded-[2rem] p-5 shadow-xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full lg:max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/35" />
+              <input
+                type="search"
+                value={compareSearch}
+                onChange={(event) => setCompareSearch(event.target.value)}
+                placeholder={t('search.placeholder')}
+                aria-label={t('search.placeholder')}
+                className="h-12 w-full rounded-2xl border border-white/[0.06] bg-white/[0.04] pl-11 pr-4 text-sm font-semibold text-foreground placeholder:text-foreground/30 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="secondary"
+                onClick={copyCompareLink}
+                disabled={activeCompareIds.length === 0}
+                className="rounded-xl font-black uppercase tracking-widest gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                {t('team.copy_code')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleClearCompare}
+                disabled={activeCompareIds.length === 0}
+                className="rounded-xl font-black uppercase tracking-widest gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t('compare.clear')}
+              </Button>
+            </div>
           </div>
-          <div className="h-px w-full bg-gradient-to-r from-border via-border to-transparent" />
+
+          {compareSearch.trim().length > 0 && (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {searchResults.length > 0 ? searchResults.map((pokemon) => {
+                const speciesNames = pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
+                const localized = speciesNames.find((entry) => entry.pokemon_v2_language?.name === resolvedLang);
+                const displayName = pokemon.name.includes('-')
+                  ? pokemon.name.replace(/-/g, ' ')
+                  : localized?.name || pokemon.name;
+
+                return (
+                  <button
+                    key={pokemon.id}
+                    type="button"
+                    onClick={() => handleAddToCompare(pokemon.id)}
+                    disabled={activeCompareIds.length >= 3}
+                    className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3 text-left transition-all hover:border-primary/30 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-white/[0.04] p-1">
+                      <Image
+                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
+                        alt={displayName}
+                        fill
+                        sizes="48px"
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black capitalize">{displayName}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/35">
+                        {formatId(pokemon.id)}
+                      </p>
+                    </div>
+                    <Plus className="h-4 w-4 text-primary" />
+                  </button>
+                );
+              }) : (
+                <div className="rounded-2xl border border-dashed border-white/[0.08] px-4 py-6 text-sm font-medium text-foreground/35">
+                  {t('list.no_results')}
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {isLoading ? (
@@ -285,7 +437,7 @@ export default function ComparePage() {
                     style={{ '--type-color': `${color}20` } as React.CSSProperties}
                   >
                     <button 
-                      onClick={() => removeFromCompare(p.id)}
+                      onClick={() => handleRemoveFromCompare(p.id)}
                       className="absolute top-4 right-4 z-20 p-2 rounded-full bg-secondary/50 hover:bg-destructive/20 hover:text-destructive transition-colors"
                       aria-label={t('card.remove_compare')}
                     >
@@ -341,7 +493,7 @@ export default function ComparePage() {
                             <Swords className="w-3 h-3" /> {t('compare.stats')}
                           </h4>
                           <div className={cn(
-                            "px-2 py-0.5 rounded-full text-[11px] md:text-[10px] font-black uppercase tracking-tighter",
+                            "px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-tighter",
                             isOverallBest ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" : "bg-secondary/50 text-foreground/40"
                           )}>
                             {t('compare.total')}: {totalStats} {isOverallBest ? t('compare.best') : ''}
@@ -352,7 +504,7 @@ export default function ComparePage() {
                             const isBest = bestStats[s.stat.name]?.index === idx;
                             return (
                               <div key={s.stat.name} className="space-y-1">
-                                <div className="flex justify-between items-center text-[11px] md:text-[10px] font-bold uppercase tracking-wider">
+                                <div className="flex justify-between items-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
                                   <span className={cn(isBest ? "text-primary" : "text-foreground/40")}>
                                     {statLabels[s.stat.name]}
                                   </span>
@@ -386,7 +538,7 @@ export default function ComparePage() {
                               className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
                             >
                               {a.ability.name.replace('-', ' ')}
-                              {a.is_hidden && <span className="ml-1 opacity-40 text-[11px] md:text-[10px]">{t('detail.hidden')}</span>}
+                              {a.is_hidden && <span className="ml-1 opacity-40 text-[10px] sm:text-[11px]">{t('detail.hidden')}</span>}
                             </div>
                           ))}
                         </div>

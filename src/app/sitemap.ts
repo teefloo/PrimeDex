@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import { getAllPokemonNames } from '@/lib/api';
 
+const stableLastModified = new Date('2026-04-21T00:00:00.000Z');
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
 
@@ -9,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const pokemonUrls: MetadataRoute.Sitemap = pokemonList.map((pokemon) => ({
     url: `${baseUrl}/pokemon/${pokemon.name}`,
-    lastModified: new Date(),
+    lastModified: stableLastModified,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
     images: [
@@ -21,39 +23,57 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'daily',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/types`,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/compare`,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: `${baseUrl}/favorites`,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/team`,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/quiz`,
-      lastModified: new Date(),
+      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/tcg`,
+      lastModified: stableLastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: stableLastModified,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: stableLastModified,
+      changeFrequency: 'yearly',
+      priority: 0.2,
     },
   ];
 

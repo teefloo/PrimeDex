@@ -146,7 +146,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
                         {localizedMoveName}
                       </span>
                       <span 
-                        className="px-2 py-0.5 rounded text-[11px] md:text-[10px] font-black uppercase text-white shadow-sm"
+                        className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase text-white shadow-sm"
                         style={{ backgroundColor: TYPE_COLORS[move.type.name] }}
                       >
                         {t(`types.${move.type.name}`)}
@@ -170,7 +170,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
                           move.damage_class.name === 'physical' ? 'bg-orange-500' : 
                           move.damage_class.name === 'special' ? 'bg-blue-500' : 'bg-gray-500'
                         )} />
-                        <span className="text-[11px] md:text-[10px] font-black uppercase text-foreground/30">{t(`moves.damage_class.${move.damage_class.name}`)}</span>
+                        <span className="text-[10px] sm:text-[11px] font-black uppercase text-foreground/30">{t(`moves.damage_class.${move.damage_class.name}`)}</span>
                       </div>
                     </div>
                   </div>

@@ -1,9 +1,10 @@
-import { graphqlClient } from './client';
+﻿import { graphqlClient } from './client';
 import { getCachedData, setCachedData } from './cache';
-import { PokemonBasicData, GraphQLPokemonSummary, GraphQLPokemonMoveData, LocalizedPokemonData, GraphQLMoveData, GraphQLMovePokemonData } from '@/types/pokemon';
+import { PokemonBasicData, GraphQLPokemonSummary, GraphQLPokemonSearchIndex, GraphQLPokemonMoveData, LocalizedPokemonData, GraphQLMoveData, GraphQLMovePokemonData, GraphQLAbilityData, GraphQLAbilityPokemonData } from '@/types/pokemon';
 
 const BATCH_SIZE = 200;
-const TOTAL_POKEMON = 1500;
+const SEARCH_BATCH_SIZE = 250;
+const MOVE_BATCH_SIZE = 250;
 
 const getBatchCacheKey = (base: string, batchIndex: number) => `${base}-batch-${batchIndex}`;
 
@@ -22,6 +23,145 @@ const fetchBatch = async <T>(query: string, cacheKey: string): Promise<T[]> => {
   return results;
 };
 
+const buildPokemonSummarySelection = () => `
+  id
+  name
+  height
+  weight
+  pokemon_v2_pokemonspecy {
+    generation_id
+    pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
+      name
+      pokemon_v2_language {
+        name
+      }
+    }
+  }
+  pokemon_v2_pokemontypes {
+    pokemon_v2_type {
+      name
+    }
+  }
+`;
+
+const buildPokemonDetailedSelection = () => `
+  id
+  name
+  height
+  weight
+  pokemon_v2_pokemonstats(order_by: {pokemon_v2_stat: {id: asc}}) {
+    base_stat
+    pokemon_v2_stat {
+      name
+    }
+  }
+  pokemon_v2_pokemonspecy {
+    is_legendary
+    is_mythical
+    generation_id
+    pokemon_v2_pokemoncolor {
+      name
+    }
+    pokemon_v2_pokemonshape {
+      name
+    }
+    pokemon_v2_pokemonegggroups {
+      pokemon_v2_egggroup {
+        name
+      }
+    }
+    pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
+      name
+      pokemon_v2_language {
+        name
+      }
+    }
+  }
+  pokemon_v2_pokemontypes {
+    pokemon_v2_type {
+      name
+    }
+  }
+`;
+
+const buildPokemonSearchSelection = () => `
+  id
+  name
+  pokemon_v2_pokemonspecy {
+    pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
+      name
+      pokemon_v2_language {
+        name
+      }
+    }
+  }
+`;
+
+const fetchPokemonBatches = async <T>(
+  cacheBase: string,
+  buildQuery: (offset: number, limit: number) => string,
+  batchSize: number,
+): Promise<T[][]> => {
+  const batches: T[][] = [];
+  let offset = 0;
+
+  while (true) {
+    const cacheKey = getBatchCacheKey(cacheBase, Math.floor(offset / batchSize));
+    const query = buildQuery(offset, batchSize);
+    const batch = await fetchBatch<T>(query, cacheKey);
+    batches.push(batch);
+
+    if (batch.length < batchSize) {
+      break;
+    }
+
+    offset += batchSize;
+  }
+
+  return batches;
+};
+
+const fetchMoveBatches = async <T>(
+  cacheBase: string,
+  buildQuery: (offset: number, limit: number) => string,
+  batchSize: number,
+): Promise<T[][]> => {
+  const batches: T[][] = [];
+  let offset = 0;
+
+  while (true) {
+    const cacheKey = getBatchCacheKey(cacheBase, Math.floor(offset / batchSize));
+    const cached = await getCachedData<T[]>(cacheKey, true);
+    if (cached) {
+      batches.push(cached);
+      if (cached.length < batchSize) {
+        break;
+      }
+      offset += batchSize;
+      continue;
+    }
+
+    const query = buildQuery(offset, batchSize);
+    const { data } = await graphqlClient.post<{ data?: { pokemon_v2_move?: T[] } }>('/graphql/v1beta', { query });
+
+    if (!data?.data?.pokemon_v2_move) {
+      throw new Error(`Invalid GraphQL response in fetchMoveBatches: ${JSON.stringify(data)}`);
+    }
+
+    const results = data.data.pokemon_v2_move;
+    batches.push(results);
+    await setCachedData(cacheKey, results);
+
+    if (results.length < batchSize) {
+      break;
+    }
+
+    offset += batchSize;
+  }
+
+  return batches;
+};
+
 export const getAllPokemonSummary = async (): Promise<GraphQLPokemonSummary[]> => {
   const cacheKey = 'all-pokemon-summary-v1';
   
@@ -29,36 +169,18 @@ export const getAllPokemonSummary = async (): Promise<GraphQLPokemonSummary[]> =
   if (cached) return cached;
 
   try {
-    const query = `
-      query {
-        pokemon_v2_pokemon(limit: 1500, order_by: {id: asc}) {
-          id
-          name
-          height
-          weight
-          pokemon_v2_pokemonspecy {
-            generation_id
-            pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
-              name
-              pokemon_v2_language {
-                name
-              }
-            }
-          }
-          pokemon_v2_pokemontypes {
-            pokemon_v2_type {
-              name
-            }
+    const batches = await fetchPokemonBatches<GraphQLPokemonSummary>(
+      'all-pokemon-summary-paginated-v1',
+      (offset, limit) => `
+        query {
+          pokemon_v2_pokemon(limit: ${limit}, offset: ${offset}, order_by: {id: asc}) {
+            ${buildPokemonSummarySelection()}
           }
         }
-      }
-    `;
-
-    const { data } = await graphqlClient.post<{ data?: { pokemon_v2_pokemon?: GraphQLPokemonSummary[] } }>('/graphql/v1beta', { query });
-    if (!data?.data?.pokemon_v2_pokemon) {
-      throw new Error(`Invalid GraphQL response in getAllPokemonSummary: ${JSON.stringify(data)}`);
-    }
-    const results = data.data.pokemon_v2_pokemon;
+      `,
+      BATCH_SIZE,
+    );
+    const results = batches.flat();
     await setCachedData(cacheKey, results);
     return results;
   } catch (error) {
@@ -67,42 +189,47 @@ export const getAllPokemonSummary = async (): Promise<GraphQLPokemonSummary[]> =
 };
 
 export const getAllPokemonSummaryPaginated = async (): Promise<GraphQLPokemonSummary[][]> => {
-  const batches: Promise<GraphQLPokemonSummary[]>[] = [];
-  
-  for (let i = 0; i < TOTAL_POKEMON; i += BATCH_SIZE) {
-    const cacheKey = getBatchCacheKey('all-pokemon-summary-paginated-v1', Math.floor(i / BATCH_SIZE));
-    const query = `
+  return fetchPokemonBatches<GraphQLPokemonSummary>(
+    'all-pokemon-summary-paginated-v1',
+    (offset, limit) => `
       query {
-        pokemon_v2_pokemon(limit: ${BATCH_SIZE}, offset: ${i}, order_by: {id: asc}) {
-          id
-          name
-          height
-          weight
-          pokemon_v2_pokemonspecy {
-            generation_id
-            pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
-              name
-              pokemon_v2_language {
-                name
-              }
-            }
-          }
-          pokemon_v2_pokemontypes {
-            pokemon_v2_type {
-              name
-            }
-          }
+        pokemon_v2_pokemon(limit: ${limit}, offset: ${offset}, order_by: {id: asc}) {
+          ${buildPokemonSummarySelection()}
         }
       }
-    `;
-    batches.push(fetchBatch<GraphQLPokemonSummary>(query, cacheKey));
-  }
+    `,
+    BATCH_SIZE,
+  );
+};
 
-  return Promise.all(batches);
+export const getAllPokemonSearchIndex = async (): Promise<GraphQLPokemonSearchIndex[]> => {
+  const cacheKey = 'all-pokemon-search-index-v1';
+
+  const cached = await getCachedData<GraphQLPokemonSearchIndex[]>(cacheKey, true);
+  if (cached) return cached;
+
+  try {
+    const batches = await fetchPokemonBatches<GraphQLPokemonSearchIndex>(
+      'all-pokemon-search-index-paginated-v1',
+      (offset, limit) => `
+        query {
+          pokemon_v2_pokemon(limit: ${limit}, offset: ${offset}, order_by: {id: asc}) {
+            ${buildPokemonSearchSelection()}
+          }
+        }
+      `,
+      SEARCH_BATCH_SIZE,
+    );
+    const results = batches.flat();
+    await setCachedData(cacheKey, results);
+    return results;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getAllPokemonDetailed = async (): Promise<PokemonBasicData[]> => {
-  const cacheKey = 'all-pokemon-detailed-v8';
+  const cacheKey = 'all-pokemon-detailed-v9';
   
   const cached = await getCachedData<PokemonBasicData[]>(cacheKey, true);
   if (cached && cached.length > 0 && cached[0]?.pokemon_v2_pokemonspecy) {
@@ -110,123 +237,35 @@ export const getAllPokemonDetailed = async (): Promise<PokemonBasicData[]> => {
   }
 
   try {
-    const query = `
-      query {
-        pokemon_v2_pokemon(limit: 1500, order_by: {id: asc}) {
-          id
-          name
-          height
-          weight
-          pokemon_v2_pokemonstats {
-            base_stat
-          }
-          pokemon_v2_pokemonspecy {
-            is_legendary
-            is_mythical
-            generation_id
-            pokemon_v2_pokemoncolor {
-              name
-            }
-            pokemon_v2_pokemonshape {
-              name
-            }
-            pokemon_v2_pokemonegggroups {
-              pokemon_v2_egggroup {
-                name
-              }
-            }
-            pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
-              name
-              pokemon_v2_language {
-                name
-              }
-            }
-          }
-          pokemon_v2_pokemontypes {
-            pokemon_v2_type {
-              name
-            }
-          }
-        }
-      }
-    `;
-
-    const response = await graphqlClient.post<{ data?: { pokemon_v2_pokemon?: PokemonBasicData[] } }>('/graphql/v1beta', { query });
-    
-    if (!response.data?.data?.pokemon_v2_pokemon || !Array.isArray(response.data.data.pokemon_v2_pokemon)) {
-      console.warn('Invalid GraphQL response, trying paginated fallback...');
-      const paginatedResults = await getAllPokemonDetailedPaginated();
-      const flattenedResults = paginatedResults.flat();
-      if (flattenedResults.length > 0) {
-        await setCachedData(cacheKey, flattenedResults);
-        return flattenedResults;
-      }
-      throw new Error('PokéAPI GraphQL returned invalid data');
-    }
-    
-    const results = response.data.data.pokemon_v2_pokemon;
-    await setCachedData(cacheKey, results);
-    return results;
-  } catch (error) {
-    console.error('Failed to fetch detailed Pokémon data:', error);
     const paginatedResults = await getAllPokemonDetailedPaginated();
     const flattenedResults = paginatedResults.flat();
     if (flattenedResults.length > 0) {
+      await setCachedData(cacheKey, flattenedResults);
       return flattenedResults;
+    }
+    throw new Error('PokéAPI GraphQL returned invalid data');
+  } catch (error) {
+    console.error('Failed to fetch detailed Pokémon data:', error);
+    const cachedFallback = await getCachedData<PokemonBasicData[]>(cacheKey, true);
+    if (cachedFallback && cachedFallback.length > 0) {
+      return cachedFallback;
     }
     throw error;
   }
 };
 
 export const getAllPokemonDetailedPaginated = async (): Promise<PokemonBasicData[][]> => {
-  const batches: Promise<PokemonBasicData[]>[] = [];
-  
-  for (let i = 0; i < TOTAL_POKEMON; i += BATCH_SIZE) {
-    const cacheKey = getBatchCacheKey('all-pokemon-detailed-paginated-v1', Math.floor(i / BATCH_SIZE));
-    const query = `
+  return fetchPokemonBatches<PokemonBasicData>(
+    'all-pokemon-detailed-paginated-v2',
+    (offset, limit) => `
       query {
-        pokemon_v2_pokemon(limit: ${BATCH_SIZE}, offset: ${i}, order_by: {id: asc}) {
-          id
-          name
-          height
-          weight
-          pokemon_v2_pokemonstats {
-            base_stat
-          }
-          pokemon_v2_pokemonspecy {
-            is_legendary
-            is_mythical
-            generation_id
-            pokemon_v2_pokemoncolor {
-              name
-            }
-            pokemon_v2_pokemonshape {
-              name
-            }
-            pokemon_v2_pokemonegggroups {
-              pokemon_v2_egggroup {
-                name
-              }
-            }
-            pokemon_v2_pokemonspeciesnames(where: {pokemon_v2_language: {name: {_in: ["en", "fr", "es", "de", "it", "ja", "ko"]}}}) {
-              name
-              pokemon_v2_language {
-                name
-              }
-            }
-          }
-          pokemon_v2_pokemontypes {
-            pokemon_v2_type {
-              name
-            }
-          }
+        pokemon_v2_pokemon(limit: ${limit}, offset: ${offset}, order_by: {id: asc}) {
+          ${buildPokemonDetailedSelection()}
         }
       }
-    `;
-    batches.push(fetchBatch<PokemonBasicData>(query, cacheKey));
-  }
-
-  return Promise.all(batches);
+    `,
+    BATCH_SIZE,
+  );
 };
 
 export const getLocalizedPokemonData = async (name: string, languageId: number): Promise<LocalizedPokemonData> => {
@@ -318,56 +357,52 @@ export const getPokemonMovesLocalized = async (name: string, languageId: number)
 };
 
 export const getAllMoves = async (languageId: number): Promise<GraphQLMoveData[]> => {
-  const cacheKey = `all-moves-${languageId}`;
+  const cacheKey = `all-moves-v2-${languageId}`;
   const cached = await getCachedData<GraphQLMoveData[]>(cacheKey, true);
   if (cached) return cached;
 
   try {
-    const query = `
-      query GetAllMoves($languageId: Int!) {
-        pokemon_v2_move(limit: 1000, order_by: {id: asc}) {
-          id
-          name
-          power
-          accuracy
-          pp
-          priority
-          generation_id
-          pokemon_v2_type {
+    const batches = await fetchMoveBatches<GraphQLMoveData>(
+      'all-moves-paginated-v2',
+      (offset, limit) => `
+        query GetAllMoves {
+          pokemon_v2_move(limit: ${limit}, offset: ${offset}, order_by: {id: asc}) {
+            id
             name
-          }
-          pokemon_v2_movedamageclass {
-            name
-          }
-          pokemon_v2_movenames(where: {language_id: {_eq: $languageId}}) {
-            name
-          }
-          pokemon_v2_moveflavortexts(where: {language_id: {_eq: $languageId}}, limit: 1) {
-            flavor_text
-          }
-          pokemon_v2_moveeffect {
-            pokemon_v2_moveeffecteffecttexts(where: {language_id: {_eq: $languageId}}) {
-              short_effect
-              effect
+            power
+            accuracy
+            pp
+            priority
+            generation_id
+            pokemon_v2_type {
+              name
+            }
+            pokemon_v2_movedamageclass {
+              name
+            }
+            pokemon_v2_movenames(where: {language_id: {_eq: ${languageId}}}) {
+              name
+            }
+            pokemon_v2_moveflavortexts(where: {language_id: {_eq: ${languageId}}}, limit: 1) {
+              flavor_text
+            }
+            pokemon_v2_moveeffect {
+              pokemon_v2_moveeffecteffecttexts(where: {language_id: {_eq: ${languageId}}}) {
+                short_effect
+                effect
+              }
             }
           }
         }
-      }
-    `;
+      `,
+      MOVE_BATCH_SIZE,
+    );
 
-    const { data } = await graphqlClient.post<{ data?: { pokemon_v2_move?: GraphQLMoveData[] } }>('/graphql/v1beta', {
-      query,
-      variables: { languageId },
-    });
-
-    if (!data?.data?.pokemon_v2_move) {
-      throw new Error(`Invalid GraphQL response in getAllMoves: ${JSON.stringify(data)}`);
-    }
-
-    const results = data.data.pokemon_v2_move;
+    const results = batches.flat();
     await setCachedData(cacheKey, results);
     return results;
   } catch (error) {
+    console.error('Failed to fetch all moves:', error);
     const cached = await getCachedData<GraphQLMoveData[]>(cacheKey, true);
     if (cached) return cached;
     throw error;
@@ -426,3 +461,108 @@ export const getMovePokemonLearners = async (moveName: string, languageId: numbe
     throw error;
   }
 };
+
+export const getAllAbilities = async (languageId: number): Promise<GraphQLAbilityData[]> => {
+  const cacheKey = `all-abilities-v2-${languageId}`;
+  const cached = await getCachedData<GraphQLAbilityData[]>(cacheKey, true);
+  if (cached) return cached;
+
+  try {
+    const query = `
+      query GetAllAbilities($languageId: Int!) {
+        pokemon_v2_ability(limit: 1000, order_by: {id: asc}, where: {is_main_series: {_eq: true}}) {
+          id
+          name
+          generation_id
+          is_main_series
+          pokemon_v2_abilitynames(where: {language_id: {_eq: $languageId}}) {
+            name
+          }
+          pokemon_v2_abilityeffecttexts(where: {language_id: {_eq: $languageId}}) {
+            short_effect
+            effect
+          }
+          pokemon_v2_abilityflavortexts(
+            where: {language_id: {_eq: $languageId}}
+            order_by: {version_group_id: desc}
+            limit: 1
+          ) {
+            flavor_text
+            pokemon_v2_versiongroup {
+              name
+            }
+          }
+        }
+      }
+    `;
+
+    const { data } = await graphqlClient.post<{ data?: { pokemon_v2_ability?: GraphQLAbilityData[] } }>('/graphql/v1beta', {
+      query,
+      variables: { languageId },
+    });
+
+    if (!data?.data?.pokemon_v2_ability) {
+      throw new Error(`Invalid GraphQL response in getAllAbilities: ${JSON.stringify(data)}`);
+    }
+
+    const results = data.data.pokemon_v2_ability;
+    await setCachedData(cacheKey, results);
+    return results;
+  } catch (error) {
+    const cached = await getCachedData<GraphQLAbilityData[]>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
+};
+
+export const getAbilityPokemon = async (abilityName: string, languageId: number): Promise<GraphQLAbilityPokemonData[]> => {
+  const cacheKey = `ability-pokemon-v1-${abilityName}-${languageId}`;
+  const cached = await getCachedData<GraphQLAbilityPokemonData[]>(cacheKey, true);
+  if (cached) return cached;
+
+  try {
+    const query = `
+      query GetAbilityPokemon($abilityName: String!, $languageId: Int!) {
+        pokemon_v2_pokemonability(
+          where: {pokemon_v2_ability: {name: {_eq: $abilityName}}}
+          order_by: {pokemon_id: asc}
+        ) {
+          is_hidden
+          slot
+          pokemon_v2_pokemon {
+            id
+            name
+            pokemon_v2_pokemontypes {
+              pokemon_v2_type {
+                name
+              }
+            }
+            pokemon_v2_pokemonspecy {
+              pokemon_v2_pokemonspeciesnames(where: {language_id: {_eq: $languageId}}) {
+                name
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const { data } = await graphqlClient.post<{ data?: { pokemon_v2_pokemonability?: GraphQLAbilityPokemonData[] } }>('/graphql/v1beta', {
+      query,
+      variables: { abilityName, languageId },
+    });
+
+    if (!data?.data?.pokemon_v2_pokemonability) {
+      throw new Error(`Invalid GraphQL response in getAbilityPokemon: ${JSON.stringify(data)}`);
+    }
+
+    const results = data.data.pokemon_v2_pokemonability;
+    await setCachedData(cacheKey, results);
+    return results;
+  } catch (error) {
+    const cached = await getCachedData<GraphQLAbilityPokemonData[]>(cacheKey, true);
+    if (cached) return cached;
+    throw error;
+  }
+};
+

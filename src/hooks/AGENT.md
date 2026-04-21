@@ -1,12 +1,14 @@
-## Hooks
+# Hooks
 
-| Hook | Purpose |
-|------|---------|
-| `useKeyboardShortcuts.ts` | Keyboard shortcut bindings for app-wide actions |
-| `useMounted.ts` | SSR-safe mounted state (prevents hydration mismatches) |
+## Hooks
+- `useKeyboardShortcuts.ts`
+- `useMounted.ts`
 
 ## Conventions
+- One hook, one concern.
+- Use `useMounted` when browser APIs would cause hydration mismatches.
+- Prefer SSR-safe derived state before mounted-only branching.
 
-- `use` prefix mandatory
-- Each hook solves one concern
-- Use `useMounted` when accessing browser-only APIs
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

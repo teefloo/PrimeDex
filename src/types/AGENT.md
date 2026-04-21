@@ -1,11 +1,14 @@
-## Files
+# Types
 
-| File | Purpose |
-|------|---------|
-| `pokemon.ts` | Foundational type system — interfaces, enums, type unions |
+## Files
+- `pokemon.ts` shared Pokemon type system
 
 ## Conventions
+- Treat this folder as the source of truth for shared domain types.
+- Prefer interfaces for object shapes and type aliases for unions.
+- Avoid `any` and `Record<string, unknown>`.
+- Reuse these types across app, components, and lib code.
 
-- All Pokémon types defined here — reference extensively
-- Prefer interfaces for object shapes, type aliases for unions
-- No `any` or `Record<string, unknown>` — define explicit types
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

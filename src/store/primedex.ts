@@ -1,19 +1,23 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
+import { getLanguageId as getResolvedLanguageId } from '@/lib/languages';
+
+const isIndexedDbAvailable = (): boolean =>
+  typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
 
 // Custom storage for IndexedDB
 const storage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    if (typeof window === 'undefined') return null;
+    if (!isIndexedDbAvailable()) return null;
     return (await get(name)) || null;
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    if (typeof window === 'undefined') return;
+    if (!isIndexedDbAvailable()) return;
     await set(name, value);
   },
   removeItem: async (name: string): Promise<void> => {
-    if (typeof window === 'undefined') return;
+    if (!isIndexedDbAvailable()) return;
     await del(name);
   },
 };
@@ -115,13 +119,11 @@ interface PrimeDexStore {
 
   // Quiz
   quizHighScores: {
-    survival: number;
-    marathon: number;
     classic: number;
     silhouette: number;
     stats: number;
   };
-  updateQuizHighScore: (mode: 'survival' | 'marathon' | 'classic' | 'silhouette' | 'stats', score: number) => void;
+  updateQuizHighScore: (mode: 'classic' | 'silhouette' | 'stats', score: number) => void;
 
   // Settings
   isSettingsOpen: boolean;
@@ -298,8 +300,6 @@ export const usePrimeDexStore = create<PrimeDexStore>()(
 
       // Quiz
       quizHighScores: {
-        survival: 0,
-        marathon: 0,
         classic: 0,
         silhouette: 0,
         stats: 0,
@@ -322,17 +322,7 @@ export const usePrimeDexStore = create<PrimeDexStore>()(
       language: 'auto',
       setLanguage: (lang) => set({ language: lang }),
       getLanguageId: () => {
-        const lang = get().language === 'auto' ? get().systemLanguage : get().language;
-        const mapping: Record<string, number> = {
-          en: 9,
-          fr: 5,
-          de: 6,
-          es: 7,
-          it: 8,
-          ja: 11,
-          ko: 3,
-        };
-        return mapping[lang] || 9;
+        return getResolvedLanguageId(get().language, get().systemLanguage);
       },
       systemLanguage: typeof window !== 'undefined' ? (navigator.language.split('-')[0] || 'en') : 'en',
       setSystemLanguage: (lang) => set({ systemLanguage: lang }),

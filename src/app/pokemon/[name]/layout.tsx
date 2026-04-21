@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
-import { getPokemonDetail } from '@/lib/api';
+import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
 import { t } from '@/lib/server-i18n';
+import { getBaseSpeciesName } from '@/lib/form-names';
+import { formatPokemonSlugName } from '@/lib/utils';
 
 type Props = {
   params: Promise<{ name: string }>;
@@ -9,8 +11,14 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = (await params).name;
   try {
-    const pokemon = await getPokemonDetail(name);
-    const displayName = pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1);
+    const baseName = getBaseSpeciesName(name);
+    const [pokemon, species] = await Promise.all([
+      getPokemonDetail(name),
+      getPokemonSpecies(baseName).catch(() => null),
+    ]);
+    const baseLocalizedName = species?.names?.find((entry) => entry.language.name === 'en')?.name
+      || baseName.charAt(0).toUpperCase() + baseName.slice(1);
+    const displayName = name.includes('-') ? formatPokemonSlugName(name) : baseLocalizedName;
     const types = pokemon.types
       .map((type) => t(`types.${type.type.name}`, { defaultValue: type.type.name }))
       .join(', ');
@@ -69,8 +77,14 @@ export default async function PokemonLayout({
   let breadcrumbJsonLd = null;
 
   try {
-    const pokemon = await getPokemonDetail(name);
-    const displayName = pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1);
+    const baseName = getBaseSpeciesName(name);
+    const [pokemon, species] = await Promise.all([
+      getPokemonDetail(name),
+      getPokemonSpecies(baseName).catch(() => null),
+    ]);
+    const baseLocalizedName = species?.names?.find((entry) => entry.language.name === 'en')?.name
+      || baseName.charAt(0).toUpperCase() + baseName.slice(1);
+    const displayName = name.includes('-') ? formatPokemonSlugName(name) : baseLocalizedName;
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default;
     const totalStats = pokemon.stats.reduce((sum: number, s: { base_stat: number }) => sum + s.base_stat, 0);
     const typesArr = pokemon.types.map((typeItem: { type: { name: string } }) => typeItem.type.name);
@@ -114,7 +128,7 @@ export default async function PokemonLayout({
           '@type': 'ListItem',
           position: 2,
           name: 'Pokédex',
-          item: baseUrl,
+          item: `${baseUrl}/pokemon`,
         },
         {
           '@type': 'ListItem',

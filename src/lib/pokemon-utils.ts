@@ -54,3 +54,24 @@ export const getTypeGradient = (types: string[]) => {
   }
   return `from-[${getThemeColor(types[0])}] to-[${getThemeColor(types[1])}]`;
 };
+
+/**
+ * Determines a simulated TCG rarity based on Pokemon properties.
+ * Useful for applying TCG-like effects to official artwork.
+ */
+export const getSimulatedRarity = (pokemon: { 
+  id: number; 
+  stats?: number[]; 
+  is_legendary?: boolean; 
+  is_mythical?: boolean;
+}) => {
+  if (pokemon.is_mythical) return 'rare secret';
+  if (pokemon.is_legendary) return 'rare ultra';
+  
+  const totalStats = pokemon.stats?.reduce((a, b) => a + b, 0) || 0;
+  if (totalStats >= 540) return 'rare holo';
+  if (totalStats >= 480) return 'rare';
+  if (totalStats >= 380) return 'uncommon';
+  
+  return 'common';
+};

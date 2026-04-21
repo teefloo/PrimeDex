@@ -28,28 +28,30 @@ export default function EmptyState({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        'flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-[2rem] max-w-2xl mx-auto border-dashed border border-white/[0.06]',
+        'section-frame flex flex-col items-center justify-center rounded-[2rem] border-dashed border border-border/70 py-24 text-foreground/50 md:py-28',
         className
       )}
     >
-      <div className="p-6 bg-white/[0.03] rounded-full mb-6">
+      <div className="mb-6 rounded-full border border-border/70 bg-background/70 p-6 shadow-[0_10px_20px_-18px_rgba(0,0,0,0.18)]">
         <Icon className="w-16 h-16 text-foreground/20" />
       </div>
-      <h3 className="text-2xl font-black mb-2 text-foreground/70 tracking-tight">{title}</h3>
-      <p className="text-sm text-foreground/40 font-medium mb-8 text-center px-6 max-w-md">
+      <p className="page-eyebrow mb-3 justify-center">PrimeDex</p>
+      <h3 className="mb-2 text-2xl font-black tracking-tight text-foreground/70">{title}</h3>
+      <p className="mb-8 max-w-md px-6 text-center text-sm font-medium text-foreground/40">
         {description}
       </p>
       {actionLabel && actionHref && (
-        <Link href={actionHref}>
-          <button className="glass-btn px-8 py-4 flex items-center gap-2 hover:scale-105 transition-all">
-            <span className="font-black uppercase tracking-[0.15em] text-sm">{actionLabel}</span>
-          </button>
+        <Link
+          href={actionHref}
+          className="glass-btn flex min-h-12 items-center gap-2 px-8 py-4 transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="font-black uppercase tracking-[0.15em] text-sm">{actionLabel}</span>
         </Link>
       )}
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="glass-btn px-8 py-4 flex items-center gap-2 hover:scale-105 transition-all"
+          className="glass-btn flex items-center gap-2 px-8 py-4 transition-all hover:scale-[1.02]"
         >
           <span className="font-black uppercase tracking-[0.15em] text-sm">{actionLabel}</span>
         </button>

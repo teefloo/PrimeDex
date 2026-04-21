@@ -149,7 +149,7 @@ export default function AdvancedFilters() {
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
                 {t('filters.generation')}
               </h4>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
                 {GENERATIONS.map((gen) => {
                   const isActive = selectedGeneration === gen.id;
                   const label = t(`generations.gen_${gen.id}`);
@@ -159,14 +159,14 @@ export default function AdvancedFilters() {
                       key={gen.id}
                       onClick={() => setSelectedGeneration(isActive ? null : gen.id)}
                       className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200",
+                        "flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 min-h-[64px]",
                         isActive 
                           ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(255,50,50,0.1)]" 
                           : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
                       )}
                     >
                       <span className="text-xs font-black">{label}</span>
-                      <span className="text-[11px] md:text-[10px] font-medium opacity-60 uppercase">{regionLabel}</span>
+                      <span className="text-[10px] font-medium opacity-60 uppercase">{regionLabel}</span>
                     </button>
                   );
                 })}
@@ -178,7 +178,7 @@ export default function AdvancedFilters() {
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
                 {t('filters.types')}
               </h4>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Object.keys(TYPE_COLORS).map((type) => {
                   const isActive = selectedTypes.includes(type);
                   const color = TYPE_COLORS[type];
@@ -188,7 +188,7 @@ export default function AdvancedFilters() {
                       key={type}
                       onClick={() => toggleType(type)}
                       className={cn(
-                        "relative flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 overflow-hidden group",
+                        "relative flex items-center gap-2 px-4 py-4 rounded-xl border transition-all duration-200 overflow-hidden group min-h-[56px]",
                         isActive 
                           ? "text-white border-transparent" 
                           : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
@@ -214,10 +214,11 @@ export default function AdvancedFilters() {
                     <span className="text-sm font-bold">{t('filters.legendary')}</span>
                     <span className="text-[10px] text-foreground/40 font-medium">{t('filters.legendary_desc')}</span>
                   </div>
-                  <Switch 
-                    checked={isLegendary === true}
-                    onCheckedChange={(checked) => setIsLegendary(checked ? true : null)}
-                  />
+                   <Switch 
+                     id="filter-legendary"
+                     checked={isLegendary === true}
+                     onCheckedChange={(checked) => setIsLegendary(checked ? true : null)}
+                   />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
                   <div className="flex flex-col gap-0.5">
@@ -225,9 +226,10 @@ export default function AdvancedFilters() {
                     <span className="text-[10px] text-foreground/40 font-medium">{t('filters.mythical_desc')}</span>
                   </div>
                   <Switch 
-                    checked={isMythical === true}
-                    onCheckedChange={(checked) => setIsMythical(checked ? true : null)}
-                  />
+                     id="filter-mythical"
+                     checked={isMythical === true}
+                     onCheckedChange={(checked) => setIsMythical(checked ? true : null)}
+                   />
                 </div>
               </div>
             </div>
@@ -330,7 +332,7 @@ export default function AdvancedFilters() {
                 step={10}
                 className="py-4"
               />
-              <div className="flex justify-between text-[11px] md:text-[10px] font-black text-foreground/20 uppercase tracking-widest">
+              <div className="flex justify-between text-[10px] sm:text-[11px] font-black text-foreground/20 uppercase tracking-widest">
                 <span>0</span>
                 <span>400 ({t('filters.avg')})</span>
                 <span>800</span>

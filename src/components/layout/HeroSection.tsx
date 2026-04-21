@@ -15,75 +15,60 @@ const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
+      staggerChildren: 0.1,
     },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export default function HeroSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="text-center mb-16 pt-14 relative">
-      {/* Decorative orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-primary/15 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute top-1/3 left-1/3 w-[200px] h-[100px] bg-indigo-500/10 rounded-full blur-[80px] animate-pulse-glow" style={{ animationDelay: '-1.5s' }} />
-        <div className="absolute top-2/3 right-1/4 w-[150px] h-[80px] bg-purple-500/8 rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: '-3s' }} />
-      </div>
-
+    <section className="pt-10 pb-8">
       <motion.div 
-        className="relative z-10"
+        className="page-shell page-surface relative z-10 overflow-hidden px-5 py-8 md:px-8 md:py-10 shadow-[0_24px_72px_-34px_rgba(0,0,0,0.32)]"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Pill badge */}
-        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] backdrop-blur-xl mb-8">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-foreground/40">
+        <div className="mx-auto max-w-5xl text-center">
+          <motion.p variants={itemVariants} className="page-eyebrow justify-center">
+            PrimeDex
+          </motion.p>
+          <motion.h1 
+            variants={itemVariants} 
+            className="mx-auto max-w-4xl text-5xl font-black tracking-tight leading-[0.9] md:text-7xl lg:text-[5.8rem]"
+          >
+            <span className="gradient-text-hero">
+              {t('home.hero_title')}
+            </span>
+          </motion.h1>
+          <motion.p variants={itemVariants} className="page-subtitle mx-auto mt-4 max-w-2xl">
             {t('home.hero_subtitle')}
-          </span>
-        </motion.div>
+          </motion.p>
+        </div>
 
-        {/* Main title */}
-        <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter drop-shadow-sm leading-[0.9] mb-6">
-          <span className="gradient-text-hero">
-            {t('home.hero_title')}
-          </span>
-        </motion.h1>
-
-        {/* Decorative line */}
-        <motion.div variants={itemVariants} className="flex items-center justify-center gap-4 mb-10">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-primary/30" />
-          <div className="w-2 h-2 rounded-full bg-primary/40" />
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-primary/30" />
-        </motion.div>
-
-        {/* Search and Filters - Glassmorphic Panel */}
-        <motion.div variants={itemVariants} className="w-full max-w-5xl mx-auto">
-          {/* Main Search Bar separated slightly for prominence */}
-          <div className="mb-6 relative z-20">
+        <motion.div variants={itemVariants} className="mt-10 w-full max-w-5xl mx-auto">
+          <div className="mb-5 relative z-20" id="hero-search-bar">
             <SearchBar />
           </div>
 
-          <div className="bg-white/[0.02] border border-white/[0.05] shadow-2xl backdrop-blur-2xl rounded-[2rem] p-6 md:p-8 flex flex-col space-y-6 relative overflow-hidden transition-all duration-500 hover:bg-white/[0.03]">
-            {/* Inner subtle glow for the glass panel */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-
+          <div className="section-frame p-5 md:p-8 flex flex-col gap-6 relative overflow-hidden transition-all duration-500">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+            <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                 <FavoriteToggle />
                 <CaughtFilter />
                 <AdvancedFiltersWrapper />
               </div>
-              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent hidden md:block" />
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent hidden md:block" />
               <div className="flex-shrink-0">
                 <SortSelector />
               </div>

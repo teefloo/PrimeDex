@@ -1,360 +1,710 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  Filter,
+  Gauge,
+  Loader2,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Swords,
+  Target,
+  Trophy,
+  X,
+  Zap,
+} from 'lucide-react';
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Swords, Trophy, Target, Zap, Filter, X, SlidersHorizontal } from 'lucide-react';
-import Header from '@/components/layout/Header';
-import { getAllMoves } from '@/lib/api/graphql';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { TYPE_COLORS, MoveListItem } from '@/types/pokemon';
-import { usePrimeDexStore } from '@/store/primedex';
 import { useMounted } from '@/hooks/useMounted';
+import { usePrimeDexStore } from '@/store/primedex';
 import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
-
-const MoveDetailModal = dynamic(() => import('./MoveDetailModal'), { ssr: false });
+import Header from '@/components/layout/Header';
+import PageHeader from '@/components/layout/PageHeader';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getAllMoves } from '@/lib/api/graphql';
+import { TYPE_COLORS, type GraphQLMoveData, type MoveListItem } from '@/types/pokemon';
+import MoveDetailModal from './MoveDetailModal';
 
 const ALL_TYPES = [
-  'normal', 'fire', 'water', 'electric', 'grass', 'ice',
-  'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug',
-  'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
-];
+  'normal',
+  'fire',
+  'water',
+  'electric',
+  'grass',
+  'ice',
+  'fighting',
+  'poison',
+  'ground',
+  'flying',
+  'psychic',
+  'bug',
+  'rock',
+  'ghost',
+  'dragon',
+  'dark',
+  'steel',
+  'fairy',
+] as const;
 
 const DAMAGE_CLASSES = ['physical', 'special', 'status'] as const;
 
-type SortKey = 'id' | 'name' | 'power';
+type SortKey = 'name' | 'id' | 'power';
 
 export default function MovesPageClient() {
   const { t } = useTranslation();
   const mounted = useMounted();
-  const getLanguageId = usePrimeDexStore((s) => s.getLanguageId);
-  const languageId = getLanguageId();
+  const getLanguageId = usePrimeDexStore((state) => state.getLanguageId);
+  const languageId = mounted ? getLanguageId() : 9;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortKey>('id');
+  const [sortBy, setSortBy] = useState<SortKey>('name');
   const [selectedMove, setSelectedMove] = useState<MoveListItem | null>(null);
 
-  const { data: rawMoves, isLoading } = useQuery({
-    queryKey: ['all-moves', languageId],
+  const {
+    data: rawMoves,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useQuery<GraphQLMoveData[]>({
+    queryKey: ['moves', languageId],
     queryFn: () => getAllMoves(languageId),
+    enabled: mounted,
     staleTime: 24 * 60 * 60 * 1000,
+    retry: 2,
+    refetchOnMount: 'always',
   });
 
-  const moves: MoveListItem[] = useMemo(() => {
+  const moves = useMemo<MoveListItem[]>(() => {
     if (!rawMoves) return [];
-    return rawMoves.map((m) => ({
-      id: m.id,
-      name: m.name,
-      power: m.power,
-      accuracy: m.accuracy,
-      pp: m.pp,
-      priority: m.priority,
-      type: m.pokemon_v2_type?.name || 'normal',
-      damage_class: m.pokemon_v2_movedamageclass?.name || 'status',
-      localizedName: m.pokemon_v2_movenames?.[0]?.name || m.name,
-      description:
-        m.pokemon_v2_moveflavortexts?.[0]?.flavor_text?.replace(/\n/g, ' ') ||
-        m.pokemon_v2_moveeffect?.pokemon_v2_moveeffecteffecttexts?.[0]?.short_effect?.replace(/\n/g, ' ') ||
-        '',
-      generation_id: m.generation_id,
+
+    return rawMoves.map((move) => ({
+      id: move.id,
+      name: move.name,
+      power: move.power,
+      accuracy: move.accuracy,
+      pp: move.pp,
+      priority: move.priority,
+      type: move.pokemon_v2_type?.name || 'normal',
+      damage_class: move.pokemon_v2_movedamageclass?.name || 'status',
+      localizedName: move.pokemon_v2_movenames?.[0]?.name || move.name,
+      description: getMoveDescription(move),
+      generation_id: move.generation_id,
     }));
   }, [rawMoves]);
 
   const filteredMoves = useMemo(() => {
-    let result = moves;
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      result = result.filter(
-        (m) =>
-          m.localizedName.toLowerCase().includes(lower) ||
-          m.name.toLowerCase().includes(lower)
-      );
-    }
+    const nextMoves = moves.filter((move) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        move.localizedName.toLowerCase().includes(normalizedSearch) ||
+        move.name.toLowerCase().includes(normalizedSearch) ||
+        move.description.toLowerCase().includes(normalizedSearch);
 
-    if (selectedType) {
-      result = result.filter((m) => m.type === selectedType);
-    }
+      const matchesType = !selectedType || move.type === selectedType;
+      const matchesClass = !selectedClass || move.damage_class === selectedClass;
 
-    if (selectedClass) {
-      result = result.filter((m) => m.damage_class === selectedClass);
-    }
-
-    result.sort((a, b) => {
-      if (sortBy === 'name') return a.localizedName.localeCompare(b.localizedName);
-      if (sortBy === 'power') return (b.power || 0) - (a.power || 0);
-      return a.id - b.id;
+      return matchesSearch && matchesType && matchesClass;
     });
 
-    return result;
+    return [...nextMoves].sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.localizedName.localeCompare(b.localizedName);
+      }
+
+      if (sortBy === 'power') {
+        const powerA = a.power ?? -1;
+        const powerB = b.power ?? -1;
+        if (powerA !== powerB) return powerB - powerA;
+        return a.localizedName.localeCompare(b.localizedName);
+      }
+
+      return a.id - b.id;
+    });
   }, [moves, searchTerm, selectedType, selectedClass, sortBy]);
 
-  if (!mounted) return null;
+  const stats = useMemo(() => ({
+    total: moves.length,
+    visible: filteredMoves.length,
+    physical: moves.filter((move) => move.damage_class === 'physical').length,
+    special: moves.filter((move) => move.damage_class === 'special').length,
+    status: moves.filter((move) => move.damage_class === 'status').length,
+  }), [filteredMoves.length, moves]);
+
+  const activeFiltersCount =
+    Number(Boolean(searchTerm)) +
+    Number(Boolean(selectedType)) +
+    Number(Boolean(selectedClass)) +
+    Number(sortBy !== 'name');
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedType(null);
+    setSelectedClass(null);
+    setSortBy('name');
+  };
+
+  if (!mounted) {
+    return (
+      <MovesPageShell
+        loading
+        title={t('moves_page.title')}
+        subtitle={t('moves_page.subtitle')}
+        eyebrow={t('nav.moves')}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <BackgroundGlow />
       <Header />
 
-      <main className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
-        {/* Hero */}
-        <section className="mb-10 pt-10 text-center">
-          <div className="inline-block p-4 bg-primary/10 rounded-3xl border border-primary/20 mb-6">
-            <Swords className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-5xl font-black tracking-tight mb-2 uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
-            {t('moves_page.title')}
-          </h2>
-          <p className="text-foreground/40 font-bold uppercase tracking-widest text-sm">
-            {t('moves_page.subtitle')}
-          </p>
-        </section>
+      <main className="page-shell pb-20 pt-8">
+        <PageHeader
+          title={t('moves_page.title')}
+          subtitle={t('moves_page.subtitle')}
+          eyebrow={t('nav.moves')}
+          icon={Swords}
+          badge={<Badge variant="outline">{t('moves_page.results_count', { count: stats.total })}</Badge>}
+        />
 
-        {/* Search & Sort */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t('moves_page.search_placeholder')}
-              className="w-full h-12 pl-11 pr-10 rounded-2xl bg-white/[0.04] border border-white/10 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
-              aria-label={t('moves_page.search_placeholder')}
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 transition-colors"
-                aria-label={t('search.clear')}
-              >
-                <X className="w-3.5 h-3.5 text-foreground/40" />
-              </button>
-            )}
-          </div>
+        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="xl:sticky xl:top-24 xl:h-[calc(100vh-7rem)]">
+            <div className="page-surface h-full overflow-hidden p-4 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">
+                  <Filter className="h-3.5 w-3.5 text-primary" />
+                  {t('moves_page.catalog_filters')}
+                </div>
+                <Button variant="ghost" size="xs" onClick={clearFilters} className="h-8 px-2.5 text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {t('filters.reset')}
+                </Button>
+              </div>
 
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-2xl px-4 h-12">
-              <SlidersHorizontal className="w-4 h-4 text-foreground/30" />
-              <span className="text-xs font-bold text-foreground/40 uppercase tracking-wider hidden sm:inline">
-                {t('moves_page.sort_by')}
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortKey)}
-                className="bg-transparent text-sm font-semibold text-foreground focus:outline-none cursor-pointer"
-                aria-label={t('moves_page.sort_by')}
-              >
-                <option value="id">{t('moves_page.sort_id')}</option>
-                <option value="name">{t('moves_page.sort_name')}</option>
-                <option value="power">{t('moves_page.sort_power')}</option>
-              </select>
+              <div className="space-y-4 overflow-y-auto pr-1 scrollbar-premium xl:max-h-[calc(100vh-13rem)]">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  onClear={() => setSearchTerm('')}
+                  placeholder={t('moves_page.search_placeholder')}
+                  clearLabel={t('search.clear')}
+                />
+
+                <FilterSection
+                  title={t('moves_page.sort_by')}
+                  icon={SlidersHorizontal}
+                  badge={sortBy === 'name' ? t('moves_page.sort_name') : t(`moves_page.sort_${sortBy}`)}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { key: 'name', label: t('moves_page.sort_name') },
+                      { key: 'id', label: t('moves_page.sort_id') },
+                      { key: 'power', label: t('moves_page.sort_power') },
+                    ] as const).map((option) => {
+                      const active = sortBy === option.key;
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => setSortBy(option.key)}
+                          className={cn(
+                            'inline-flex h-8 items-center justify-center rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                            active
+                              ? 'border-primary/35 bg-primary/15 text-primary'
+                              : 'border-border/60 bg-white/[0.03] text-foreground/55 hover:border-border/90 hover:bg-white/[0.06] hover:text-foreground',
+                          )}
+                          aria-pressed={active}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </FilterSection>
+
+                <FilterSection
+                  title={t('moves_page.filter_by_type')}
+                  icon={Sparkles}
+                  badge={selectedType ? t(`types.${selectedType}`) : t('moves_page.all_types')}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_TYPES.map((type) => {
+                      const active = selectedType === type;
+                      const typeColor = TYPE_COLORS[type] || '#6B7280';
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setSelectedType(active ? null : type)}
+                          className={cn(
+                            'inline-flex h-8 items-center justify-center rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                            active
+                              ? 'border-transparent text-white shadow-[0_0_16px_rgba(227,53,13,0.14)]'
+                              : 'border-border/60 bg-white/[0.03] text-foreground/55 hover:border-border/90 hover:bg-white/[0.06] hover:text-foreground',
+                          )}
+                          style={active ? { backgroundColor: typeColor } : undefined}
+                          aria-pressed={active}
+                          aria-label={t(`types.${type}`)}
+                        >
+                          {t(`types.${type}`)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </FilterSection>
+
+                <FilterSection
+                  title={t('moves_page.filter_by_class')}
+                  icon={Trophy}
+                  badge={selectedClass ? t(`moves.damage_class.${selectedClass}`) : t('moves_page.all_classes')}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {DAMAGE_CLASSES.map((damageClass) => {
+                      const active = selectedClass === damageClass;
+                      return (
+                        <button
+                          key={damageClass}
+                          type="button"
+                          onClick={() => setSelectedClass(active ? null : damageClass)}
+                          className={cn(
+                            'inline-flex h-8 items-center justify-center rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
+                            active
+                              ? 'border-primary/35 bg-primary/15 text-primary'
+                              : 'border-border/60 bg-white/[0.03] text-foreground/55 hover:border-border/90 hover:bg-white/[0.06] hover:text-foreground',
+                          )}
+                          aria-pressed={active}
+                        >
+                          {t(`moves.damage_class.${damageClass}`)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </FilterSection>
+
+              <div className="rounded-[1.5rem] border border-border/70 bg-background/60 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">
+                    {t('moves_page.catalog_filters_hint')}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-foreground/45">
+                    {t('moves_page.results_count', { count: stats.visible })}
+                  </p>
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <SmallStat label={t('moves.damage_class.physical')} value={stats.physical} />
+                    <SmallStat label={t('moves.damage_class.special')} value={stats.special} />
+                    <SmallStat label={t('moves.damage_class.status')} value={stats.status} />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </aside>
 
-        {/* Type Filter */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-4 h-4 text-foreground/30" />
-            <span className="text-xs font-black uppercase tracking-widest text-foreground/30">
-              {t('moves_page.filter_by_type')}
-            </span>
-            {selectedType && (
-              <button
-                onClick={() => setSelectedType(null)}
-                className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors ml-1"
-              >
-                {t('filters.clear_all')}
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {ALL_TYPES.map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(selectedType === type ? null : type)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 border',
-                  selectedType === type
-                    ? 'text-white border-transparent shadow-lg'
-                    : 'text-foreground/50 border-white/10 hover:border-white/20 hover:text-foreground/70 bg-white/[0.02]'
-                )}
-                style={selectedType === type ? { backgroundColor: TYPE_COLORS[type] } : undefined}
-                aria-label={t(`types.${type}`)}
-                aria-pressed={selectedType === type}
-              >
-                {t(`types.${type}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Damage Class Filter */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-4 h-4 text-foreground/30" />
-            <span className="text-xs font-black uppercase tracking-widest text-foreground/30">
-              {t('moves_page.filter_by_class')}
-            </span>
-            {selectedClass && (
-              <button
-                onClick={() => setSelectedClass(null)}
-                className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors ml-1"
-              >
-                {t('filters.clear_all')}
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {DAMAGE_CLASSES.map((cls) => (
-              <button
-                key={cls}
-                onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
-                className={cn(
-                  'px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-200 border',
-                  selectedClass === cls
-                    ? 'bg-primary text-primary-foreground border-primary shadow-lg'
-                    : 'text-foreground/50 border-white/10 hover:border-white/20 hover:text-foreground/70 bg-white/[0.02]'
-                )}
-                aria-label={t(`moves.damage_class.${cls}`)}
-                aria-pressed={selectedClass === cls}
-              >
-                {t(`moves.damage_class.${cls}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Results count */}
-        <div className="mb-4">
-          <span className="text-xs font-bold text-foreground/30 uppercase tracking-widest">
-            {isLoading
-              ? t('moves_page.loading')
-              : t('moves_page.results_count', { count: filteredMoves.length })}
-          </span>
-        </div>
-
-        {/* Moves Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {Array.from({ length: 16 }).map((_, i) => (
-              <Skeleton key={i} className="h-36 w-full rounded-2xl" />
-            ))}
-          </div>
-        ) : filteredMoves.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-block p-4 bg-white/[0.03] rounded-3xl border border-white/5 mb-4">
-              <Search className="w-8 h-8 text-foreground/20" />
+          <section className="min-w-0 space-y-6">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <StatTile icon={Swords} label={t('moves_page.results_count', { count: stats.total })} value={stats.total} />
+              <StatTile icon={Target} label={t('moves_page.results_count', { count: stats.visible })} value={stats.visible} />
+              <StatTile icon={Zap} label={t('moves.damage_class.physical')} value={stats.physical} />
+              <StatTile icon={Gauge} label={t('moves.damage_class.special')} value={stats.special} />
             </div>
-            <p className="text-lg font-bold text-foreground/40">{t('moves_page.no_results')}</p>
-            <p className="text-sm text-foreground/25 mt-1">{t('moves_page.no_results_desc')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            <AnimatePresence mode="popLayout">
-              {filteredMoves.map((move) => (
-                <MoveCard key={move.id} move={move} onClick={() => setSelectedMove(move)} t={t} />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+
+            <div className="page-surface p-4 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)]">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">
+                  {isFetching && !isLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  ) : (
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {isFetching && !isLoading ? t('moves_page.loading') : t('moves_page.results_count', { count: filteredMoves.length })}
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+                      {t('moves_page.active_filters', { count: activeFiltersCount })}
+                    </Badge>
+                  )}
+                  <Badge variant="ghost" className="text-[10px] text-foreground/45">
+                    {selectedType ? t(`types.${selectedType}`) : t('moves_page.all_types')}
+                  </Badge>
+                </div>
+              </div>
+
+              {isError ? (
+                <ErrorState
+                  title={t('moves_page.load_error')}
+                  description={t('moves_page.load_error_desc')}
+                  details={error instanceof Error ? error.message : null}
+                  retryLabel={t('common.retry')}
+                  onRetry={() => void refetch()}
+                />
+              ) : isLoading ? (
+                <MovesGridSkeleton />
+              ) : filteredMoves.length === 0 ? (
+                <NoResults
+                  title={t('moves_page.no_results')}
+                  description={t('moves_page.no_results_desc')}
+                  onClear={clearFilters}
+                  clearLabel={t('filters.reset')}
+                />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  <AnimatePresence mode="popLayout">
+                    {filteredMoves.map((move, index) => (
+                      <MoveCard
+                        key={move.id}
+                        move={move}
+                        index={index}
+                        onClick={() => setSelectedMove(move)}
+                        t={t}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </main>
 
-      {/* Detail Modal */}
-      <MoveDetailModal
-        move={selectedMove}
-        open={!!selectedMove}
-        onClose={() => setSelectedMove(null)}
-      />
+      <MoveDetailModal move={selectedMove} open={!!selectedMove} onClose={() => setSelectedMove(null)} />
     </div>
   );
 }
 
 function MoveCard({
   move,
+  index,
   onClick,
   t,
 }: {
   move: MoveListItem;
+  index: number;
   onClick: () => void;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  t: (key: string, options?: { count?: number; defaultValue?: string }) => string;
 }) {
   const typeColor = TYPE_COLORS[move.type] || '#6B7280';
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.25) }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/[0.03] p-4 text-left transition-all duration-300 hover:border-border/90 hover:bg-white/[0.05]"
+      aria-label={move.localizedName}
     >
-      <button
-        onClick={onClick}
-        className="w-full text-left p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/15 hover:bg-white/[0.06] transition-all duration-200 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary/30"
-        aria-label={move.localizedName}
-      >
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-black text-foreground capitalize truncate group-hover:text-primary transition-colors">
-              {move.localizedName}
-            </h3>
-            <span className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest">
-              #{String(move.id).padStart(3, '0')}
-            </span>
-          </div>
-          <Badge
-            className="text-white text-[10px] font-bold px-2 py-0.5 shrink-0"
-            style={{ backgroundColor: typeColor }}
-          >
-            {t(`types.${move.type}`)}
+      <div
+        className="absolute inset-x-0 top-0 h-1.5 rounded-t-[1.5rem]"
+        style={{ backgroundColor: typeColor }}
+      />
+
+      <div className="flex items-start justify-between gap-3 pt-1.5">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/30">
+            #{String(move.id).padStart(3, '0')}
+          </p>
+          <h3 className="mt-1 truncate text-sm font-black uppercase tracking-tight text-foreground/90 transition-colors group-hover:text-primary">
+            {move.localizedName}
+          </h3>
+        </div>
+
+        <Badge className="shrink-0 text-white" style={{ backgroundColor: typeColor }}>
+          {t(`types.${move.type}`)}
+        </Badge>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="border-border/70 text-[10px] text-foreground/55">
+          {t(`moves.damage_class.${move.damage_class}`)}
+        </Badge>
+        {move.generation_id !== null && (
+          <Badge variant="ghost" className="text-[10px] text-foreground/45">
+            {t('moves_page.generation')} {move.generation_id}
           </Badge>
-        </div>
+        )}
+      </div>
 
-        <div className="flex items-center gap-3 mb-2">
-          <Badge variant="outline" className="text-[10px] border-white/10 text-foreground/50 font-bold">
-            {t(`moves.damage_class.${move.damage_class}`)}
-          </Badge>
-        </div>
+      <p className="mt-3 line-clamp-3 text-sm leading-6 text-foreground/45">
+        {move.description || t('moves_page.no_description')}
+      </p>
 
-        <div className="flex items-center gap-3 text-xs text-foreground/50">
-          {move.power !== null ? (
-            <div className="flex items-center gap-1">
-              <Trophy className="w-3 h-3 text-orange-400/70" />
-              <span className="font-bold">{move.power}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 opacity-30">
-              <Trophy className="w-3 h-3" />
-              <span>—</span>
-            </div>
-          )}
-
-          {move.accuracy !== null ? (
-            <div className="flex items-center gap-1">
-              <Target className="w-3 h-3 text-green-400/70" />
-              <span className="font-bold">{move.accuracy}%</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 opacity-30">
-              <Target className="w-3 h-3" />
-              <span>—</span>
-            </div>
-          )}
-
-          {move.pp !== null && (
-            <div className="flex items-center gap-1">
-              <Zap className="w-3 h-3 text-blue-400/70" />
-              <span className="font-bold">{move.pp}</span>
-            </div>
-          )}
-        </div>
-      </button>
-    </motion.div>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <MiniStat label={t('moves.power_short')} value={move.power !== null ? String(move.power) : '—'} />
+        <MiniStat label={t('moves.accuracy_short')} value={move.accuracy !== null ? `${move.accuracy}%` : '—'} />
+        <MiniStat label={t('moves_page.pp')} value={move.pp !== null ? String(move.pp) : '—'} />
+      </div>
+    </motion.button>
   );
+}
+
+function SmallStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-black/20 px-3 py-2 text-center">
+      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-foreground/30">{label}</p>
+      <p className="mt-1 text-sm font-black text-foreground/80">{value}</p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-black/20 px-3 py-2 text-center">
+      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-foreground/30">{label}</p>
+      <p className="mt-1 text-sm font-black text-foreground/80">{value}</p>
+    </div>
+  );
+}
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="page-surface flex items-center gap-3 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">{label}</p>
+        <p className="mt-1 truncate text-lg font-black text-foreground/90">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function FilterSection({
+  title,
+  icon: Icon,
+  badge,
+  children,
+}: {
+  title: string;
+  icon: LucideIcon;
+  badge?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[1.5rem] border border-border/70 bg-white/[0.02] p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-primary" />
+          <h4 className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">{title}</h4>
+        </div>
+        {badge && (
+          <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-primary">
+            {badge}
+          </span>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SearchInput({
+  value,
+  onChange,
+  onClear,
+  placeholder,
+  clearLabel,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+  placeholder: string;
+  clearLabel: string;
+}) {
+  return (
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" />
+      <input
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-11 w-full rounded-2xl border border-border/70 bg-black/20 pl-11 pr-11 text-sm text-foreground placeholder:text-foreground/30 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-foreground/30 transition-colors hover:text-foreground"
+          aria-label={clearLabel}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MovesGridSkeleton() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {Array.from({ length: 12 }).map((_, index) => (
+        <div key={index} className="rounded-[1.5rem] border border-border/70 bg-white/[0.03] p-4">
+          <Skeleton className="h-3 w-12 rounded-full" />
+          <Skeleton className="mt-3 h-5 w-3/4 rounded-full" />
+          <Skeleton className="mt-3 h-7 w-24 rounded-full" />
+          <Skeleton className="mt-4 h-14 w-full rounded-2xl" />
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <Skeleton className="h-12 rounded-2xl" />
+            <Skeleton className="h-12 rounded-2xl" />
+            <Skeleton className="h-12 rounded-2xl" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MovesPageShell({
+  loading = false,
+  title,
+  subtitle,
+  eyebrow,
+}: {
+  loading?: boolean;
+  title: string;
+  subtitle: string;
+  eyebrow: string;
+}) {
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <BackgroundGlow />
+      <Header />
+
+      <main className="page-shell pb-20 pt-8">
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+          eyebrow={eyebrow}
+          icon={Swords}
+        />
+
+        {loading ? <MovesSkeleton /> : null}
+      </main>
+    </div>
+  );
+}
+
+function MovesSkeleton() {
+  return (
+    <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="page-surface h-[60vh] p-4">
+        <Skeleton className="h-11 w-full rounded-2xl" />
+        <Skeleton className="mt-4 h-16 w-full rounded-[1.5rem]" />
+        <Skeleton className="mt-3 h-24 w-full rounded-[1.5rem]" />
+        <Skeleton className="mt-3 h-24 w-full rounded-[1.5rem]" />
+      </div>
+      <div className="page-surface min-h-[60vh] p-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton key={index} className="h-44 rounded-[1.5rem]" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({
+  title,
+  description,
+  details,
+  retryLabel,
+  onRetry,
+}: {
+  title: string;
+  description: string;
+  details: string | null;
+  retryLabel: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border/70 bg-white/[0.02] px-6 py-16 text-center">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <AlertCircle className="h-8 w-8 text-primary" />
+      </div>
+      <h3 className="text-xl font-black uppercase tracking-[0.2em] text-foreground/90">{title}</h3>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-foreground/35">{description}</p>
+      {details && (
+        <p className="mt-3 max-w-xl rounded-2xl border border-border/70 bg-black/20 px-4 py-3 font-mono text-[11px] leading-5 text-foreground/45">
+          {details}
+        </p>
+      )}
+      <Button className="mt-6 h-11 px-5 uppercase tracking-[0.18em]" onClick={onRetry}>
+        <RefreshCw className="h-4 w-4" />
+        {retryLabel}
+      </Button>
+    </div>
+  );
+}
+
+function NoResults({
+  title,
+  description,
+  onClear,
+  clearLabel,
+}: {
+  title: string;
+  description: string;
+  onClear: () => void;
+  clearLabel: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-border/70 bg-white/[0.02] px-6 py-16 text-center">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <X className="h-8 w-8 text-primary" />
+      </div>
+      <h3 className="text-xl font-black uppercase tracking-[0.2em] text-foreground/90">{title}</h3>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-foreground/35">{description}</p>
+      <Button variant="outline" className="mt-6 h-11 px-5 uppercase tracking-[0.18em]" onClick={onClear}>
+        <RefreshCw className="h-4 w-4" />
+        {clearLabel}
+      </Button>
+    </div>
+  );
+}
+
+function BackgroundGlow() {
+  return (
+    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="absolute top-[6%] -left-[8%] h-[28rem] w-[28rem] rounded-full bg-primary/8 blur-[120px]" />
+      <div className="absolute bottom-[8%] -right-[6%] h-[26rem] w-[26rem] rounded-full bg-blue-500/8 blur-[110px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--background)_78%)] opacity-80" />
+    </div>
+  );
+}
+
+function getMoveDescription(move: GraphQLMoveData) {
+  const flavorText = move.pokemon_v2_moveflavortexts?.[0]?.flavor_text?.replace(/\n/g, ' ').trim();
+  const shortEffect = move.pokemon_v2_moveeffect?.pokemon_v2_moveeffecteffecttexts?.[0]?.short_effect?.replace(/\n/g, ' ').trim();
+  const effect = move.pokemon_v2_moveeffect?.pokemon_v2_moveeffecteffecttexts?.[0]?.effect?.replace(/\n/g, ' ').trim();
+
+  return flavorText || shortEffect || effect || '';
 }

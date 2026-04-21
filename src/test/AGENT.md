@@ -1,13 +1,14 @@
-## Files
+# Test Infrastructure
 
-| File | Purpose |
-|------|---------|
-| `setup.ts` | Vitest setup — global mocks, test utilities, environment |
+## Files
+- `setup.ts` Vitest setup, mocks, helpers, and environment wiring
 
 ## Conventions
+- Keep shared test infrastructure here.
+- Prefer co-located tests next to source files.
+- Use this folder for shared setup and mocks, not feature-specific assertions.
+- Update tests when business logic changes.
 
-- Tests co-located with source files (`*.test.ts` next to source)
-- This directory: shared test infrastructure only
-- Run all: `npx vitest`
-- Run single: `npx vitest path/to/file.test.ts`
-- Update tests when modifying business logic
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

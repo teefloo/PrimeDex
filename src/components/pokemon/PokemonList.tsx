@@ -2,16 +2,27 @@
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { usePrimeDexStore } from '@/store/primedex';
-import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary, getPokemonByGeneration } from '@/lib/api';
+import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary } from '@/lib/api';
 import { pokemonKeys } from '@/lib/api/keys';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
-import { useEffect, useRef, useMemo, useState } from 'react';
-import { useInView, motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, SearchX } from 'lucide-react';
 import { PokemonBasicData, GraphQLPokemonSummary, LocalizedNameEntry, PokemonSpecies } from '@/types/pokemon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
+
+type PokemonStatName = 'hp' | 'attack' | 'defense' | 'speed' | 'special-attack' | 'special-defense';
+
+interface PokemonStatMap {
+  hp?: number;
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  'special-attack'?: number;
+  'special-defense'?: number;
+}
 
 interface PokemonResultItem {
   id: number;
@@ -22,7 +33,7 @@ interface PokemonResultItem {
   generation_id?: number;
   height?: number;
   weight?: number;
-  stats?: number[];
+  stats?: PokemonStatMap;
   base_stat_total?: number;
   is_legendary?: boolean;
   is_mythical?: boolean;
@@ -107,7 +118,7 @@ export default function PokemonList() {
 
   // 1. Summary Data : Loaded on demand (Search or Filters)
   const { data: allSummary, isLoading: isLoadingSummary } = useQuery({
-    queryKey: pokemonKeys.allSummary(resolvedLang),
+    queryKey: pokemonKeys.allSummary(),
     queryFn: () => getAllPokemonSummary(),
     enabled: !isBasicMode || !!searchTerm, // Load only if filtering or searching
     staleTime: 24 * 60 * 60 * 1000,
@@ -115,8 +126,8 @@ export default function PokemonList() {
   });
 
   // 2. Detailed Data : Loaded ONLY if advanced filters are used
-  const { data: allDetailed, isLoading: isLoadingDetailed, isFetching: isFetchingDetailed, error: detailedError } = useQuery({
-    queryKey: pokemonKeys.allDetailed(resolvedLang),
+  const { data: allDetailed, isLoading: isLoadingDetailed, error: detailedError } = useQuery({
+    queryKey: pokemonKeys.allDetailed(),
     queryFn: () => getAllPokemonDetailed(),
     enabled: isAdvancedFilterActive,
     staleTime: 24 * 60 * 60 * 1000,
@@ -132,21 +143,13 @@ export default function PokemonList() {
     isFetchingNextPage,
     isLoading: isLoadingInfinite,
   } = useInfiniteQuery({
-    queryKey: pokemonKeys.lists(resolvedLang),
+    queryKey: pokemonKeys.lists(),
     queryFn: getPokemonList,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextParam,
     enabled: isBasicMode,
     staleTime: 60 * 60 * 1000,
     gcTime: 2 * 60 * 60 * 1000, // Keep pages 2h in GC
-  });
-
-  // 4. Mode Filtre par Génération — data integrated into filteredAndSortedResults
-  const { data: genPokemon } = useQuery({
-    queryKey: ['genPokemon', selectedGeneration, resolvedLang],
-    queryFn: () => (selectedGeneration ? getPokemonByGeneration(selectedGeneration.toString()) : Promise.resolve([])),
-    enabled: !!selectedGeneration,
-    staleTime: 24 * 60 * 60 * 1000,
   });
 
   const transformedSummary = useMemo(() => {
@@ -194,7 +197,12 @@ export default function PokemonList() {
         id: p.id,
         height: p.height ?? 0,
         weight: p.weight ?? 0,
-        stats: p.pokemon_v2_pokemonstats?.map(s => s.base_stat) || [],
+        stats: p.pokemon_v2_pokemonstats?.reduce<PokemonStatMap>((acc, stat) => {
+          const statName = stat.pokemon_v2_stat?.name as PokemonStatName | undefined;
+          if (!statName) return acc;
+          acc[statName] = stat.base_stat;
+          return acc;
+        }, {}) || {},
         base_stat_total: p.pokemon_v2_pokemonstats?.reduce((acc, curr) => acc + curr.base_stat, 0) || 0,
         is_legendary: p.pokemon_v2_pokemonspecy?.is_legendary || false,
         is_mythical: p.pokemon_v2_pokemonspecy?.is_mythical || false,
@@ -210,16 +218,10 @@ export default function PokemonList() {
   }, [allDetailed]);
 
   const [displayLimit, setDisplayLimit] = useState(20);
-  const currentFiltersKey = useMemo(() => JSON.stringify({
-    searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, 
-    isLegendary, isMythical, selectedEggGroups, selectedColors, 
-    selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, 
-    minHp, heightRange, weightRange, isBasicMode, showCaughtOnly
-  }), [searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, showCaughtOnly]);
 
   useEffect(() => {
     setDisplayLimit(20);
-  }, [currentFiltersKey]);
+  }, [searchTerm, selectedTypes, selectedGeneration, showFavoritesOnly, isLegendary, isMythical, selectedEggGroups, selectedColors, selectedShapes, minBaseStats, minAttack, minDefense, minSpeed, minHp, heightRange, weightRange, isBasicMode, showCaughtOnly]);
 
   const filteredAndSortedResults = useMemo(() => {
     let results: PokemonResultItem[] = [];
@@ -301,10 +303,10 @@ export default function PokemonList() {
       if (selectedColors.length > 0) results = results.filter(p => p.color && selectedColors.includes(p.color));
       if (selectedShapes.length > 0) results = results.filter(p => p.shape && selectedShapes.includes(p.shape));
       if (minBaseStats > 0) results = results.filter(p => (p.base_stat_total || 0) >= minBaseStats);
-      if (minHp > 0) results = results.filter(p => p.stats && p.stats[0] >= minHp);
-      if (minAttack > 0) results = results.filter(p => p.stats && p.stats[1] >= minAttack);
-      if (minDefense > 0) results = results.filter(p => p.stats && p.stats[2] >= minDefense);
-      if (minSpeed > 0) results = results.filter(p => p.stats && p.stats[5] >= minSpeed);
+      if (minHp > 0) results = results.filter(p => (p.stats?.hp || 0) >= minHp);
+      if (minAttack > 0) results = results.filter(p => (p.stats?.attack || 0) >= minAttack);
+      if (minDefense > 0) results = results.filter(p => (p.stats?.defense || 0) >= minDefense);
+      if (minSpeed > 0) results = results.filter(p => (p.stats?.speed || 0) >= minSpeed);
 
       if (heightRange[0] > 0 || heightRange[1] < 25) {
         const minH = heightRange[0];
@@ -330,6 +332,11 @@ export default function PokemonList() {
           return meetsMin && meetsMax;
         });
       }
+    }
+
+    // Fast path: basic mode with default ID sort is already ordered from API
+    if (isBasicMode && sortBy === 'id-asc') {
+      return results;
     }
 
     const sortedResults = [...results];
@@ -363,9 +370,8 @@ export default function PokemonList() {
 
   const displayedPokemon = useMemo(() => {
     if (!filteredAndSortedResults) return [];
-    if (isBasicMode) return filteredAndSortedResults;
     return filteredAndSortedResults.slice(0, displayLimit);
-  }, [filteredAndSortedResults, displayLimit, isBasicMode]);
+  }, [filteredAndSortedResults, displayLimit]);
 
   const hasMoreFiltered = !isBasicMode && filteredAndSortedResults !== null && displayLimit < filteredAndSortedResults.length;
 
@@ -373,7 +379,7 @@ export default function PokemonList() {
     if (isBasicMode && hasNextPage) {
       fetchNextPage();
     }
-    setDisplayLimit(prev => prev + 20);
+    setDisplayLimit(prev => prev + 40);
   };
 
   const useAnimations = displayedPokemon.length < 30;
@@ -385,22 +391,9 @@ export default function PokemonList() {
 
   if (isDataLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2 mt-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 sm:gap-2 px-1 sm:px-4 mt-8">
         {Array.from({ length: 10 }).map((_, i) => <PokemonCardSkeleton key={i} />)}
       </div>
-    );
-  }
-
-  if (detailedError) {
-    return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
-        <SearchX className="w-20 h-20 text-red-500/40" />
-        <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.error_loading')}</h3>
-        <p className="text-sm text-foreground/40 max-w-md">{(detailedError as Error).message || t('list.error_desc')}</p>
-        <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
-          <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
-        </Button>
-      </motion.div>
     );
   }
 
@@ -437,18 +430,18 @@ export default function PokemonList() {
       '@type': 'ListItem',
       position: idx + 1,
       name: p.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || p.name,
-      url: `https://primedex.vercel.app/pokemon/${p.name}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app'}/pokemon/${p.name}`,
     })),
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-2 pb-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       {!isBasicMode && (
-        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-white/5 mx-2 mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-white/5 mx-2 mt-4">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t('list.results')}</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
@@ -461,12 +454,12 @@ export default function PokemonList() {
         </div>
       )}
 
-      <motion.div layout={useAnimations} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 px-2">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-y-0.5 gap-x-2 px-2">
         {useAnimations ? (
           <AnimatePresence mode="popLayout">
             {displayedPokemon.map((p, idx) => (
-              <motion.div layout key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
-                <PokemonCard name={p.name} url={p.url} index={idx} initialData={buildInitialData(p)} />
+              <motion.div key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
+                <PokemonCard name={p.name} index={idx} initialData={buildInitialData(p)} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -477,7 +470,7 @@ export default function PokemonList() {
             </div>
           ))
         )}
-      </motion.div>
+      </div>
 
       {(isBasicMode || hasMoreFiltered) && (
         <div className="flex justify-center p-8">
@@ -500,4 +493,3 @@ export default function PokemonList() {
     </div>
   );
 }
-

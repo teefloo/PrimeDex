@@ -25,6 +25,7 @@ export default function TypesLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
   return (
     <>
       <script
@@ -37,7 +38,7 @@ export default function TypesLayout({
             applicationCategory: 'GameApplication',
             operatingSystem: 'All',
             description: 'Interactive type chart showing strengths, weaknesses, resistances, and immunities for all 18 Pokémon types.',
-            url: 'https://primedex.vercel.app/types',
+            url: `${baseUrl}/types`,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
           }),
         }}

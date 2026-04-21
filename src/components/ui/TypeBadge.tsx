@@ -10,7 +10,7 @@ interface TypeBadgeProps {
 export default function TypeBadge({ type, size = 'md', className }: TypeBadgeProps) {
   const color = TYPE_COLORS[type] || '#A8A77A';
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-[11px] md:text-[10px]',
+    sm: 'px-2 py-0.5 text-[10px] sm:text-[11px]',
     md: 'px-3 py-1 text-[10px]',
     lg: 'px-4 py-1.5 text-xs',
   };
@@ -22,7 +22,7 @@ export default function TypeBadge({ type, size = 'md', className }: TypeBadgePro
         sizeClasses[size],
         className
       )}
-      style={{ backgroundColor: `${color}cc`, borderColor: color }}
+      style={{ backgroundColor: `${color}d9`, borderColor: color }}
     >
       {type}
     </span>

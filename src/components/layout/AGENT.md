@@ -1,14 +1,19 @@
-## Components
+# Layout Components
 
-| Component | Purpose |
-|-----------|---------|
-| `Header.tsx` | Top nav bar with logo, search, nav links |
-| `Breadcrumbs.tsx` | Navigation breadcrumb trail |
-| `HeroSection.tsx` | Landing page hero |
-| `SettingsModal.tsx` | Settings dialog (language, theme, preferences) |
+## Components
+- `Header.tsx` top nav with logo, search, and links
+- `Breadcrumbs.tsx` breadcrumb trail
+- `HeroSection.tsx` landing hero
+- `SettingsModal.tsx` shared settings dialog
+- `SiteFooter.tsx` shared footer
 
 ## Conventions
+- Use across multiple routes.
+- Put `Header` and `Breadcrumbs` in the root layout.
+- Open `SettingsModal` from shared state, not page-local state.
+- Keep shell elements responsive and click-safe.
+- Icon-only controls need `aria-label`.
 
-- Used across multiple routes
-- Header and Breadcrumbs appear in root layout
-- SettingsModal triggered globally via state management
+## Commit Attribution
+AI-authored commits MUST include:
+`Co-authored-by: Gemini CLI <agent@gemini.google.com>`

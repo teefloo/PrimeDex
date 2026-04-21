@@ -58,9 +58,15 @@ export const PokemonMoves = ({ pokemonName }: PokemonMovesProps) => {
     );
   }
 
+  const sortedMoves = [...moves].sort((a, b) => {
+    const nameA = a.pokemon_v2_move.pokemon_v2_movenames?.[0]?.name || a.pokemon_v2_move.name;
+    const nameB = b.pokemon_v2_move.pokemon_v2_movenames?.[0]?.name || b.pokemon_v2_move.name;
+    return nameA.localeCompare(nameB);
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {moves.map((moveData: GraphQLPokemonMoveData) => {
+      {sortedMoves.map((moveData: GraphQLPokemonMoveData) => {
         const move = moveData.pokemon_v2_move;
         const moveNameInternal = move.name;
         const localizedName = move.pokemon_v2_movenames?.[0]?.name || moveNameInternal;

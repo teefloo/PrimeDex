@@ -19,10 +19,10 @@ export default function RecentlyViewed() {
   if (!mounted || history.length === 0) return null;
 
   return (
-    <section className="mt-20 px-4">
+    <section className="mt-4 px-4">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-secondary/50 rounded-xl">
+          <div className="p-2 bg-secondary/50 rounded-xl border border-border/60">
             <History className="w-5 h-5 text-foreground/60" />
           </div>
           <div>
@@ -48,7 +48,7 @@ export default function RecentlyViewed() {
           <Link key={`${p.id}-${idx}`} href={`/pokemon/${p.name}`}>
             <motion.div 
               whileHover={{ y: -5, scale: 1.05 }}
-              className="glass-panel p-3 rounded-2xl flex flex-col items-center text-center gap-2 group border-white/5 hover:border-primary/20 transition-all"
+              className="glass-panel p-3 rounded-2xl flex flex-col items-center text-center gap-2 group border-border/60 hover:border-primary/20 transition-all"
             >
               <div className="relative w-12 h-12">
                 <div className="absolute inset-0 bg-primary/5 rounded-full blur-lg group-hover:bg-primary/10 transition-colors" />
@@ -62,7 +62,7 @@ export default function RecentlyViewed() {
                 />
               </div>
               <div className="space-y-0.5">
-                <p className="text-[11px] md:text-[10px] font-black text-foreground/30">{formatId(p.id)}</p>
+                <p className="text-[10px] sm:text-[11px] font-black text-foreground/30">{formatId(p.id)}</p>
                 <p className="text-[10px] font-black capitalize truncate max-w-full text-foreground/70 group-hover:text-primary transition-colors">{p.name}</p>
               </div>
             </motion.div>

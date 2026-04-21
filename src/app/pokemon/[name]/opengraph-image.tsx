@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
-import { getPokemonDetail } from '@/lib/api';
+import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
+import { getBaseSpeciesName } from '@/lib/form-names';
+import { formatPokemonSlugName } from '@/lib/utils';
 
 export const runtime = 'edge';
 export const alt = 'Pokémon Details — PrimeDex';
@@ -18,8 +20,14 @@ export default async function Image({ params }: { params: { name: string } }) {
   const name = params.name;
 
   try {
-    const pokemon = await getPokemonDetail(name);
-    const displayName = pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1);
+    const baseName = getBaseSpeciesName(name);
+    const [pokemon, species] = await Promise.all([
+      getPokemonDetail(name),
+      getPokemonSpecies(baseName).catch(() => null),
+    ]);
+    const baseLocalizedName = species?.names?.find((entry) => entry.language.name === 'en')?.name
+      || baseName.charAt(0).toUpperCase() + baseName.slice(1);
+    const displayName = name.includes('-') ? formatPokemonSlugName(name) : baseLocalizedName;
     const artwork = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default;
     const mainType = pokemon.types[0].type.name;
     const mainColor = TYPE_COLORS[mainType] || '#A8A77A';

@@ -29,11 +29,11 @@ export default function RegionFilter() {
       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
       className="w-full pb-4 pt-2"
     >
-      <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide">
+      <div className="flex flex-nowrap items-center gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide lg:flex-wrap">
         {/* Region label */}
         <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/8 rounded-full border border-primary/15 shrink-0">
           <Map className="w-3.5 h-3.5 text-primary/70" />
-          <span className="text-[11px] md:text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
+          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
         </div>
 
         <AnimatePresence mode="popLayout">
