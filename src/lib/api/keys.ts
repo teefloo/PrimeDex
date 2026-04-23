@@ -7,6 +7,7 @@ export const pokemonKeys = {
   details: () => [...pokemonKeys.all, 'detail'] as const,
   detail: (name: string, lang: string) => [...pokemonKeys.details(), name, lang] as const,
   species: (name: string, lang: string) => [...pokemonKeys.all, 'species', name, lang] as const,
+  summarySlice: (offset: number, limit: number) => [...pokemonKeys.all, 'summary-slice', offset, limit] as const,
   types: () => [...pokemonKeys.all, 'type'] as const,
   type: (type: string) => [...pokemonKeys.types(), type] as const,
   encounters: (id: number) => [...pokemonKeys.all, 'encounters', id] as const,

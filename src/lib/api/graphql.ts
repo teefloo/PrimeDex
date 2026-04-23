@@ -44,6 +44,30 @@ const buildPokemonSummarySelection = () => `
   }
 `;
 
+export const getPokemonSummarySlice = async (
+  limit = 80,
+  offset = 0,
+): Promise<GraphQLPokemonSummary[]> => {
+  const cacheKey = `pokemon-summary-slice-v1-${offset}-${limit}`;
+  const cached = await getCachedData<GraphQLPokemonSummary[]>(cacheKey, true);
+  if (cached) return cached;
+
+  const { data } = await graphqlClient.post<{ data?: { pokemon_v2_pokemon?: GraphQLPokemonSummary[] } }>('/graphql/v1beta', {
+    query: `
+      query GetPokemonSummarySlice($limit: Int!, $offset: Int!) {
+        pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}) {
+          ${buildPokemonSummarySelection()}
+        }
+      }
+    `,
+    variables: { limit, offset },
+  });
+
+  const results = data?.data?.pokemon_v2_pokemon ?? [];
+  await setCachedData(cacheKey, results);
+  return results;
+};
+
 const buildPokemonDetailedSelection = () => `
   id
   name
@@ -226,6 +250,30 @@ export const getAllPokemonSearchIndex = async (): Promise<GraphQLPokemonSearchIn
   } catch (error) {
     throw error;
   }
+};
+
+export const getPokemonDetailedByType = async (type: string): Promise<PokemonBasicData[]> => {
+  const cacheKey = `pokemon-detailed-by-type-v1-${type}`;
+  const cached = await getCachedData<PokemonBasicData[]>(cacheKey, true);
+  if (cached) return cached;
+
+  const { data } = await graphqlClient.post<{ data?: { pokemon_v2_pokemon?: PokemonBasicData[] } }>('/graphql/v1beta', {
+    query: `
+      query GetPokemonDetailedByType($type: String!) {
+        pokemon_v2_pokemon(
+          where: {pokemon_v2_pokemontypes: {pokemon_v2_type: {name: {_eq: $type}}}}
+          order_by: {id: asc}
+        ) {
+          ${buildPokemonDetailedSelection()}
+        }
+      }
+    `,
+    variables: { type },
+  });
+
+  const results = data?.data?.pokemon_v2_pokemon ?? [];
+  await setCachedData(cacheKey, results);
+  return results;
 };
 
 export const getAllPokemonDetailed = async (): Promise<PokemonBasicData[]> => {

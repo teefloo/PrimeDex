@@ -4,7 +4,8 @@ import Header from '@/components/layout/Header';
 import PageHeader from '@/components/layout/PageHeader';
 import { TYPE_COLORS } from '@/types/pokemon';
 import { useQuery } from '@tanstack/react-query';
-import { getTypeRelations, getAllPokemonDetailed } from '@/lib/api';
+import { getTypeRelations } from '@/lib/api';
+import { getPokemonDetailedByType } from '@/lib/api/graphql';
 import { 
   ShieldCheck, 
   ShieldAlert,
@@ -46,8 +47,8 @@ export default function TypesPage() {
   });
 
   const { data: allPokemon } = useQuery({
-    queryKey: ['allPokemonDetailed'],
-    queryFn: getAllPokemonDetailed,
+    queryKey: ['pokemonDetailedByType', selectedType],
+    queryFn: () => getPokemonDetailedByType(selectedType),
     staleTime: 30 * 60 * 1000,
   });
 

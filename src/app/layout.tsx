@@ -126,32 +126,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://pokeapi.co" />
         <link rel="preconnect" href="https://raw.githubusercontent.com" />
         <link rel="preconnect" href="https://beta.pokeapi.co" />
-        <link rel="preconnect" href="https://api.tcgdex.net" />
-        <link rel="preconnect" href="https://assets.tcgdex.net" />
         <link rel="dns-prefetch" href="https://pokeapi.co" />
         <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
         <link rel="dns-prefetch" href="https://beta.pokeapi.co" />
-        <link rel="dns-prefetch" href="https://api.tcgdex.net" />
-        <link rel="dns-prefetch" href="https://assets.tcgdex.net" />
-        {/* Deferred load for non-critical card CSS */}
-        <link rel="preload" href="/pokemon-cards/css/all-cards.css" as="style" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var l = document.createElement('link');
-                l.rel = 'stylesheet';
-                l.href = '/pokemon-cards/css/all-cards.css';
-                l.media = 'print';
-                l.onload = function() { this.media = 'all'; };
-                document.head.appendChild(l);
-              })();
-            `,
-          }}
-        />
-        <noscript>
-          <link rel="stylesheet" href="/pokemon-cards/css/all-cards.css" />
-        </noscript>
         <script
           id="website-jsonld"
           type="application/ld+json"

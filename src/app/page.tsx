@@ -4,6 +4,7 @@ import RecentlyViewed from '@/components/pokemon/RecentlyViewed';
 import HeroSection from '@/components/layout/HeroSection';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { getPokemonList } from '@/lib/api';
+import { getPokemonSummarySlice } from '@/lib/api/graphql';
 import { pokemonKeys } from '@/lib/api/keys';
 
 export default async function Home() {
@@ -14,6 +15,10 @@ export default async function Home() {
     queryKey: pokemonKeys.lists(),
     queryFn: getPokemonList,
     initialPageParam: 0,
+  });
+  await queryClient.prefetchQuery({
+    queryKey: pokemonKeys.summarySlice(0, 80),
+    queryFn: () => getPokemonSummarySlice(80, 0),
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';

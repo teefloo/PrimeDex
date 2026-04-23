@@ -10,7 +10,6 @@ interface TCGCardItemProps {
   card: TCGCard;
   index?: number;
   onClick?: (card: TCGCard) => void;
-  onHover?: (card: TCGCard) => void;
   variant?: 'default' | 'compact' | 'list';
 }
 
@@ -18,22 +17,17 @@ export const TCGCardItem = memo(function TCGCardItem({
   card,
   index = 0,
   onClick,
-  onHover,
   variant = 'default',
 }: TCGCardItemProps) {
   const { t } = useTranslation();
 
   const cardImage = useMemo(
-    () => (card.image ? `${card.image}/high.webp` : '/images/card-placeholder.webp'),
+    () => (card.image ? `${card.image}/high.webp` : '/images/card-placeholder.svg'),
     [card.image],
   );
 
   const handleClick = () => {
     if (onClick) onClick(card);
-  };
-
-  const handleHover = () => {
-    if (onHover) onHover(card);
   };
 
   if (variant === 'list') {
@@ -46,8 +40,6 @@ export const TCGCardItem = memo(function TCGCardItem({
         whileHover={{ y: -2 }}
         whileTap={{ scale: 0.99 }}
         onClick={handleClick}
-        onMouseEnter={handleHover}
-        onFocus={handleHover}
         className="block w-full cursor-pointer bg-transparent text-left"
         aria-label={t('tcg.open_card_detail', { name: card.name })}
       >
@@ -73,8 +65,6 @@ export const TCGCardItem = memo(function TCGCardItem({
       whileTap={{ scale: 0.98 }}
       className="group block w-full cursor-pointer bg-transparent text-left"
       onClick={handleClick}
-      onMouseEnter={handleHover}
-      onFocus={handleHover}
       aria-label={t('tcg.open_card_detail', { name: card.name })}
     >
       <Image

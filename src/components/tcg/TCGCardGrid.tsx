@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
   ChevronDown,
   Loader2,
@@ -19,7 +19,7 @@ import type { TCGCard, TCGCardFilters } from '@/types/tcg';
 import { TCGCardItem, TCGCardItemSkeleton } from './TCGCardItem';
 import { TCGFilters } from './TCGFilters';
 import { TCGCardDetailModal } from './TCGCardDetailModal';
-import { DEFAULT_TCG_CARD_FILTERS, getTCGCard, searchCards } from '@/lib/api/tcg';
+import { DEFAULT_TCG_CARD_FILTERS, searchCards } from '@/lib/api/tcg';
 import { tcgKeys } from '@/lib/api/keys';
 import { useMounted } from '@/hooks/useMounted';
 import { usePrimeDexStore } from '@/store/primedex';
@@ -31,7 +31,6 @@ export function TCGCardGrid() {
   const { t } = useTranslation();
   const mounted = useMounted();
   const { language } = usePrimeDexStore();
-  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<TCGCardFilters>(DEFAULT_TCG_CARD_FILTERS);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCard, setSelectedCard] = useState<TCGCard | null>(null);
@@ -68,14 +67,6 @@ export function TCGCardGrid() {
     setSelectedCard(card);
     setIsModalOpen(true);
   }, []);
-
-  const handleCardHover = useCallback((card: TCGCard) => {
-    void queryClient.prefetchQuery({
-      queryKey: tcgKeys.card(card.id, resolvedLang),
-      queryFn: () => getTCGCard(card.id, resolvedLang),
-      staleTime: 30 * 60 * 1000,
-    });
-  }, [queryClient, resolvedLang]);
 
   const loadMore = useCallback(() => {
     if (!hasNextPage) return;
@@ -237,30 +228,16 @@ export function TCGCardGrid() {
           ) : hasResults ? (
             <>
               <div className={cn('grid gap-4 md:gap-6', viewMode === 'grid' ? 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1')}>
-                <AnimatePresence mode="popLayout">
-                  {cards.map((card, index) => (
-                    <motion.div
-                      layout
-                      key={card.id}
-                      initial={{ opacity: 0, y: 24, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{
-                        duration: 0.35,
-                        delay: Math.min(index * 0.03, 0.35),
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                    >
-                      <TCGCardItem
-                        card={card}
-                        index={index}
-                        onClick={handleCardClick}
-                        onHover={handleCardHover}
-                        variant={viewMode === 'grid' ? 'default' : 'list'}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {cards.map((card, index) => (
+                  <div key={card.id}>
+                    <TCGCardItem
+                      card={card}
+                      index={index}
+                      onClick={handleCardClick}
+                      variant={viewMode === 'grid' ? 'default' : 'list'}
+                    />
+                  </div>
+                ))}
               </div>
 
               {hasNextPage && (

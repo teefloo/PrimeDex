@@ -24,7 +24,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation, loadLanguage } from '@/lib/i18n';
 import { usePrimeDexStore } from '@/store/primedex';
-import { getAllPokemonSummary } from '@/lib/api/graphql';
+import { getAllPokemonSearchIndex } from '@/lib/api/graphql';
 import { pokemonKeys } from '@/lib/api/keys';
 import PrimeDexLogo from '@/components/ui/PrimeDexLogo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -85,8 +85,9 @@ export default function Header() {
   const resolvedLang = mounted ? (language === 'auto' ? (systemLanguage || 'en') : language) : 'en';
 
   const { data: allPokemon } = useQuery({
-    queryKey: pokemonKeys.allSummary(),
-    queryFn: () => getAllPokemonSummary(),
+    queryKey: pokemonKeys.allSearchIndex(),
+    queryFn: () => getAllPokemonSearchIndex(),
+    enabled: localSearch.trim().length > 0,
     staleTime: 24 * 60 * 60 * 1000,
   });
 

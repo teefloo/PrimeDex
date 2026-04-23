@@ -325,7 +325,7 @@ export const getCardsBySet = async (setId: string, lang = 'en'): Promise<TCGCard
  */
 export const getAllSets = async (lang = 'en'): Promise<TCGSet[]> => {
   const tcgLang = resolveTcgLang(lang);
-    const cacheKey = `tcg-all-sets-v4-${tcgLang}`;
+  const cacheKey = `tcg-all-sets-v4-${tcgLang}`;
 
   try {
     const cached = await getCachedData<TCGSet[]>(cacheKey);
@@ -334,39 +334,7 @@ export const getAllSets = async (lang = 'en'): Promise<TCGSet[]> => {
     const { data } = await tcgClient.get<RawSet[]>(`/${tcgLang}/sets`);
     const sets = data.map(normaliseSet).filter((set) => (set.totalCards ?? 0) > 0);
 
-    const enrichedSets = await Promise.all(
-      sets.map(async (set) => {
-        try {
-          const details = await getSetById(set.id, tcgLang);
-          return {
-            ...set,
-            releaseDate: details?.releaseDate ?? set.releaseDate,
-          };
-        } catch (error) {
-          console.warn(`[TCG API] Failed to enrich set ${set.id}:`, error);
-          return set;
-        }
-      }),
-    );
-
-    if (tcgLang !== 'en') {
-      try {
-        const { data: enSets } = await tcgClient.get<RawSet[]>('/en/sets');
-        const enSetMap = new Map(enSets.map((set) => [set.id, set]));
-
-        for (const set of enrichedSets) {
-          const enSet = enSetMap.get(set.id);
-          if (enSet) {
-            set.logo = enSet.logo;
-            set.symbol = enSet.symbol;
-          }
-        }
-      } catch (error) {
-        console.warn('[TCG API] Failed to fetch English set logos:', error);
-      }
-    }
-
-    const sortedSets = [...enrichedSets].sort((a, b) => {
+    const sortedSets = [...sets].sort((a, b) => {
       const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : Number.NEGATIVE_INFINITY;
       const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : Number.NEGATIVE_INFINITY;
       return dateB - dateA;
@@ -531,6 +499,12 @@ export const getRaritiesForSet = async (setId: string, lang = 'en'): Promise<str
 
     const summaries = await getCardsBySet(setId, tcgLang);
     if (summaries.length === 0) return [];
+
+    const summaryRarities = [...new Set(summaries.map((card) => card.rarity).filter((rarity): rarity is string => Boolean(rarity)))].sort((a, b) => a.localeCompare(b));
+    if (summaryRarities.length > 0) {
+      await setCachedData(cacheKey, summaryRarities);
+      return summaryRarities;
+    }
 
     const total = summaries.length;
     const sampleSize = Math.min(total, 40);

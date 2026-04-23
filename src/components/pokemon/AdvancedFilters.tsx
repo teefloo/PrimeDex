@@ -122,9 +122,9 @@ export default function AdvancedFilters() {
           </Badge>
         )}
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md bg-background/95 backdrop-blur-2xl border-l border-white/10 flex flex-col p-0">
-        <SheetHeader className="p-6 border-b border-white/5">
-          <div className="flex items-center justify-between">
+      <SheetContent className="w-full bg-background/95 backdrop-blur-2xl border-l border-white/10 flex max-h-[calc(100dvh-1rem)] min-h-0 flex-col overflow-hidden p-0 data-[side=right]:sm:max-w-none data-[side=right]:lg:w-[min(56rem,calc(100vw-1rem))]">
+        <SheetHeader className="border-b border-white/5 p-5 pb-4 pr-16 sm:pr-20">
+          <div className="flex items-center justify-between gap-4">
             <SheetTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
               <SlidersHorizontal className="w-6 h-6 text-primary" />
               {t('filters.title')}
@@ -142,8 +142,8 @@ export default function AdvancedFilters() {
           </div>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
-          <div className="space-y-10 pb-10">
+        <ScrollArea className="min-h-0 flex-1 px-5 py-4 md:px-6">
+          <div className="grid gap-4 pb-6 xl:grid-cols-2">
             {/* Generation Filter */}
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 flex items-center gap-2">
@@ -464,8 +464,8 @@ export default function AdvancedFilters() {
           </div>
         </ScrollArea>
 
-        <SheetFooter className="p-6 border-t border-white/5 bg-background/50">
-          <SheetClose render={<Button className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-sm shadow-[0_8px_30px_rgb(255,50,50,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all" />}>
+        <SheetFooter className="border-t border-white/5 bg-background/50 p-4 md:p-5">
+          <SheetClose render={<Button className="h-12 w-full rounded-2xl text-sm font-black uppercase tracking-widest shadow-[0_8px_30px_rgb(255,50,50,0.3)] transition-all hover:scale-[1.01] active:scale-[0.98]" />}>
             {t('filters.apply')}
           </SheetClose>
         </SheetFooter>

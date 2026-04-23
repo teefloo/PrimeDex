@@ -79,7 +79,7 @@ export function TCGCardDetailModal({ card, isOpen, onClose }: TCGCardDetailModal
 
   const displayCard = hydratedCard ?? card;
   const isHydrating = isFetching && !displayCard.category;
-  const cardImage = displayCard.image ? `${displayCard.image}/high.webp` : '/images/card-placeholder.webp';
+  const cardImage = displayCard.image ? `${displayCard.image}/high.webp` : '/images/card-placeholder.svg';
   const titleId = `tcg-card-detail-title-${card.id}`;
   const descriptionId = `tcg-card-detail-description-${card.id}`;
   const totalCards = displayCard.set?.cardCount?.total ?? displayCard.set?.totalCards;

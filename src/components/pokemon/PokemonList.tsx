@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { usePrimeDexStore } from '@/store/primedex';
 import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary } from '@/lib/api';
+import { getPokemonSummarySlice } from '@/lib/api/graphql';
 import { pokemonKeys } from '@/lib/api/keys';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useEffect, useMemo, useState } from 'react';
@@ -125,6 +126,14 @@ export default function PokemonList() {
     gcTime: 48 * 60 * 60 * 1000, // Keep 48h in garbage collection
   });
 
+  const { data: basicSummary } = useQuery({
+    queryKey: pokemonKeys.summarySlice(0, 80),
+    queryFn: () => getPokemonSummarySlice(80, 0),
+    enabled: isBasicMode,
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 48 * 60 * 60 * 1000,
+  });
+
   // 2. Detailed Data : Loaded ONLY if advanced filters are used
   const { data: allDetailed, isLoading: isLoadingDetailed, error: detailedError } = useQuery({
     queryKey: pokemonKeys.allDetailed(),
@@ -153,8 +162,9 @@ export default function PokemonList() {
   });
 
   const transformedSummary = useMemo(() => {
-    if (!allSummary) return [];
-    return allSummary.map((p: GraphQLPokemonSummary) => ({
+    const source = isBasicMode ? basicSummary : allSummary;
+    if (!source) return [];
+    return source.map((p: GraphQLPokemonSummary) => ({
       name: p.name,
       url: `https://pokeapi.co/api/v2/pokemon/${p.id}/`,
       id: p.id,
@@ -167,7 +177,7 @@ export default function PokemonList() {
       })) || [],
       generation_id: p.pokemon_v2_pokemonspecy?.generation_id
     }));
-  }, [allSummary]);
+  }, [allSummary, basicSummary, isBasicMode]);
 
   const buildInitialData = (p: PokemonResultItem) => {
     const localizedNames = p.localizedNames || [];
