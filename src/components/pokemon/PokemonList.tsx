@@ -5,6 +5,7 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { getPokemonList, getAllPokemonDetailed, getAllPokemonSummary } from '@/lib/api';
 import { getPokemonSummarySlice } from '@/lib/api/graphql';
 import { pokemonKeys } from '@/lib/api/keys';
+import { SITE_URL } from '@/lib/site';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -440,7 +441,7 @@ export default function PokemonList() {
       '@type': 'ListItem',
       position: idx + 1,
       name: p.localizedNames?.find((n: LocalizedNameEntry) => n.language === resolvedLang)?.name || p.name,
-      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app'}/pokemon/${p.name}`,
+      url: `${SITE_URL}/pokemon/${p.name}`,
     })),
   };
 

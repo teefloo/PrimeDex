@@ -3,6 +3,7 @@ import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
 import { t } from '@/lib/server-i18n';
 import { getBaseSpeciesName } from '@/lib/form-names';
 import { formatPokemonSlugName } from '@/lib/utils';
+import { SITE_URL } from '@/lib/site';
 
 type Props = {
   params: Promise<{ name: string }>;
@@ -72,7 +73,7 @@ export default async function PokemonLayout({
   params: Promise<{ name: string }>;
 }) {
   const { name } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
   let jsonLd = null;
   let breadcrumbJsonLd = null;
 

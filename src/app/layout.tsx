@@ -7,6 +7,7 @@ import { t } from '@/lib/server-i18n';
 import { AppContent } from "./AppContent";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { getLanguageAlternates, languageToOpenGraphLocale } from "@/lib/languages";
+import { GITHUB_REPO_URL, SITE_URL } from "@/lib/site";
 
 const displayFont = Fraunces({
   subsets: ["latin"],
@@ -32,14 +33,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://primedex.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: t("meta.title"),
     template: "%s | PrimeDex",
   },
   description: t("meta.description"),
   keywords: t("meta.keywords", { returnObjects: true }) as unknown as string[],
-  authors: [{ name: t("meta.author"), url: process.env.NEXT_PUBLIC_APP_URL || "https://primedex.vercel.app" }],
+  authors: [{ name: t("meta.author"), url: SITE_URL }],
   creator: "PrimeDex",
   publisher: "PrimeDex",
   applicationName: "PrimeDex",
@@ -94,7 +95,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
@@ -115,7 +116,7 @@ export default function RootLayout({
     url: baseUrl,
     logo: `${baseUrl}/icon.svg`,
     sameAs: [
-      'https://github.com/Teeflo/PrimeDex',
+      GITHUB_REPO_URL,
     ],
   };
 

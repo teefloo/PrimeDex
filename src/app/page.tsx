@@ -6,6 +6,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 import { getPokemonList } from '@/lib/api';
 import { getPokemonSummarySlice } from '@/lib/api/graphql';
 import { pokemonKeys } from '@/lib/api/keys';
+import { SITE_URL } from '@/lib/site';
 
 export default async function Home() {
   const queryClient = new QueryClient();
@@ -21,7 +22,7 @@ export default async function Home() {
     queryFn: () => getPokemonSummarySlice(80, 0),
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
 
   const jsonLd = {
     '@context': 'https://schema.org',

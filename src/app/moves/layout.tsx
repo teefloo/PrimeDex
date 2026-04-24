@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Pokémon Moves — All Moves Database | PrimeDex',
@@ -36,7 +37,7 @@ export default function MovesLayout({
             applicationCategory: 'GameApplication',
             operatingSystem: 'All',
             description: 'Complete database of all Pokémon moves with detailed stats, effects, and compatible Pokémon lists.',
-            url: 'https://primedex.vercel.app/moves',
+            url: `${SITE_URL}/moves`,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
           }),
         }}

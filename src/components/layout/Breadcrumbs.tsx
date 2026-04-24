@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight, Home } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { SITE_URL } from '@/lib/site';
 
 export function Breadcrumbs() {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
 
   if (pathname === '/' || pathname.startsWith('/pokemon/')) return null;
 

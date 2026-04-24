@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next';
 import { getAllPokemonNames } from '@/lib/api';
+import { SITE_URL } from '@/lib/site';
 
 const stableLastModified = new Date('2026-04-21T00:00:00.000Z');
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
 
   // Get all pokemon names to generate dynamic routes
   const pokemonList = await getAllPokemonNames();

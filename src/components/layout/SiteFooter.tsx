@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import PrimeDexLogo from '@/components/ui/PrimeDexLogo';
+import { GITHUB_REPO_URL } from '@/lib/site';
 
 type FooterLink = {
   href: string;
@@ -101,7 +102,7 @@ export default function SiteFooter() {
   const resourceLinks: FooterLink[] = [
     { href: 'https://pokeapi.co/', label: t('footer.resources.pokeapi'), icon: Globe, external: true },
     { href: 'https://tcgdex.de/', label: t('footer.resources.tcgdex'), icon: Sparkles, external: true },
-    { href: 'https://github.com/Teeflo/PrimeDex', label: t('footer.resources.github'), icon: Github, external: true },
+    { href: GITHUB_REPO_URL, label: t('footer.resources.github'), icon: Github, external: true },
   ];
 
   const legalLinks: FooterLink[] = [

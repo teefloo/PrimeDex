@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { SITE_URL } from '@/lib/site';
 
 export const runtime = 'edge';
 export const alt = 'PrimeDex — The Ultimate Online Pokédex';
@@ -138,7 +139,7 @@ export default async function Image() {
             display: 'flex',
           }}
         >
-          primedex.vercel.app
+          {new URL(SITE_URL).host}
         </div>
       </div>
     ),

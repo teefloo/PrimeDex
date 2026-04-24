@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { t } from '@/lib/server-i18n';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: t('meta.compare_title'),
@@ -25,7 +26,7 @@ export default function CompareLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://primedex.vercel.app';
+  const baseUrl = SITE_URL;
   return (
     <>
       <script
