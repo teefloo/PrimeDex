@@ -61,7 +61,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
     queryKey: tcgKeys.rarities(selectedSet, resolvedLang),
     queryFn: () => getRaritiesForSet(selectedSet as string, resolvedLang),
     staleTime: 60 * 60 * 1000,
-    enabled: mounted && !!selectedSet && activeSection === 'rarity',
+    enabled: mounted && !!selectedSet && (activeSection === 'rarity' || Boolean(filters.selectedRarity)),
   });
 
   const updateFilter = useCallback(

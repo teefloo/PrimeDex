@@ -540,13 +540,15 @@ function SearchInput({
 }) {
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/30" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-4">
+        <Search className="h-4 w-4 text-foreground/30" />
+      </div>
       <input
         type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-2xl border border-border/70 bg-black/20 pl-11 pr-11 text-sm text-foreground placeholder:text-foreground/30 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+        className="relative z-0 h-11 w-full rounded-2xl border border-border/70 bg-black/20 pl-11 pr-11 text-sm text-foreground placeholder:text-foreground/30 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
       />
       {value && (
         <button

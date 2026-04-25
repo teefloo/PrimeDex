@@ -95,6 +95,7 @@ export default function SiteFooter() {
     { href: '/compare', label: t('nav.compare'), icon: Swords },
     { href: '/tcg', label: t('nav.tcg'), icon: LayoutGrid },
     { href: '/types', label: t('nav.types'), icon: Shapes },
+    { href: '/moves', label: t('nav.moves'), icon: Swords },
     { href: '/quiz', label: t('nav.quiz'), icon: BrainCircuit },
     { href: '/favorites', label: t('nav.favorites'), icon: Heart },
   ];

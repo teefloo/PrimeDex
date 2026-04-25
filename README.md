@@ -32,6 +32,7 @@
 | **🔍 Quantum Search** | Multi-dimensional filtering across all 9 generations. Filter by BST, height, weight, legendary status, and complex type combinations. |
 | **🏆 Trial Chambers** | Three distinct quiz modes: **Time Attack**, **Survival**, and **Marathon**. Climb the local leaderboards! |
 | **📦 Living Dex Tracker** | Integrated capture management. Track your journey through every region with persistent state. |
+| **⚔️ Move Library** | Browse Pokémon moves by type, damage class, power, accuracy, and compatible learners. |
 | **🌍 Hyper-Localized** | Fully native experience in 7 languages, including Japanese and Korean, with regional name variants. |
 
 ---
@@ -75,7 +76,9 @@ src/
 ├── app/              # RSC-first Routing & Layouts
 │   ├── compare/      # Technical comparison logic
 │   ├── team/         # Architect & Analysis suite
-│   └── quiz/         # Gamified knowledge trials
+│   ├── quiz/         # Gamified knowledge trials
+│   ├── moves/        # Move catalog and learner explorer
+│   └── tcg/          # Trading card catalog
 ├── components/       # Component Architecture
 │   ├── pokemon/      # Domain-specific logic
 │   └── ui/           # Atomic shadcn/ui primitives

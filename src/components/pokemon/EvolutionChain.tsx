@@ -1019,15 +1019,11 @@ export function EvolutionChain({ url, currentSpeciesName, speciesData }: Evoluti
     const collected: AlternateForm[] = [];
 
     const addFormsFromSpecies = (species: { varieties?: { pokemon: { name: string; url: string } }[] } | null | undefined) => {
-      console.log('[EvolutionChain] addFormsFromSpecies called with:', species ? 'species object' : 'null/undefined', 'varieties:', species?.varieties?.length);
       if (!species?.varieties) {
-        console.log('[EvolutionChain] No varieties found in species');
         return;
       }
-      console.log('[EvolutionChain] Processing varieties:', species.varieties.map(v => v.pokemon.name));
       for (const v of species.varieties) {
         const formType = detectFormType(v.pokemon.name);
-        console.log('[EvolutionChain] Checking:', v.pokemon.name, '-> formType:', formType);
         if (formType !== 'standard') {
           collected.push({
             name: v.pokemon.name,
@@ -1038,12 +1034,10 @@ export function EvolutionChain({ url, currentSpeciesName, speciesData }: Evoluti
       }
     };
 
-    console.log('[EvolutionChain] speciesData:', speciesData ? 'exists with varieties:' + speciesData.varieties?.length : 'null/undefined');
     if (speciesData) addFormsFromSpecies(speciesData);
     for (const queryData of speciesQueryData) {
       if (queryData) addFormsFromSpecies(queryData);
     }
-    console.log('[EvolutionChain] Final collected forms:', collected.length, collected.map(f => f.name));
 
     const seen = new Set<string>();
     return collected.filter((f) => {

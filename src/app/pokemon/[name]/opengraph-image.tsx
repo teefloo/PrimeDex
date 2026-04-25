@@ -168,7 +168,6 @@ export default async function Image({ params }: { params: { name: string } }) {
             }}
           >
             {artwork && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={artwork}
                 alt={displayName}
