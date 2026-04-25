@@ -4,7 +4,6 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { TYPE_COLORS } from '@/types/pokemon';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
 export default function TypeFilter() {
@@ -13,28 +12,21 @@ export default function TypeFilter() {
   const { t } = useTranslation();
 
   return (
-    <motion.div 
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.2, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+    <div 
       className="w-full overflow-x-auto pb-8 pt-4 scrollbar-hide"
     >
       <div className="flex flex-nowrap lg:flex-wrap gap-2 justify-start lg:justify-center px-4 min-w-max lg:min-w-0 mx-auto max-w-7xl">
-        <AnimatePresence>
-          {selectedTypes.length > 0 && (
-            <motion.button
-              initial={{ scale: 0.8, opacity: 0, width: 0 }}
-              animate={{ scale: 1, opacity: 1, width: 'auto' }}
-              exit={{ scale: 0.8, opacity: 0, width: 0 }}
-              onClick={() => setSelectedTypes([])}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-foreground/70 bg-destructive/10 border border-destructive/20 rounded-full hover:bg-destructive/20 hover:text-destructive transition-all duration-300 whitespace-nowrap overflow-hidden backdrop-blur-xl"
-              aria-label={t('filters.clear_types', { count: selectedTypes.length })}
-            >
-              <X className="w-3.5 h-3.5" />
-              <span className="uppercase tracking-wider">{t('filters.clear_types', { count: selectedTypes.length })}</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {selectedTypes.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setSelectedTypes([])}
+            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-foreground/80 bg-destructive/10 border border-destructive/20 rounded-full hover:bg-destructive/20 hover:text-destructive transition-all duration-300 whitespace-nowrap overflow-hidden backdrop-blur-xl"
+            aria-label={t('filters.clear_types', { count: selectedTypes.length })}
+          >
+            <X className="w-3.5 h-3.5" />
+            <span className="uppercase tracking-wider">{t('filters.clear_types', { count: selectedTypes.length })}</span>
+          </button>
+        )}
         
         {types.map((type) => {
           const isActive = selectedTypes.includes(type);
@@ -42,16 +34,16 @@ export default function TypeFilter() {
           const label = t(`types.${type}`);
           
           return (
-            <motion.button
+            <button
               key={type}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              type="button"
               onClick={() => toggleType(type)}
+              aria-label={label}
               className={cn(
-                "relative px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-400 overflow-hidden group border",
+                "relative px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-400 overflow-hidden group border hover:scale-105 active:scale-95",
                 isActive 
                   ? "text-white border-transparent" 
-                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/50 hover:text-foreground/80 border-white/[0.06] hover:border-white/[0.12]"
+                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-white/[0.06] hover:border-white/[0.12]"
               )}
               style={isActive ? {
                 backgroundColor: color,
@@ -73,18 +65,14 @@ export default function TypeFilter() {
               
               <span className="relative z-10 flex items-center gap-2">
                 {isActive && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" 
-                  />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                 )}
                 {label}
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }

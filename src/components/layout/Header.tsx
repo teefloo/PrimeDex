@@ -17,7 +17,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { useEffect, useMemo, useState, ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
@@ -37,7 +37,8 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useMounted } from '@/hooks/useMounted';
-import SettingsModal from './SettingsModal';
+
+const SettingsModal = dynamic(() => import('./SettingsModal'), { ssr: false });
 
 interface HeaderLinkProps extends LinkProps {
   children: ReactNode;
@@ -154,37 +155,33 @@ export default function Header() {
       <header
         className="fixed left-0 right-0 top-2 z-50 flex justify-center px-3 md:top-3 md:px-4"
       >
-        <motion.div
+        <div
           className="inline-flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-1.5 rounded-[2rem] border border-border/50 bg-background/72 px-3 py-2 shadow-[0_14px_36px_-26px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:max-w-[calc(100vw-3rem)] md:px-4"
         >
           <div className="flex shrink-0 items-center justify-start">
             <Link href="/" className="flex items-center gap-2 group" aria-label={t('header.home_aria')}>
-              <motion.div whileHover={{ rotate: 12, scale: 1.1 }} transition={{ type: 'spring', stiffness: 300 }} className="shrink-0">
+              <div className="shrink-0 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
                 <PrimeDexLogo className="h-5 w-5 md:h-6 md:w-6 transition-all duration-300 drop-shadow-[0_0_8px_rgba(227,53,13,0.24)] group-hover:drop-shadow-[0_0_14px_rgba(227,53,13,0.42)]" />
-              </motion.div>
+              </div>
 
               <div className="flex flex-col items-start gap-0.5">
-                <h1 className="flex items-center text-[0.95rem] font-black leading-none tracking-tight md:text-base">
+                <div className="flex items-center text-[0.95rem] font-black leading-none tracking-tight md:text-base">
                   <span className="gradient-text-primary">Prime</span>
                   <span className="text-foreground">Dex</span>
-                </h1>
+                </div>
 
-                {mounted && (
-                  <div className="flex items-center gap-1 px-1 py-0.5">
-                    <div className="h-1 w-1 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.45)] animate-pulse" />
-                    <span className="text-[8px] font-black uppercase tracking-[0.22em] text-foreground/35 md:text-[9px]">
-                      {caughtCount} / 1025
-                    </span>
-                    <div className="h-[2px] w-7 overflow-hidden rounded-full bg-muted/70">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercent}%` }}
-                        transition={{ duration: 1.5, ease: 'easeOut' }}
-                      />
-                    </div>
+                <div className="flex h-3 items-center gap-1 px-1 py-0.5">
+                  <div className="h-1 w-1 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.45)]" />
+                  <span className="min-w-[4.4rem] text-[8px] font-black uppercase tracking-[0.22em] text-foreground/70 md:text-[9px]">
+                    {mounted ? caughtCount : 0} / 1025
+                  </span>
+                  <div className="h-[2px] w-7 overflow-hidden rounded-full bg-muted/70">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 transition-[width] duration-700 ease-out"
+                      style={{ width: `${mounted ? progressPercent : 0}%` }}
+                    />
                   </div>
-                )}
+                </div>
               </div>
             </Link>
           </div>
@@ -219,7 +216,7 @@ export default function Header() {
             <div className="relative group mr-0.5 hidden w-[clamp(180px,13vw,240px)] 2xl:block">
               <div className="relative w-full">
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 transition-colors duration-300 group-hover:text-primary">
-                  <Search className="h-3.5 w-3.5 text-foreground/40 transition-colors duration-300 group-hover:text-primary" />
+                  <Search className="h-3.5 w-3.5 text-foreground/60 transition-colors duration-300 group-hover:text-primary" />
                 </div>
                 <input
                   type="text"
@@ -229,17 +226,12 @@ export default function Header() {
                   onChange={(event) => setLocalSearch(event.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                  className="h-8 w-full rounded-full border border-border/70 bg-background/80 pl-9 pr-3 text-[10px] font-semibold leading-none text-foreground shadow-[0_10px_20px_-22px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 placeholder:text-foreground/35 focus:border-primary/40 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/25"
+                  className="h-8 w-full rounded-full border border-border/70 bg-background/80 pl-9 pr-3 text-[10px] font-semibold leading-none text-foreground shadow-[0_10px_20px_-22px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 placeholder:text-foreground/60 focus:border-primary/40 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/25"
                 />
               </div>
 
-              <AnimatePresence>
-                {isSearchFocused && localSearch && searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
+              {isSearchFocused && localSearch && searchResults.length > 0 && (
+                  <div
                     className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-[1.25rem] border border-border/70 bg-background/96 p-2 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)] backdrop-blur-3xl"
                   >
                     <div className="flex flex-col gap-1">
@@ -277,22 +269,19 @@ export default function Header() {
                         );
                       })}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
             </div>
 
             <Tooltip>
               <TooltipTrigger>
-                <Link href="/favorites" aria-label={t('header.open_favorites')}>
-                  <motion.div
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.92 }}
-                    className="flex h-8 items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-2.5 text-foreground/60 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-rose-500/25 hover:bg-rose-500/10 hover:text-rose-500"
+                <Link href="/favorites" aria-label={t('nav.favorites')}>
+                  <div
+                    className="flex h-8 items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-2.5 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-rose-500/25 hover:bg-rose-500/10 hover:text-rose-500 active:scale-95"
                   >
                     <Heart className="h-3.5 w-3.5" />
                     <span className="hidden text-[9px] font-black uppercase tracking-[0.15em] xl:inline">{t('nav.favorites')}</span>
-                  </motion.div>
+                  </div>
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
@@ -302,16 +291,15 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <motion.button
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
+                <button
+                  type="button"
                   onClick={cycleLanguage}
-                  className="flex h-8 min-w-[42px] items-center justify-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-3 text-foreground/60 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-indigo-500/20 hover:bg-indigo-500/10 hover:text-indigo-500"
-                  aria-label={t('header.change_language')}
+                  className="flex h-8 min-w-[56px] items-center justify-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-3 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-indigo-500/20 hover:bg-indigo-500/10 hover:text-indigo-500 active:scale-95"
+                  aria-label={t('header.language_title', { language: languageLabel })}
                 >
                   <Languages className="h-4 w-4" />
-                  <span className="text-[10px] font-black uppercase">{languageLabel}</span>
-                </motion.button>
+                  <span className="min-w-[24px] text-center text-[10px] font-black uppercase">{languageLabel}</span>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {t('header.language_title', { language: languageLabel })}
@@ -320,12 +308,11 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <motion.button
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
+                <button
+                  type="button"
                   onClick={cycleTheme}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/60 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-500"
-                  aria-label={t('settings.theme_toggle')}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-500 active:scale-95"
+                  aria-label={themeLabel}
                 >
                   {!mounted ? (
                     <div className="h-4 w-4 md:h-[18px] md:w-[18px]" />
@@ -334,7 +321,7 @@ export default function Header() {
                   ) : (
                     <Sun className="h-4 w-4 text-amber-500 md:h-[18px] md:w-[18px]" />
                   )}
-                </motion.button>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {themeLabel}
@@ -343,15 +330,14 @@ export default function Header() {
 
             <Tooltip>
               <TooltipTrigger>
-                <motion.button
-                  whileHover={{ scale: 1.08, rotate: 60 }}
-                  whileTap={{ scale: 0.92 }}
+                <button
+                  type="button"
                   onClick={toggleSettings}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/60 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-border/90 hover:bg-muted/70 hover:text-foreground"
-                  aria-label={t('header.open_settings')}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:rotate-45 hover:border-border/90 hover:bg-muted/70 hover:text-foreground active:scale-95"
+                  aria-label={t('settings.title')}
                 >
                   <Settings className="h-4 w-4 md:h-[18px] md:w-[18px]" />
-                </motion.button>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
                 {t('settings.title')}
@@ -362,14 +348,13 @@ export default function Header() {
               <Sheet>
                 <SheetTrigger
                   render={
-                    <motion.button
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.92 }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/60 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-border/90 hover:bg-muted/70 hover:text-foreground"
+                    <button
+                      type="button"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-border/90 hover:bg-muted/70 hover:text-foreground active:scale-95"
                       aria-label={t('header.open_menu') || 'Menu'}
                     >
                       <Menu className="h-4 w-4" />
-                    </motion.button>
+                    </button>
                   }
                 />
                 <SheetContent side="right" className="w-[85vw] max-w-[350px] bg-background/96 p-0 backdrop-blur-3xl">
@@ -434,7 +419,7 @@ export default function Header() {
               </Sheet>
             </div>
           </div>
-        </motion.div>
+        </div>
       </header>
       <SettingsModal />
     </>

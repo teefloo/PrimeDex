@@ -3,7 +3,6 @@
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn } from '@/lib/utils';
 import { X, Map } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
 const REGIONS = [
@@ -23,10 +22,7 @@ export default function RegionFilter() {
   const { t } = useTranslation();
 
   return (
-    <motion.div 
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+    <div 
       className="w-full pb-4 pt-2"
     >
       <div className="flex flex-nowrap items-center gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide lg:flex-wrap">
@@ -36,37 +32,33 @@ export default function RegionFilter() {
           <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
         </div>
 
-        <AnimatePresence mode="popLayout">
-          {selectedGeneration && (
-            <motion.button
-              initial={{ scale: 0.8, opacity: 0, width: 0 }}
-              animate={{ scale: 1, opacity: 1, width: 'auto' }}
-              exit={{ scale: 0.8, opacity: 0, width: 0 }}
-              onClick={() => setSelectedGeneration(null)}
-              className="flex items-center justify-center shrink-0 gap-1 bg-destructive/10 border border-destructive/20 px-4 py-2 rounded-full text-xs text-destructive hover:bg-destructive/20 transition-all duration-300 whitespace-nowrap backdrop-blur-xl"
-              aria-label={t('filters.reset')}
-            >
-              <X className="w-3 h-3 shrink-0" />
-              <span className="font-bold uppercase tracking-wider text-[10px]">{t('filters.reset')}</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {selectedGeneration && (
+          <button
+            type="button"
+            onClick={() => setSelectedGeneration(null)}
+            className="flex items-center justify-center shrink-0 gap-1 bg-destructive/10 border border-destructive/20 px-4 py-2 rounded-full text-xs text-destructive hover:bg-destructive/20 transition-all duration-300 whitespace-nowrap backdrop-blur-xl"
+            aria-label={t('filters.reset')}
+          >
+            <X className="w-3 h-3 shrink-0" />
+            <span className="font-bold uppercase tracking-wider text-[10px]">{t('filters.reset')}</span>
+          </button>
+        )}
         
         {REGIONS.map((region) => {
           const isActive = selectedGeneration === parseInt(region.gen);
           const label = t(`regions.${region.key}`);
           
           return (
-            <motion.button
+            <button
               key={region.key}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              type="button"
               onClick={() => setSelectedGeneration(isActive ? null : parseInt(region.gen))}
+              aria-label={label}
               className={cn(
-                "relative px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-400 overflow-hidden group border",
+                "relative px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-400 overflow-hidden group border hover:scale-105 active:scale-95",
                 isActive 
                   ? "bg-primary text-white border-primary/50 shadow-[0_4px_20px_-4px_rgba(227,53,13,0.5)]"
-                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/45 hover:text-foreground/75 border-white/[0.06] hover:border-white/[0.12]"
+                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-white/[0.06] hover:border-white/[0.12]"
               )}
             >
               {/* Hover glow */}
@@ -82,10 +74,10 @@ export default function RegionFilter() {
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {label}
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }

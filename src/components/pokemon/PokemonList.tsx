@@ -8,7 +8,6 @@ import { pokemonKeys } from '@/lib/api/keys';
 import { SITE_URL } from '@/lib/site';
 import { PokemonCard, PokemonCardSkeleton } from './PokemonCard';
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, SearchX } from 'lucide-react';
 import { PokemonBasicData, GraphQLPokemonSummary, LocalizedNameEntry, PokemonSpecies } from '@/types/pokemon';
 import { Badge } from '@/components/ui/badge';
@@ -393,8 +392,6 @@ export default function PokemonList() {
     setDisplayLimit(prev => prev + 40);
   };
 
-  const useAnimations = displayedPokemon.length < 30;
-
   const isDataLoading = (isBasicMode && isLoadingInfinite) || 
                         (!isBasicMode && isAdvancedFilterActive && isLoadingDetailed) || 
                         (!isBasicMode && !isAdvancedFilterActive && isLoadingSummary) ||
@@ -410,26 +407,26 @@ export default function PokemonList() {
 
   if (detailedError) {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
         <SearchX className="w-20 h-20 text-red-500/40" />
         <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.error_loading')}</h3>
-        <p className="text-sm text-foreground/40 max-w-md">{(detailedError as Error).message || t('list.error_desc')}</p>
+        <p className="text-sm text-foreground/70 max-w-md">{(detailedError as Error).message || t('list.error_desc')}</p>
         <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
           <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
         </Button>
-      </motion.div>
+      </div>
     );
   }
 
   if (displayedPokemon.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6">
         <SearchX className="w-20 h-20 text-foreground/20" />
         <h3 className="text-2xl font-black uppercase tracking-tight text-foreground/80">{t('list.no_results')}</h3>
         <Button variant="outline" onClick={resetFilters} className="rounded-full px-8 py-6 h-auto font-black uppercase tracking-[0.2em] text-xs border-primary/20 hover:bg-primary/10 gap-2">
           <RotateCcw className="w-4 h-4" /> {t('filters.reset')}
         </Button>
-      </motion.div>
+      </div>
     );
   }
 
@@ -454,7 +451,7 @@ export default function PokemonList() {
       {!isBasicMode && (
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-white/5 mx-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t('list.results')}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/70">{t('list.results')}</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
               {filteredAndSortedResults?.length ?? 0}
             </Badge>
@@ -466,21 +463,11 @@ export default function PokemonList() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-y-0.5 gap-x-2 px-2">
-        {useAnimations ? (
-          <AnimatePresence mode="popLayout">
-            {displayedPokemon.map((p, idx) => (
-              <motion.div key={`${p.id}-${idx}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.2 }} className="pokemon-grid-item">
-                <PokemonCard name={p.name} index={idx} initialData={buildInitialData(p)} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        ) : (
-          displayedPokemon.map((p, idx) => (
-            <div key={`${p.id}-${idx}`} className="pokemon-grid-item">
-              <PokemonCard name={p.name} url={p.url} index={idx} initialData={buildInitialData(p)} />
-            </div>
-          ))
-        )}
+        {displayedPokemon.map((p, idx) => (
+          <div key={p.id} className="pokemon-grid-item">
+            <PokemonCard name={p.name} url={p.url} index={idx} initialData={buildInitialData(p)} />
+          </div>
+        ))}
       </div>
 
       {(isBasicMode || hasMoreFiltered) && (

@@ -2,7 +2,6 @@
 
 import { usePrimeDexStore } from '@/store/primedex';
 import { Search, X, Command } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/lib/i18n';
@@ -59,10 +58,7 @@ export default function SearchBar() {
   }, []);
 
   return (
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+    <div
       className="relative mx-auto my-6 flex w-full max-w-2xl items-center px-4 group"
     >
       {/* Glow effect behind search bar */}
@@ -73,7 +69,7 @@ export default function SearchBar() {
       <div className="relative w-full">
         {/* Search icon */}
         <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 transition-colors duration-300">
-          <Search className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-foreground/30'}`} />
+          <Search className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-foreground/60'}`} />
         </div>
 
         <Input
@@ -87,37 +83,33 @@ export default function SearchBar() {
             setLocalSearch(e.target.value);
             prefetchIndex();
           }}
-          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] py-6 pl-12 pr-20 text-base font-medium text-foreground shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all duration-500 placeholder:text-foreground/30 focus-visible:border-primary/30 focus-visible:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:shadow-[0_8px_40px_rgba(227,53,13,0.1)] md:text-lg"
+          className="w-full rounded-full border border-white/[0.08] bg-white/[0.04] py-6 pl-12 pr-20 text-base font-medium text-foreground shadow-[0_4px_24px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all duration-500 placeholder:text-foreground/60 focus-visible:border-primary/30 focus-visible:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:shadow-[0_8px_40px_rgba(227,53,13,0.1)] md:text-lg"
           aria-label={t('search.placeholder')}
           id="pokemon-search"
         />
 
         {/* Keyboard shortcut badge */}
         <div className={`absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-1.5 transition-opacity duration-300 pointer-events-none ${localSearch ? 'opacity-0' : 'opacity-100'}`}>
-          <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] font-bold text-foreground/30 tracking-wide">
+          <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] font-bold text-foreground/70 tracking-wide">
             {isMac ? <Command className="w-3 h-3" /> : <span className="px-0.5">Ctrl</span>} K
           </kbd>
         </div>
       </div>
 
       {/* Clear button */}
-      <AnimatePresence>
-        {localSearch && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => {
-              setLocalSearch('');
-              setSearchTerm('');
-            }}
-            className="absolute right-6 z-10 rounded-full p-2 text-foreground/30 transition-all duration-300 hover:bg-primary/10 hover:text-primary focus:outline-none"
-            aria-label={t('search.clear')}
-          >
-            <X className="w-5 h-5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {localSearch && (
+        <button
+          type="button"
+          onClick={() => {
+            setLocalSearch('');
+            setSearchTerm('');
+          }}
+          className="absolute right-6 z-10 rounded-full p-2 text-foreground/60 transition-all duration-300 hover:bg-primary/10 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t('search.clear')}
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+    </div>
   );
 }

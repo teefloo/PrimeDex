@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
 import { getBaseSpeciesName } from '@/lib/form-names';
 import { PokemonDetail, PokemonSpecies, TYPE_COLORS, PokemonCardType, LocalizedNameEntry } from '@/types/pokemon';
-import { motion } from 'framer-motion';
 import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
 import { cn, formatPokemonSlugName } from '@/lib/utils';
@@ -214,10 +213,7 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
 
   return (
     <div className="relative block h-full py-1 px-1 sm:px-2" onMouseEnter={prefetchDetails}>
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
+      <div
         className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-secondary/25 p-2 transition-all duration-500 sm:p-4"
         style={{
           '--type-color': `${color}50`,
@@ -237,23 +233,22 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
           }}
         />
 
-        <motion.button
-          whileHover={{ scale: 1.15, rotate: 20 }}
-          whileTap={{ scale: 0.9 }}
+        <button
+          type="button"
           onClick={(event) => {
             event.stopPropagation();
             if (pokemon.id) toggleCaught(pokemon.id);
           }}
           className={cn(
-            'absolute bottom-2 left-2 z-20 flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border shadow-lg transition-all duration-400 sm:bottom-3 sm:left-3 sm:min-h-[40px] sm:min-w-[40px]',
+            'absolute bottom-2 left-2 z-20 flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border shadow-lg transition-all duration-400 hover:scale-110 active:scale-95 sm:bottom-3 sm:left-3 sm:min-h-[40px] sm:min-w-[40px]',
             caught
               ? 'border-primary/60 bg-primary text-white shadow-[0_4px_20px_-4px_rgba(227,53,13,0.6)]'
-              : 'border-border/60 bg-background/75 text-foreground/40 backdrop-blur-md hover:bg-muted/70 hover:text-foreground/70'
+              : 'border-border/60 bg-background/75 text-foreground/70 backdrop-blur-md hover:bg-muted/70 hover:text-foreground/90'
           )}
           aria-label={caught ? t('card.caught') : t('card.mark_caught')}
         >
           <PokeballIcon className={cn('h-4 w-4 sm:h-5 sm:w-5', caught ? 'text-white' : 'text-foreground/50')} />
-        </motion.button>
+        </button>
 
         <div
           className="pointer-events-none absolute -right-20 -top-20 z-0 h-48 w-48 rounded-full blur-[90px] opacity-20 transition-all duration-700 group-hover:opacity-40"
@@ -280,72 +275,61 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
 
         <div className="relative z-10 mb-1 flex w-full flex-col gap-1 sm:mb-2 sm:gap-2">
           <div className="flex items-start justify-between">
-            <span className="rounded-md bg-muted/60 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-foreground/30 sm:text-[11px]">
+            <span className="rounded-md bg-muted/60 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-foreground/70 sm:text-[11px]">
               #{pokemonId.toString().padStart(3, '0')}
             </span>
             <div className="flex items-center gap-1 sm:gap-1.5">
-              <motion.button
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.85 }}
+              <button
+                type="button"
                 onClick={toggleTeam}
                 disabled={!isTeam && teamFull}
                 aria-label={isTeam ? t('card.remove_team') : t('card.add_team')}
                 className={cn(
-                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
+                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 hover:scale-110 active:scale-95 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
                   isTeam
                     ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.25)]'
-                    : 'border-border/60 bg-background/70 text-foreground/35 hover:bg-muted/70 hover:text-foreground/70',
+                    : 'border-border/60 bg-background/70 text-foreground/70 hover:bg-muted/70 hover:text-foreground/90',
                   !isTeam && teamFull && 'cursor-not-allowed opacity-20'
                 )}
               >
                 {isTeam ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.85 }}
+              <button
+                type="button"
                 onClick={toggleCompare}
                 disabled={!isComp && compareFull}
                 aria-label={isComp ? t('card.remove_compare') : t('card.add_compare')}
                 className={cn(
-                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
+                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 hover:scale-110 active:scale-95 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
                   isComp
                     ? 'border-primary/30 bg-primary/20 text-primary shadow-[0_0_16px_rgba(227,53,13,0.25)]'
-                    : 'border-border/60 bg-background/70 text-foreground/35 hover:bg-muted/70 hover:text-foreground/70',
+                    : 'border-border/60 bg-background/70 text-foreground/70 hover:bg-muted/70 hover:text-foreground/90',
                   !isComp && compareFull && 'cursor-not-allowed opacity-20'
                 )}
               >
                 <ArrowLeftRight className={cn('h-3 w-3 transition-transform', isComp && 'scale-110 rotate-12')} />
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.85 }}
+              <button
+                type="button"
                 onClick={toggleFavorite}
                 aria-label={isFav ? t('card.remove_favorite') : t('card.add_favorite')}
                 className={cn(
-                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
+                  'flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border p-1.5 backdrop-blur-xl transition-all duration-300 hover:scale-110 active:scale-95 sm:min-h-[38px] sm:min-w-[38px] sm:p-2',
                   isFav
                     ? 'border-rose-500/30 bg-rose-500/20 text-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.25)]'
-                    : 'border-border/60 bg-background/70 text-foreground/35 hover:bg-muted/70 hover:text-foreground/70'
+                    : 'border-border/60 bg-background/70 text-foreground/70 hover:bg-muted/70 hover:text-foreground/90'
                 )}
               >
-                <motion.div animate={isFav ? { scale: [1, 1.5, 1], transition: { duration: 0.35 } } : {}}>
-                  <Heart className={cn('h-3.5 w-3.5 transition-all', isFav && 'fill-current')} />
-                </motion.div>
-              </motion.button>
+                <Heart className={cn('h-3.5 w-3.5 transition-all', isFav && 'fill-current scale-110')} />
+              </button>
             </div>
           </div>
         </div>
 
         <div className="relative mx-auto h-20 w-20 transition-transform duration-500 group-hover:scale-105 sm:h-32 sm:w-32">
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{
-              scale: [1, 1.02, 1],
-              transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
-            }}
-          />
+          <div className="absolute inset-0 rounded-full" />
           <Image
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`}
             alt={displayName}
@@ -381,7 +365,7 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
             })}
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 });

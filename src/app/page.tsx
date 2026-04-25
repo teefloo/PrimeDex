@@ -1,6 +1,6 @@
 import Header from '@/components/layout/Header';
 import PokemonList from '@/components/pokemon/PokemonList';
-import RecentlyViewed from '@/components/pokemon/RecentlyViewed';
+import ClientRecentlyViewed from '@/components/pokemon/ClientRecentlyViewed';
 import HeroSection from '@/components/layout/HeroSection';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { getPokemonList } from '@/lib/api';
@@ -22,20 +22,6 @@ export default async function Home() {
     queryFn: () => getPokemonSummarySlice(80, 0),
   });
 
-  const baseUrl = SITE_URL;
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'PrimeDex',
-    url: baseUrl,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${baseUrl}/?search={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
   const softwareAppJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
@@ -43,15 +29,11 @@ export default async function Home() {
     operatingSystem: 'All',
     applicationCategory: 'GameApplication',
     description: 'A high-performance Gaming Dashboard for Pokémon tracking and team building.',
-    url: baseUrl,
+    url: SITE_URL,
   };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
@@ -63,7 +45,7 @@ export default async function Home() {
           <HeroSection />
 
           <PokemonList />
-          <RecentlyViewed />
+          <ClientRecentlyViewed />
         </main>
 
 
