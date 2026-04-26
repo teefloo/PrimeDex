@@ -33,6 +33,26 @@ describe('tcg holo mapping', () => {
     expect(getTCGHoloRarity({ ...baseCard, rarity })).toBe(expected);
   });
 
+  it('maps EX and GX cards to the v-style holo effect', () => {
+    expect(
+      getTCGHoloRarity({
+        ...baseCard,
+        id: 'xy1-001',
+        name: 'Chesnaught-EX',
+        rarity: 'Ultra Rare',
+      }),
+    ).toBe('rare holo v');
+
+    expect(
+      getTCGHoloRarity({
+        ...baseCard,
+        id: 'sm3-147',
+        name: 'Charizard-GX',
+        rarity: 'Ultra Rare',
+      }),
+    ).toBe('rare holo v');
+  });
+
   it('detects trainer gallery numbers for data attributes', () => {
     const data = getTCGHoloData({
       ...baseCard,
@@ -46,6 +66,21 @@ describe('tcg holo mapping', () => {
     expect(data.isTrainerGallery).toBe(true);
   });
 
+  it.each([
+    ['base1-001', 'base1', 'pokemon-wotc'],
+    ['ex6-001', 'ex6', 'pokemon-ex'],
+    ['dp4-001', 'dp4', 'pokemon-dp-hgss'],
+    ['bw7-001', 'bw7', 'pokemon-bw'],
+    ['sv1-001', 'sv1', 'pokemon-modern'],
+  ])('maps %s to the %s art window', (id, setId, expected) => {
+    expect(getTCGHoloData({
+      ...baseCard,
+      id,
+      rarity: 'Rare Holo',
+      set: { id: setId, name: setId },
+    }).artWindow).toBe(expected);
+  });
+
   it('keeps basic rarities effect-free', () => {
     expect(getTCGHoloData({ ...baseCard, rarity: 'Common' }).hasHoloEffect).toBe(false);
     expect(getTCGHoloData({ ...baseCard, rarity: 'Rare Holo' }).hasHoloEffect).toBe(true);
@@ -57,5 +92,23 @@ describe('tcg holo mapping', () => {
       rarity: 'Rare',
       variants: { firstEdition: true, holo: true, normal: false, reverse: false, wPromo: false },
     })).toBe('rare holo');
+  });
+
+  it('maps holo rare energy cards to the classic holo effect', () => {
+    const data = getTCGHoloData({
+      id: 'me03-087',
+      localId: '087',
+      name: 'Énergie Fighting Rocheuse',
+      image: 'https://assets.tcgdex.net/fr/me/me03/087',
+      rarity: 'Rare',
+      category: 'Energy',
+      energyType: 'De base',
+      variants: { firstEdition: false, holo: true, normal: false, reverse: true, wPromo: false },
+    });
+
+    expect(data.rarity).toBe('rare holo');
+    expect(data.supertype).toBe('energy');
+    expect(data.artWindow).toBe('energy');
+    expect(data.hasHoloEffect).toBe(true);
   });
 });

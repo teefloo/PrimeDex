@@ -162,6 +162,53 @@ describe('tcg api helpers', () => {
     });
   });
 
+  it('normalizes localized category names while hydrating visual metadata', async () => {
+    mockGet.mockImplementation(async (url: string) => {
+      if (url.includes('/cards?')) {
+        return {
+          data: [
+            makeCard('me03-087', {
+              category: undefined,
+              rarity: undefined,
+              energyType: undefined,
+            }),
+          ],
+        };
+      }
+
+      if (url.includes('/cards/me03-087')) {
+        return {
+          data: makeCard('me03-087', {
+            category: 'Énergie' as TCGCard['category'],
+            rarity: 'Rare',
+            energyType: 'De base',
+            variants: { firstEdition: false, holo: true, normal: false, reverse: true, wPromo: false },
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    const result = await searchCards(
+      {
+        selectedCategory: 'all',
+        sortBy: 'name',
+        sortOrder: 'asc',
+      },
+      'fr',
+      1,
+      1,
+    );
+
+    expect(result.cards[0]).toMatchObject({
+      id: 'me03-087',
+      category: 'Energy',
+      rarity: 'Rare',
+      energyType: 'De base',
+    });
+  });
+
   it('filters promo and reverse-holo style cards locally when the API cannot query them', async () => {
     mockGet.mockImplementation(async (url: string) => {
       if (url.includes('/cards?')) {

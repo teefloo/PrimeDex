@@ -120,6 +120,7 @@ function normaliseAbility(ability: TCGCardAbility): TCGCardAbility {
 function normaliseCard(card: TCGCard): TCGCard {
   return {
     ...card,
+    category: normaliseCardCategory(card.category),
     source: card.source ?? 'TCGames',
     effect: card.effect ?? card.flavorText ?? card.description,
     description: card.description ?? card.flavorText,
@@ -133,6 +134,16 @@ function normaliseCard(card: TCGCard): TCGCard {
         ? normaliseAbility(card.abilities)
         : card.abilities,
   };
+}
+
+function normaliseCardCategory(category: TCGCard['category']): TCGCard['category'] {
+  const normalized = normalizeFilterValue(category ?? '');
+
+  if (normalized === 'pokemon') return 'Pokemon';
+  if (normalized === 'trainer' || normalized === 'dresseur') return 'Trainer';
+  if (normalized === 'energy' || normalized === 'energie') return 'Energy';
+
+  return category;
 }
 
 function buildCardQueryParams(filters: TCGCardFilters, page: number, limit: number) {

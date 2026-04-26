@@ -119,9 +119,9 @@ export const TCGHolographicCard = memo(function TCGHolographicCard({
       '--rotate-y': `${Math.round(centerY / 3.5)}deg`,
       '--background-x': `${adjust(percentX, 0, 100, 37, 63)}%`,
       '--background-y': `${adjust(percentY, 0, 100, 33, 67)}%`,
-      '--card-scale': noFrame ? '1' : '1.025',
+      '--card-scale': noFrame ? '1' : '1.08',
       '--translate-x': '0px',
-      '--translate-y': noFrame ? '0px' : '-3px',
+      '--translate-y': noFrame ? '0px' : '-8px',
     });
   };
 
@@ -138,9 +138,9 @@ export const TCGHolographicCard = memo(function TCGHolographicCard({
       '--rotate-y': '-19deg',
       '--background-x': '44%',
       '--background-y': '36%',
-      '--card-scale': noFrame ? '1' : '1.025',
+      '--card-scale': noFrame ? '1' : '1.08',
       '--translate-x': '0px',
-      '--translate-y': noFrame ? '0px' : '-3px',
+      '--translate-y': noFrame ? '0px' : '-8px',
     });
   };
 
@@ -160,6 +160,7 @@ export const TCGHolographicCard = memo(function TCGHolographicCard({
       data-subtypes={holoData.subtypes}
       data-supertype={holoData.supertype}
       data-rarity={holoData.rarity}
+      data-art-window={holoData.artWindow}
       data-trainer-gallery={holoData.isTrainerGallery ? 'true' : 'false'}
       data-holo-effect={holoData.hasHoloEffect ? 'true' : 'false'}
       style={staticStyle}

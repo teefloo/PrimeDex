@@ -1,11 +1,9 @@
-﻿/*
+/*
  * Bundled pokemon-cards-css effects from simeydotme/pokemon-cards-css.
  * Source assets live in public/pokemon-cards and keep their original selectors.
  */
 
-
-/* Source: public\pokemon-cards\css\cards\base.css */
-
+/* Source: public/pokemon-cards/css/cards/base.css */
 /*
 
   BASE STYLES / VARIABLES
@@ -367,9 +365,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards.css */
-
-
+/* Source: public/pokemon-cards/css/cards.css */
 .card {
 
   --grain: url("/pokemon-cards/img/grain.webp");
@@ -406,8 +402,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\basic.css */
-
+/* Source: public/pokemon-cards/css/cards/basic.css */
 /*
 
   BASIC CARDS
@@ -423,9 +418,7 @@ Shine & Glare Effects
 */
 
 
-
-/* Source: public\pokemon-cards\css\cards\regular-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/regular-holo.css */
 /*
 
   REGULAR HOLO
@@ -609,10 +602,7 @@ Shine & Glare Effects
 */
 
 
-
-
-/* Source: public\pokemon-cards\css\cards\reverse-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/reverse-holo.css */
 /*
 
   REVERSE HOLO
@@ -742,10 +732,7 @@ Shine & Glare Effects
 }
 
 
-
-
-/* Source: public\pokemon-cards\css\cards\cosmos-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/cosmos-holo.css */
 /*
 
   COSMOS HOLO
@@ -942,8 +929,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\amazing-rare.css */
-
+/* Source: public/pokemon-cards/css/cards/amazing-rare.css */
 /*
 
   AMAZING RARE
@@ -1110,8 +1096,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\radiant-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/radiant-holo.css */
 /*
 
   RADIANT HOLO
@@ -1319,9 +1304,7 @@ Shine & Glare Effects
 }
 
 
-
-/* Source: public\pokemon-cards\css\cards\v-regular.css */
-
+/* Source: public/pokemon-cards/css/cards/v-regular.css */
 /*
 
   V REGULAR
@@ -1441,8 +1424,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\v-full-art.css */
-
+/* Source: public/pokemon-cards/css/cards/v-full-art.css */
 /*
 
   V FULL ART (ULTRA RARE)
@@ -1461,8 +1443,8 @@ Shine & Glare Effects
 
 */
 
-.card[data-rarity="rare ultra"][data-supertype="pokÃ©mon"] .card__shine,
-.card[data-rarity="rare ultra"][data-supertype="pokÃ©mon"] .card__shine:after,
+.card[data-rarity="rare ultra"][data-supertype="pokémon"] .card__shine,
+.card[data-rarity="rare ultra"][data-supertype="pokémon"] .card__shine:after,
 .card[data-rarity="rare ultra"][data-subtypes*="supporter"] .card__shine,
 .card[data-rarity="rare ultra"][data-subtypes*="supporter"] .card__shine:after,
 .card[data-rarity="rare holo v"][data-trainer-gallery="true"] .card__shine,
@@ -1513,7 +1495,7 @@ Shine & Glare Effects
 
 }
 
-.card[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine:after,
+.card[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine:after,
 .card[data-subtypes*="supporter"][data-rarity="rare ultra"] .card__shine:after,
 .card[data-trainer-gallery="true"][data-rarity="rare holo v"] .card__shine:after {
 
@@ -1533,7 +1515,7 @@ Shine & Glare Effects
 }
 
 
-.card[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine:before,
+.card[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine:before,
 .card[data-subtypes*="supporter"][data-rarity="rare ultra"] .card__shine:before {
 
   content: "";
@@ -1566,7 +1548,7 @@ Shine & Glare Effects
 
 */
 
-.card[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__glare,
+.card[data-supertype="pokémon"][data-rarity="rare ultra"] .card__glare,
 .card[data-subtypes*="supporter"][data-rarity="rare ultra"] .card__glare {
 
   background-image: 
@@ -1603,8 +1585,8 @@ Shine & Glare Effects
 */
 
 
-.card:not(.masked)[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine,
-.card:not(.masked)[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine:after,
+.card:not(.masked)[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine,
+.card:not(.masked)[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine:after,
 .card:not(.masked)[data-trainer-gallery="true"][data-rarity="rare holo v"] .card__shine,
 .card:not(.masked)[data-trainer-gallery="true"][data-rarity="rare holo v"] .card__shine:after {
 
@@ -1622,22 +1604,19 @@ Shine & Glare Effects
 
 }
 
-.card:not(.masked)[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine:before,
+.card:not(.masked)[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine:before,
 .card:not(.masked)[data-trainer-gallery="true"][data-rarity="rare holo v"] .card__shine:before {
   content: none;
   display: none;
 }
 
-.card:not(.masked)[data-supertype="pokÃ©mon"][data-rarity="rare ultra"] .card__shine:after,
+.card:not(.masked)[data-supertype="pokémon"][data-rarity="rare ultra"] .card__shine:after,
 .card:not(.masked)[data-trainer-gallery="true"][data-rarity="rare holo v"] .card__shine:after {
   filter: brightness(calc((var(--pointer-from-center)*.5) + .8)) contrast(1.6) saturate(1.4);
 }
 
 
-
-
-/* Source: public\pokemon-cards\css\cards\v-max.css */
-
+/* Source: public/pokemon-cards/css/cards/v-max.css */
 /*
 
   V MAX
@@ -1649,8 +1628,8 @@ Shine & Glare Effects
 
 
 
-.card:not(.masked)[data-rarity="rare holo vmax"][data-supertype="pokÃ©mon"] .card__shine,
-.card:not(.masked)[data-rarity="rare holo vmax"][data-supertype="pokÃ©mon"] .card__shine:after {
+.card:not(.masked)[data-rarity="rare holo vmax"][data-supertype="pokémon"] .card__shine,
+.card:not(.masked)[data-rarity="rare holo vmax"][data-supertype="pokémon"] .card__shine:after {
 
   --mask: none;
   --foil: url("/pokemon-cards/img/vmaxbg.jpg"); 
@@ -1800,16 +1779,7 @@ Shine & Glare Effects
 }
 
 
-
-
-
-
-
-
-
-
-/* Source: public\pokemon-cards\css\cards\v-star.css */
-
+/* Source: public/pokemon-cards/css/cards/v-star.css */
 /*
 
   V STAR
@@ -1983,8 +1953,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\trainer-full-art.css */
-
+/* Source: public/pokemon-cards/css/cards/trainer-full-art.css */
 /*
 
   ULTRA RARE (FULL ART TRAINER)
@@ -2080,8 +2049,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\trainer-gallery-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/trainer-gallery-holo.css */
 /*
 
   TRAINER GALLERY HOLO
@@ -2201,8 +2169,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\trainer-gallery-v-regular.css */
-
+/* Source: public/pokemon-cards/css/cards/trainer-gallery-v-regular.css */
 /*
 
   TRAINER GALLERY (V)
@@ -2239,8 +2206,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\trainer-gallery-v-max.css */
-
+/* Source: public/pokemon-cards/css/cards/trainer-gallery-v-max.css */
 /*
 
   TRAINER GALLERY (V MAX)
@@ -2287,13 +2253,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\trainer-gallery-secret-rare.css */
-
-
-
-
-
-
+/* Source: public/pokemon-cards/css/cards/trainer-gallery-secret-rare.css */
 /*
 
   TRAINER GALLERY SECRET RARE (GOLD & BLACK)
@@ -2439,8 +2399,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\rainbow-holo.css */
-
+/* Source: public/pokemon-cards/css/cards/rainbow-holo.css */
 /*
 
   RAINBOW (SECRET) HOLO
@@ -2586,8 +2545,7 @@ Shine & Glare Effects
 }
 
 
-/* Source: public\pokemon-cards\css\cards\rainbow-alt.css */
-
+/* Source: public/pokemon-cards/css/cards/rainbow-alt.css */
 /*
 
   RAINBOW (ALTERNATE ART) HOLO
@@ -2737,12 +2695,7 @@ Shine & Glare Effects
 }
 
 
-
-
-
-
-/* Source: public\pokemon-cards\css\cards\secret-rare.css */
-
+/* Source: public/pokemon-cards/css/cards/secret-rare.css */
 /*
 
   SECRET RARE (GOLD)
@@ -2884,34 +2837,7 @@ Shine & Glare Effects
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Source: public\pokemon-cards\css\cards\shiny-rare.css */
-
+/* Source: public/pokemon-cards/css/cards/shiny-rare.css */
 /*
 
   SHINY RARE (HOLO)
@@ -3091,9 +3017,7 @@ Shine & Glare Effects
 }
 
 
-
-/* Source: public\pokemon-cards\css\cards\shiny-v.css */
-
+/* Source: public/pokemon-cards/css/cards/shiny-v.css */
 /*
 
   SHINY V (ULTRA RARE)
@@ -3272,10 +3196,7 @@ Shine & Glare Effects
 }
 
 
-
-
-/* Source: public\pokemon-cards\css\cards\shiny-vmax.css */
-
+/* Source: public/pokemon-cards/css/cards/shiny-vmax.css */
 /*
 
   SHINY RARE (VMAX)
@@ -3430,17 +3351,7 @@ Shine & Glare Effects
 }
 
 
-
-
-
-
-
-
-
-
-
-/* Source: public\pokemon-cards\css\cards\swsh-pikachu.css */
-
+/* Source: public/pokemon-cards/css/cards/swsh-pikachu.css */
 /*
 
   RAINBOW (SECRET) HOLO
@@ -3584,4 +3495,3 @@ Shine & Glare Effects
   --imgsize: 33%;
 
 }
-

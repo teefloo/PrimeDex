@@ -5,6 +5,7 @@ export interface TCGHoloData {
   supertype: string;
   subtypes: string;
   typeClasses: string[];
+  artWindow: string;
   isTrainerGallery: boolean;
   hasHoloEffect: boolean;
 }
@@ -20,6 +21,7 @@ export function getTCGHoloData(card: TCGCard): TCGHoloData {
     supertype: getSupertypeAttribute(card.category),
     subtypes: getSubtypeAttribute(card),
     typeClasses: getTypeClasses(card),
+    artWindow: getArtWindow(card),
     isTrainerGallery,
     hasHoloEffect: !BASIC_RARITIES.has(rarity),
   };
@@ -65,6 +67,10 @@ export function getTCGHoloRarity(card: TCGCard): string {
 
   if (rarity.includes('cosmos') || rarity.includes('promo') || card.variants?.wPromo) {
     return 'rare holo cosmos';
+  }
+
+  if (isEX || isGX) {
+    return 'rare holo v';
   }
 
   if (trainerGallery && !isVLike && !isVMAX && !isVSTAR) {
@@ -145,6 +151,20 @@ function getTypeClasses(card: TCGCard): string[] {
   return (card.types ?? [])
     .map((type) => normalizeText(type).replace(/\s+/g, '-'))
     .filter(Boolean);
+}
+
+function getArtWindow(card: TCGCard): string {
+  if (card.category === 'Energy') return 'energy';
+  if (card.category === 'Trainer') return 'trainer';
+
+  const setId = (card.set?.id ?? card.id.split('-')[0] ?? '').toLowerCase();
+
+  if (/^(base|gym|neo|ecard)/.test(setId)) return 'pokemon-wotc';
+  if (/^(ex|np|pop)/.test(setId) || setId.startsWith('tk-ex')) return 'pokemon-ex';
+  if (/^(dp|dpp|pl|hgss|hgssp|col)/.test(setId) || setId.startsWith('tk-dp') || setId.startsWith('tk-hs')) return 'pokemon-dp-hgss';
+  if (/^(bw|bwp|dv|rc|201[1-3]bw)/.test(setId) || setId.startsWith('tk-bw')) return 'pokemon-bw';
+
+  return 'pokemon-modern';
 }
 
 function formatStageSubtype(stage: string): string {
