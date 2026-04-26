@@ -18,7 +18,6 @@ import {
   ScrollText,
   Layers3,
 } from 'lucide-react';
-import Image from 'next/image';
 import type { TCGCard, TCGCardAbility, TCGCardAttack, TCGCardCategory } from '@/types/tcg';
 import { useTranslation } from '@/lib/i18n';
 import { useMounted } from '@/hooks/useMounted';
@@ -26,6 +25,7 @@ import { usePrimeDexStore } from '@/store/primedex';
 import { getTCGCard } from '@/lib/api/tcg';
 import { tcgKeys } from '@/lib/api/keys';
 import { cn } from '@/lib/utils';
+import { TCGHolographicCard } from './TCGHolographicCard';
 
 interface TCGCardDetailModalProps {
   card: TCGCard | null;
@@ -79,7 +79,6 @@ export function TCGCardDetailModal({ card, isOpen, onClose }: TCGCardDetailModal
 
   const displayCard = hydratedCard ?? card;
   const isHydrating = isFetching && !displayCard.category;
-  const cardImage = displayCard.image ? `${displayCard.image}/high.webp` : '/images/card-placeholder.svg';
   const titleId = `tcg-card-detail-title-${card.id}`;
   const descriptionId = `tcg-card-detail-description-${card.id}`;
   const totalCards = displayCard.set?.cardCount?.total ?? displayCard.set?.totalCards;
@@ -129,16 +128,12 @@ export function TCGCardDetailModal({ card, isOpen, onClose }: TCGCardDetailModal
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-transparent" />
 
             <div className="relative w-full max-w-[240px] sm:max-w-[320px] lg:max-w-[460px]">
-              <div className="relative aspect-[2.5/3.5] overflow-hidden">
-                <Image
-                  src={cardImage}
-                  alt={t('detail.artwork_alt', { name: displayCard.name })}
-                  fill
-                  className="object-contain object-center"
-                  priority
-                  unoptimized
-                />
-              </div>
+              <TCGHolographicCard
+                card={displayCard}
+                priority
+                noFrame
+                sizes="(min-width: 1024px) 460px, (min-width: 640px) 320px, 240px"
+              />
 
               <div className="mt-5 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.24em] text-foreground/40">
                 <span className="truncate">{displayCard.set?.name || t('tcg.unknown')}</span>

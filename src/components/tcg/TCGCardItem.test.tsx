@@ -16,6 +16,9 @@ const baseCard: TCGCard = {
   localId: '001',
   name: 'Charizard',
   image: 'https://assets.tcgdex.net/en/base/base1/001',
+  rarity: 'Rare Holo VMAX',
+  category: 'Pokemon',
+  stage: 'VMAX',
 };
 
 describe('TCGCardItem', () => {
@@ -26,7 +29,9 @@ describe('TCGCardItem', () => {
       </I18nextProvider>
     );
 
-    expect(screen.getByRole('button', { name: i18n.t('tcg.open_card_detail', { name: baseCard.name }) })).toHaveClass('bg-transparent');
+    const button = screen.getByRole('button', { name: i18n.t('tcg.open_card_detail', { name: baseCard.name }) });
+
+    expect(button.closest('[data-rarity]')).toHaveAttribute('data-rarity', 'rare holo vmax');
     expect(screen.getByRole('img', { name: baseCard.name })).toBeInTheDocument();
   });
 

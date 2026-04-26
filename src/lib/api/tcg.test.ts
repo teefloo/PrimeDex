@@ -35,6 +35,10 @@ function makeCard(id: string, overrides: Partial<TCGCard> = {}): TCGCard {
     localId: id,
     name: `Card ${id}`,
     image: `https://assets.tcgdex.net/en/base/base1/${id}`,
+    rarity: 'Common',
+    category: 'Pokemon',
+    stage: 'Basic',
+    types: ['Colorless'],
     ...overrides,
   };
 }
@@ -108,6 +112,54 @@ describe('tcg api helpers', () => {
     expect(result.cards.map((card) => card.id)).toEqual(['001', '002', '003']);
     expect(result.hasMore).toBe(true);
     expect(mockedSetCachedData).toHaveBeenCalled();
+  });
+
+  it('hydrates missing catalog metadata so visual rarity effects can be mapped', async () => {
+    mockGet.mockImplementation(async (url: string) => {
+      if (url.includes('/cards?')) {
+        return {
+          data: [
+            makeCard('001', {
+              rarity: undefined,
+              category: undefined,
+              stage: undefined,
+              types: undefined,
+            }),
+          ],
+        };
+      }
+
+      if (url.includes('/cards/001')) {
+        return {
+          data: makeCard('001', {
+            rarity: 'Rare Holo',
+            category: 'Pokemon',
+            stage: 'Stage2',
+            types: ['Psychic'],
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected url: ${url}`);
+    });
+
+    const result = await searchCards(
+      {
+        selectedCategory: 'Pokemon',
+        sortBy: 'name',
+        sortOrder: 'asc',
+      },
+      'en',
+      1,
+      1,
+    );
+
+    expect(result.cards[0]).toMatchObject({
+      id: '001',
+      rarity: 'Rare Holo',
+      stage: 'Stage2',
+      types: ['Psychic'],
+    });
   });
 
   it('filters promo and reverse-holo style cards locally when the API cannot query them', async () => {

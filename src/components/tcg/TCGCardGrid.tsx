@@ -48,7 +48,7 @@ export function TCGCardGrid() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: tcgKeys.catalog(queryFilters, resolvedLang, PAGE_SIZE),
-    queryFn: async ({ pageParam = 1 }) => searchCards(queryFilters, resolvedLang, pageParam, PAGE_SIZE),
+    queryFn: async ({ pageParam = 1, signal }) => searchCards(queryFilters, resolvedLang, pageParam, PAGE_SIZE, signal),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length + 1 : undefined),
     enabled: mounted,
