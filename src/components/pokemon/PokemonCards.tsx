@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 import { TCGCardDetailModal } from '@/components/tcg/TCGCardDetailModal';
-import { PokemonCard3D } from './PokemonCard3D';
+import { TCGHolographicCard } from '@/components/tcg/TCGHolographicCard';
 
 interface PokemonCardsProps {
   name: string;
@@ -86,11 +86,11 @@ export const PokemonCards: React.FC<PokemonCardsProps> = ({ name, localizedName,
       >
         {cards.map((card) => (
           <motion.div key={card.id} variants={itemVariants} className="relative z-10 perspective-1000 w-full flex items-center justify-center">
-            <PokemonCard3D
-              name={card.name}
-              image={`${card.image}/high.webp`}
+            <TCGHolographicCard
+              card={card}
               className="w-[100%] max-w-[280px]"
-              onClick={() => setSelectedCard(card)}
+              onClick={setSelectedCard}
+              sizes="(min-width: 1024px) 220px, (min-width: 640px) 28vw, 45vw"
             />
           </motion.div>
         ))}

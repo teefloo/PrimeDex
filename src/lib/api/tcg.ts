@@ -59,6 +59,8 @@ export const TCG_GLOBAL_RARITIES = [
   'Reverse Holo',
 ];
 
+const VISUAL_METADATA_CONCURRENCY = 8;
+
 export const DEFAULT_TCG_CARD_FILTERS: TCGCardFilters = {
   selectedCategory: 'all',
   sortBy: 'name',
@@ -68,6 +70,15 @@ export const DEFAULT_TCG_CARD_FILTERS: TCGCardFilters = {
 function resolveTcgLang(lang = 'en') {
   const supportedLang = supportedLangs.includes(lang as (typeof supportedLangs)[number]) ? lang : 'en';
   return unsupportedTcgLangs.has(supportedLang) ? 'en' : supportedLang;
+}
+
+function getWithOptionalSignal<T>(url: string, signal?: AbortSignal) {
+  return signal ? tcgClient.get<T>(url, { signal }) : tcgClient.get<T>(url);
+}
+
+function throwIfAborted(signal?: AbortSignal) {
+  if (!signal?.aborted) return;
+  throw signal.reason ?? new DOMException('Aborted', 'AbortError');
 }
 
 function normaliseSet(raw: RawSet): TCGSet {
@@ -109,6 +120,7 @@ function normaliseAbility(ability: TCGCardAbility): TCGCardAbility {
 function normaliseCard(card: TCGCard): TCGCard {
   return {
     ...card,
+    category: normaliseCardCategory(card.category),
     source: card.source ?? 'TCGames',
     effect: card.effect ?? card.flavorText ?? card.description,
     description: card.description ?? card.flavorText,
@@ -122,6 +134,16 @@ function normaliseCard(card: TCGCard): TCGCard {
         ? normaliseAbility(card.abilities)
         : card.abilities,
   };
+}
+
+function normaliseCardCategory(category: TCGCard['category']): TCGCard['category'] {
+  const normalized = normalizeFilterValue(category ?? '');
+
+  if (normalized === 'pokemon') return 'Pokemon';
+  if (normalized === 'trainer' || normalized === 'dresseur') return 'Trainer';
+  if (normalized === 'energy' || normalized === 'energie') return 'Energy';
+
+  return category;
 }
 
 function buildCardQueryParams(filters: TCGCardFilters, page: number, limit: number) {
@@ -276,15 +298,17 @@ function shouldHydrateForLocalFilters(card: TCGCard, filters: TCGCardFilters): b
 /**
  * Fetch a single card by ID with full details.
  */
-export const getTCGCard = async (cardId: string, lang = 'en'): Promise<TCGCard | null> => {
+export const getTCGCard = async (cardId: string, lang = 'en', signal?: AbortSignal): Promise<TCGCard | null> => {
   const tcgLang = resolveTcgLang(lang);
-    const cacheKey = `tcg-card-v4-${cardId}-${tcgLang}`;
+    const cacheKey = `tcg-card-v5-${cardId}-${tcgLang}`;
 
   try {
     const cached = await getCachedData<TCGCard>(cacheKey);
     if (cached) return cached;
 
-    const { data } = await tcgClient.get<TCGCard>(`/${tcgLang}/cards/${cardId}`);
+    throwIfAborted(signal);
+
+    const { data } = await getWithOptionalSignal<TCGCard>(`/${tcgLang}/cards/${cardId}`, signal);
     if (data) {
       const card = normaliseCard(data);
       await setCachedData(cacheKey, card);
@@ -293,10 +317,62 @@ export const getTCGCard = async (cardId: string, lang = 'en'): Promise<TCGCard |
 
     return null;
   } catch (error) {
+    if (signal?.aborted) throw error;
     console.error(`[TCG API] Error fetching card ${cardId}:`, error);
     return await getCachedData<TCGCard>(cacheKey, true);
   }
 };
+
+async function hydrateCardsForVisualEffects(cards: TCGCard[], lang: string, signal?: AbortSignal): Promise<TCGCard[]> {
+  return mapWithConcurrency(cards, VISUAL_METADATA_CONCURRENCY, async (card) => {
+    throwIfAborted(signal);
+
+    if (!needsVisualMetadata(card)) return card;
+
+    const fullCard = await getTCGCard(card.id, lang, signal);
+    return fullCard ?? card;
+  });
+}
+
+function needsVisualMetadata(card: TCGCard): boolean {
+  if (!card.rarity || !card.category) return true;
+
+  if (card.category === 'Pokemon') {
+    return !card.stage && !(card.types?.length);
+  }
+
+  if (card.category === 'Trainer') {
+    return !card.trainerType;
+  }
+
+  if (card.category === 'Energy') {
+    return !card.energyType;
+  }
+
+  return false;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, worker));
+
+  return results;
+}
 
 /**
  * Fetches all cards from a given set.
@@ -377,11 +453,12 @@ export const searchCards = async (
   lang = 'en',
   page = 1,
   limit = 48,
+  signal?: AbortSignal,
 ): Promise<TCGCatalogPageResult> => {
   const tcgLang = resolveTcgLang(lang);
   const queryFilters = stripLocalOnlyFilters(filters);
   const query = buildCardQueryParams(queryFilters, page, limit).toString();
-  const cacheKey = `tcg-catalog-v5-${tcgLang}-${query}-p${page}-l${limit}-local-${serializeLocalOnlyFilters(filters)}`;
+  const cacheKey = `tcg-catalog-v7-${tcgLang}-${query}-p${page}-l${limit}-local-${serializeLocalOnlyFilters(filters)}`;
   const hasLocalOnlyFilters =
     Boolean(filters.selectedRarity) ||
     Boolean(filters.selectedTrainerTypes?.length) ||
@@ -392,8 +469,10 @@ export const searchCards = async (
     if (cached) return cached;
 
     if (!hasLocalOnlyFilters) {
-      const { data } = await tcgClient.get<TCGCard[]>(`/${tcgLang}/cards?${query}`);
-      const pageCards = Array.isArray(data) ? data.slice(0, limit).map((card) => normaliseCard(card)) : [];
+      const { data } = await getWithOptionalSignal<TCGCard[]>(`/${tcgLang}/cards?${query}`, signal);
+      throwIfAborted(signal);
+      const normalized = Array.isArray(data) ? data.slice(0, limit).map((card) => normaliseCard(card)) : [];
+      const pageCards = await hydrateCardsForVisualEffects(normalized, tcgLang, signal);
       const result = {
         cards: pageCards,
         hasMore: Array.isArray(data) ? data.length > limit : false,
@@ -410,7 +489,8 @@ export const searchCards = async (
 
     while (hasMoreRemote && cards.length < targetCount) {
       const pageQuery = buildCardQueryParams(queryFilters, remotePage, limit).toString();
-      const { data } = await tcgClient.get<TCGCard[]>(`/${tcgLang}/cards?${pageQuery}`);
+      const { data } = await getWithOptionalSignal<TCGCard[]>(`/${tcgLang}/cards?${pageQuery}`, signal);
+      throwIfAborted(signal);
       const normalized = Array.isArray(data) ? data.map((card) => normaliseCard(card)) : [];
       const hydrated = hasLocalOnlyFilters
         ? await Promise.all(
@@ -419,7 +499,7 @@ export const searchCards = async (
                 return card;
               }
 
-              const fullCard = await getTCGCard(card.id, tcgLang);
+              const fullCard = await getTCGCard(card.id, tcgLang, signal);
               return fullCard ?? card;
             }),
           )
@@ -432,14 +512,16 @@ export const searchCards = async (
 
     const start = (page - 1) * limit;
     const end = start + limit;
+    const pageCards = await hydrateCardsForVisualEffects(cards.slice(start, end), tcgLang, signal);
     const result = {
-      cards: cards.slice(start, end),
+      cards: pageCards,
       hasMore: hasMoreRemote || cards.length > end,
     };
 
     await setCachedData(cacheKey, result);
     return result;
   } catch (error) {
+    if (signal?.aborted) throw error;
     console.error('[TCG API] Error in searchCards:', error);
     return (await getCachedData<TCGCatalogPageResult>(cacheKey, true)) || { cards: [], hasMore: false };
   }
@@ -545,7 +627,7 @@ export const getPokemonCards = async (
   englishName?: string,
 ): Promise<TCGCard[]> => {
   const tcgLang = resolveTcgLang(lang);
-  const cacheKey = `tcg-pokemon-cards-v5-${tcgLang}-${pokemonName}`;
+  const cacheKey = `tcg-pokemon-cards-v6-${tcgLang}-${pokemonName}`;
 
   try {
     const cached = await getCachedData<TCGCard[]>(cacheKey);

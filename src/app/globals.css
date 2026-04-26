@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/pokemon-cards-css.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -419,6 +420,101 @@ h6 {
   opacity: 1;
 }
 
+.pokemon-holo-card {
+  contain: layout;
+  overflow: visible;
+  max-width: 100%;
+}
+
+.pokemon-holo-card .card__translater,
+.pokemon-holo-card .card__rotator {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pokemon-holo-card .card__rotator {
+  cursor: pointer;
+}
+
+.pokemon-holo-card[data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-rarity="rare holo cosmos"] .card__glare {
+  clip-path: var(--clip);
+}
+
+.pokemon-holo-card[data-art-window="pokemon-modern"][data-rarity="rare holo"][data-subtypes^="stage"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-modern"][data-rarity="rare holo"][data-subtypes^="stage"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-modern"][data-rarity="rare holo cosmos"][data-subtypes^="stage"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-modern"][data-rarity="rare holo cosmos"][data-subtypes^="stage"] .card__glare {
+  clip-path: var(--clip-stage);
+}
+
+.pokemon-holo-card[data-art-window="pokemon-wotc"][data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-wotc"][data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-wotc"][data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-wotc"][data-rarity="rare holo cosmos"] .card__glare {
+  clip-path: inset(13.7% 10.2% 52.6% 10.2% round 1.8% / 1.2%);
+}
+
+.pokemon-holo-card[data-art-window="pokemon-ex"][data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-ex"][data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-ex"][data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-ex"][data-rarity="rare holo cosmos"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-dp-hgss"][data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-dp-hgss"][data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-dp-hgss"][data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-dp-hgss"][data-rarity="rare holo cosmos"] .card__glare {
+  clip-path: inset(12.2% 8.7% 51.9% 8.7% round 2% / 1.4%);
+}
+
+.pokemon-holo-card[data-art-window="pokemon-bw"][data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-bw"][data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-art-window="pokemon-bw"][data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-art-window="pokemon-bw"][data-rarity="rare holo cosmos"] .card__glare {
+  clip-path: inset(10.8% 8.1% 52.2% 8.1% round 2.2% / 1.5%);
+}
+
+.pokemon-holo-card[data-art-window="energy"][data-rarity="rare holo"] .card__shine,
+.pokemon-holo-card[data-art-window="energy"][data-rarity="rare holo"] .card__glare,
+.pokemon-holo-card[data-art-window="energy"][data-rarity="rare holo cosmos"] .card__shine,
+.pokemon-holo-card[data-art-window="energy"][data-rarity="rare holo cosmos"] .card__glare {
+  clip-path: inset(17.5% 9% 39.5% 9% round 2.55% / 1.5%);
+}
+
+.pokemon-holo-card .card__front {
+  position: relative;
+}
+
+.pokemon-holo-card .card__back {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.18), transparent 18%),
+    linear-gradient(135deg, hsl(214, 84%, 32%), hsl(205, 100%, 20%));
+}
+
+.pokemon-holo-card .card__image {
+  display: block;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  width: 100%;
+}
+
+.pokemon-holo-card[data-holo-effect="false"] .card__shine,
+.pokemon-holo-card[data-holo-effect="false"] .card__glare {
+  opacity: 0 !important;
+}
+
+.pokemon-holo-card.interactive:not(.interacting) .card__translater,
+.pokemon-holo-card.interactive:not(.interacting) .card__rotator,
+.pokemon-holo-card.interactive:not(.interacting) .card__shine,
+.pokemon-holo-card.interactive:not(.interacting) .card__glare {
+  transition:
+    transform 0.26s ease,
+    opacity 0.2s ease,
+    box-shadow 0.26s ease,
+    filter 0.26s ease;
+}
+
 @keyframes holographicShimmer {
   0% {
     background-position: 0% 50%;
@@ -602,8 +698,11 @@ h6 {
   .animate-pulse-glow,
   .animate-pulse-slow,
   .gradient-text-hero,
-  .gradient-text-syne {
+  .gradient-text-syne,
+  .pokemon-holo-card .card__translater,
+  .pokemon-holo-card .card__rotator {
     animation: none !important;
+    transform: none !important;
   }
 }
 

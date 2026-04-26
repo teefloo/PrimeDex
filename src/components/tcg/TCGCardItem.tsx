@@ -1,10 +1,9 @@
 'use client';
 
-import { memo, useMemo } from 'react';
-import Image from 'next/image';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import type { TCGCard } from '@/types/tcg';
-import { useTranslation } from '@/lib/i18n';
+import { TCGHolographicCard } from './TCGHolographicCard';
 
 interface TCGCardItemProps {
   card: TCGCard;
@@ -19,63 +18,41 @@ export const TCGCardItem = memo(function TCGCardItem({
   onClick,
   variant = 'default',
 }: TCGCardItemProps) {
-  const { t } = useTranslation();
-
-  const cardImage = useMemo(
-    () => (card.image ? `${card.image}/high.webp` : '/images/card-placeholder.svg'),
-    [card.image],
-  );
-
   const handleClick = () => {
     if (onClick) onClick(card);
   };
 
   if (variant === 'list') {
     return (
-      <motion.button
-        type="button"
+      <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: Math.min(index * 0.02, 0.25), ease: [0.16, 1, 0.3, 1] }}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={handleClick}
-        className="block w-full cursor-pointer bg-transparent text-left"
-        aria-label={t('tcg.open_card_detail', { name: card.name })}
+        className="block w-full"
       >
-        <Image
-          src={cardImage}
-          alt={card.name}
-          width={500}
-          height={700}
-          className="h-auto w-full object-contain object-center"
-          unoptimized
+        <TCGHolographicCard
+          card={card}
+          onClick={handleClick}
+          className="w-full"
+          sizes="(min-width: 1024px) 720px, 92vw"
         />
-      </motion.button>
+      </motion.div>
     );
   }
 
   return (
-    <motion.button
-      type="button"
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: Math.min(index * 0.02, 0.3), ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      className="group block w-full cursor-pointer bg-transparent text-left"
-      onClick={handleClick}
-      aria-label={t('tcg.open_card_detail', { name: card.name })}
+      className="block w-full"
     >
-      <Image
-        src={cardImage}
-        alt={card.name}
-        width={500}
-        height={700}
-        className="h-auto w-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.01]"
-        unoptimized
+      <TCGHolographicCard
+        card={card}
+        onClick={handleClick}
+        className="w-full"
       />
-    </motion.button>
+    </motion.div>
   );
 });
 
