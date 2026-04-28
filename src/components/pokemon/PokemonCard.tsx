@@ -229,11 +229,11 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
   const color = TYPE_COLORS[mainType] || '#A8A77A';
   const cardLabel = t('detail.view_card_aria', { name: displayName });
   const cardBackground = [
-    `radial-gradient(circle at 50% 16%, ${hexToRgba(color, 0.34)} 0%, transparent 44%)`,
-    `radial-gradient(circle at 50% 100%, ${hexToRgba(color, 0.12)} 0%, transparent 34%)`,
-    `linear-gradient(180deg, ${hexToRgba(color, 0.22)} 0%, rgba(8, 12, 22, 0.94) 44%, rgba(4, 7, 14, 1) 100%)`,
+    `radial-gradient(circle at 50% 18%, ${hexToRgba(color, 0.18)} 0%, transparent 52%)`,
+    `radial-gradient(circle at 50% 100%, ${hexToRgba(color, 0.1)} 0%, transparent 42%)`,
+    `linear-gradient(180deg, ${hexToRgba(color, 0.12)} 0%, rgba(8, 12, 22, 0.9) 48%, rgba(4, 7, 14, 1) 100%)`,
   ].join(', ');
-  const cardShadow = `0 22px 58px -34px ${hexToRgba(color, 0.58)}, inset 0 1px 0 rgba(255, 255, 255, 0.08)`;
+  const cardShadow = `0 18px 48px -34px ${hexToRgba(color, 0.42)}, inset 0 1px 0 rgba(255, 255, 255, 0.06)`;
 
   return (
     <div className="relative block h-full py-1 px-1 sm:px-2" onMouseEnter={prefetchDetails}>
@@ -253,11 +253,12 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
         />
 
         <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-95 transition-opacity duration-500 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 z-0 opacity-80 transition-opacity duration-500 group-hover:opacity-90"
           style={{
             background: [
-              `radial-gradient(circle at 50% 18%, ${hexToRgba(color, 0.24)} 0%, transparent 44%)`,
-              `linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.18) 48%, rgba(0, 0, 0, 0.42) 100%)`,
+              `radial-gradient(circle at 50% 28%, ${hexToRgba(color, 0.14)} 0%, transparent 68%)`,
+              `radial-gradient(circle at 50% 72%, ${hexToRgba(color, 0.08)} 0%, transparent 58%)`,
+              `linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 28%, rgba(0, 0, 0, 0.14) 100%)`,
             ].join(', '),
           }}
         />
