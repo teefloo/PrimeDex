@@ -5,7 +5,7 @@ export default function HeroSection() {
   return (
     <section className="pt-8 pb-8">
       <div 
-        className="page-shell page-surface relative z-10 overflow-clip px-5 py-8 md:px-8 md:py-10"
+        className="page-shell page-surface relative z-10 !overflow-visible px-5 py-8 md:px-8 md:py-10"
       >
         <div className="mx-auto max-w-5xl text-center">
           <h1 
