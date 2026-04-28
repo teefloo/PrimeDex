@@ -25,7 +25,7 @@ export function AdvancedInfo({ pokemon, species }: AdvancedInfoProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="bg-secondary/20 border border-white/5 p-5 rounded-3xl flex flex-col gap-4">
+      <div className="bg-secondary/20 border border-border/40 p-5 rounded-2xl flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
             <Dna className="w-5 h-5" />
@@ -38,7 +38,7 @@ export function AdvancedInfo({ pokemon, species }: AdvancedInfoProps) {
             <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-2">{t('detail.egg_groups')}</p>
             <div className="flex flex-wrap gap-2">
               {species.egg_groups.map(group => (
-                <span key={group.name} className="px-3 py-1 bg-background/50 rounded-lg text-[11px] font-bold text-foreground/70 capitalize border border-white/5">
+                <span key={group.name} className="px-3 py-1 bg-background/50 rounded-lg text-[11px] font-bold text-foreground/70 capitalize border border-border/40">
                   {t(`egg_groups.${group.name}`)}
                 </span>
               ))}
@@ -69,7 +69,7 @@ export function AdvancedInfo({ pokemon, species }: AdvancedInfoProps) {
         </div>
       </div>
 
-      <div className="bg-secondary/20 border border-white/5 p-5 rounded-3xl flex flex-col gap-4">
+      <div className="bg-secondary/20 border border-border/40 p-5 rounded-2xl flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-yellow-500/10 rounded-xl text-yellow-500">
             <Target className="w-5 h-5" />
@@ -82,7 +82,7 @@ export function AdvancedInfo({ pokemon, species }: AdvancedInfoProps) {
             <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mb-1">{t('detail.catch_rate')}</p>
             <div className="flex items-center gap-2">
               <span className="text-lg font-black text-foreground/90">{species.capture_rate}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div className="flex-1 h-1.5 rounded-full bg-card/50 overflow-hidden">
                 <div className="h-full bg-yellow-500" style={{ width: `${(species.capture_rate / 255) * 100}%` }} />
               </div>
             </div>

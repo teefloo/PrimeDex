@@ -35,11 +35,11 @@ export default function PageHeader({
 
   return (
     <section className={cn('page-shell pt-14 mb-10', centered && 'text-center', className)}>
-      <div className="page-surface relative overflow-hidden px-5 py-6 md:px-8 md:py-7 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)]">
-        <div className={cn('absolute top-0 right-0 h-48 w-48 rounded-full blur-[90px] pointer-events-none opacity-60', gradientFrom)} />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <div className="page-surface relative overflow-hidden px-5 py-6 md:px-8 md:py-7">
+        <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-28 opacity-55 bg-gradient-to-b to-transparent', gradientFrom)} />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
         <div className={cn('flex items-start gap-4 md:items-center', centered && 'justify-center')}>
-          <div className={cn('flex h-14 w-14 flex-none items-center justify-center rounded-[1.25rem] border backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]', iconBgColor, iconBorderColor)}>
+          <div className={cn('flex h-14 w-14 flex-none items-center justify-center rounded-xl border backdrop-blur-xl shadow-[var(--glass-inset)]', iconBgColor, iconBorderColor)}>
             <Icon className={cn('w-6 h-6', iconColor)} />
           </div>
           <div className={cn('min-w-0 space-y-2', centered && 'max-w-3xl')}>

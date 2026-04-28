@@ -16,7 +16,7 @@ export default function CaughtFilter() {
   ];
 
   return (
-    <div className="flex bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-full p-1">
+    <div className="flex bg-card/50 backdrop-blur-xl border border-border/50 rounded-full p-1">
       {modes.map((mode) => (
         <button
           key={mode.id}
@@ -26,7 +26,7 @@ export default function CaughtFilter() {
           className={cn(
             "flex items-center justify-center gap-1.5 px-4 min-h-[44px] rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-400 hover:scale-105 active:scale-95",
             showCaughtOnly === mode.id
-              ? "bg-primary text-white shadow-[0_4px_16px_-4px_rgba(227,53,13,0.4)]" 
+              ? "bg-primary text-primary-foreground shadow-[0_4px_16px_-4px_rgba(227,53,13,0.4)]"
               : "text-foreground/70 hover:text-foreground/90"
           )}
         >

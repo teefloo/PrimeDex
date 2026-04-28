@@ -65,7 +65,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
     <Dialog open={open} onOpenChange={(value) => {
       if (!value) onClose();
     }}>
-      <DialogContent className="max-h-[88vh] overflow-y-auto rounded-[2rem] border border-border/70 bg-background/95 p-0 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:max-w-4xl">
+      <DialogContent className="glass-surface max-h-[88vh] overflow-y-auto rounded-2xl p-0 sm:max-w-4xl">
         <div className="relative overflow-hidden">
           <div
             className="absolute inset-x-0 top-0 h-1.5"
@@ -74,8 +74,8 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
 
           <div className="relative px-6 pt-7 pb-5 sm:px-8">
             <div
-              className="absolute inset-0 opacity-20"
-              style={{ background: `radial-gradient(circle at top left, ${typeColor}35, transparent 45%)` }}
+              className="absolute inset-x-0 top-0 h-32 opacity-70"
+              style={{ background: `linear-gradient(180deg, ${typeColor}18, transparent)` }}
             />
 
             <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -88,7 +88,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
                 </DialogDescription>
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Badge className="text-white" style={{ backgroundColor: typeColor }}>
+                  <Badge className="text-primary-foreground" style={{ backgroundColor: typeColor }}>
                     {t(`types.${move.type}`)}
                   </Badge>
                   <Badge variant="outline" className="border-border/70 text-foreground/60">
@@ -113,7 +113,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
 
           <div className="grid gap-0 border-t border-border/70 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="space-y-6 px-6 py-6 sm:px-8">
-              <section className="rounded-[1.5rem] border border-border/70 bg-white/[0.02] p-5">
+              <section className="rounded-xl border border-border/70 bg-card/35 p-5">
                 <div className="flex items-center gap-2">
                   <Info className="h-4 w-4 text-primary" />
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
@@ -125,7 +125,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
                 </p>
               </section>
 
-              <section className="rounded-[1.5rem] border border-border/70 bg-white/[0.02] p-5">
+              <section className="rounded-xl border border-border/70 bg-card/35 p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
@@ -211,7 +211,7 @@ export default function MoveDetailModal({ move, open, onClose }: MoveDetailModal
             </div>
 
             <aside className="border-t border-border/70 px-6 py-6 lg:border-l lg:border-t-0 sm:px-8">
-              <div className="rounded-[1.5rem] border border-border/70 bg-white/[0.02] p-4">
+              <div className="rounded-xl border border-border/70 bg-card/35 p-4">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
@@ -358,7 +358,7 @@ function PokemonLearnerCard({
       <motion.div
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
-        className="flex flex-col items-center rounded-2xl border border-border/70 bg-white/[0.03] p-2 text-center transition-all duration-200 hover:border-border/90 hover:bg-white/[0.06]"
+        className="flex flex-col items-center rounded-2xl border border-border/70 bg-card/50 p-2 text-center transition-all duration-200 hover:border-border/90 hover:bg-card/65"
       >
         <div className="relative h-14 w-14">
           <Image
@@ -403,10 +403,10 @@ function MoveStatBox({
   value: number | string | null;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/70 bg-white/[0.03] p-3">
+    <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/70 bg-card/50 p-3">
       <Icon className="h-4 w-4 text-primary" />
       <span className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground/35">{label}</span>
-      <span className="text-lg font-black text-foreground">{value ?? '—'}</span>
+      <span className="text-lg font-black text-foreground">{value ?? '-'}</span>
     </div>
   );
 }

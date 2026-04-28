@@ -16,7 +16,7 @@ import {
   ArrowLeftRight,
   LayoutGrid,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, ReactNode } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback, ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -73,15 +73,27 @@ export default function Header() {
     caughtPokemon,
     language,
     setLanguage,
-    searchTerm,
-    setSearchTerm,
     systemLanguage,
   } = usePrimeDexStore();
   const { t, i18n } = useTranslation();
   const mounted = useMounted();
   const router = useRouter();
-  const [localSearch, setLocalSearch] = useState(searchTerm);
+  const [localSearch, setLocalSearch] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  const updateDropdownPosition = useCallback(() => {
+    if (searchRef.current) {
+      const rect = searchRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${rect.bottom + 8}px`,
+        right: `${window.innerWidth - rect.right}px`,
+        zIndex: 9999,
+      });
+    }
+  }, []);
 
   const resolvedLang = mounted ? (language === 'auto' ? (systemLanguage || 'en') : language) : 'en';
 
@@ -109,16 +121,16 @@ export default function Header() {
   }, [localSearch, allPokemon, resolvedLang]);
 
   useEffect(() => {
-    setLocalSearch(searchTerm);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchTerm(localSearch);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [localSearch, setSearchTerm]);
+    if (isSearchFocused && searchResults.length > 0) {
+      updateDropdownPosition();
+      window.addEventListener('scroll', updateDropdownPosition, true);
+      window.addEventListener('resize', updateDropdownPosition);
+      return () => {
+        window.removeEventListener('scroll', updateDropdownPosition, true);
+        window.removeEventListener('resize', updateDropdownPosition);
+      };
+    }
+  }, [isSearchFocused, searchResults, updateDropdownPosition]);
 
   const languageLabel = mounted ? (language === 'auto' ? t('settings.auto') : language.toUpperCase()) : 'EN';
   const themeLabel = mounted
@@ -155,13 +167,14 @@ export default function Header() {
       <header
         className="fixed left-0 right-0 top-2 z-50 flex justify-center px-3 md:top-3 md:px-4"
       >
+        <div className="relative">
         <div
-          className="inline-flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-1.5 rounded-[2rem] border border-border/50 bg-background/72 px-3 py-2 shadow-[0_14px_36px_-26px_rgba(0,0,0,0.3)] backdrop-blur-2xl md:max-w-[calc(100vw-3rem)] md:px-4"
+          className="glass-toolbar inline-flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-1.5 px-3 py-2 md:max-w-[calc(100vw-3rem)] md:px-4"
         >
           <div className="flex shrink-0 items-center justify-start">
             <Link href="/" className="flex items-center gap-2 group" aria-label={t('header.home_aria')}>
               <div className="shrink-0 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
-                <PrimeDexLogo className="h-5 w-5 md:h-6 md:w-6 transition-all duration-300 drop-shadow-[0_0_8px_rgba(227,53,13,0.24)] group-hover:drop-shadow-[0_0_14px_rgba(227,53,13,0.42)]" />
+                <PrimeDexLogo className="h-5 w-5 md:h-6 md:w-6 transition-all duration-300 drop-shadow-[0_0_8px_rgba(190,93,72,0.18)] group-hover:drop-shadow-[0_0_14px_rgba(190,93,72,0.32)]" />
               </div>
 
               <div className="flex flex-col items-start gap-0.5">
@@ -177,7 +190,7 @@ export default function Header() {
                   </span>
                   <div className="h-[2px] w-7 overflow-hidden rounded-full bg-muted/70">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-orange-400 transition-[width] duration-700 ease-out"
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-teal-400 transition-[width] duration-700 ease-out"
                       style={{ width: `${mounted ? progressPercent : 0}%` }}
                     />
                   </div>
@@ -186,7 +199,7 @@ export default function Header() {
             </Link>
           </div>
 
-          <nav className="hidden min-w-0 flex-none items-center justify-center gap-0.5 rounded-full border border-border/70 bg-muted/45 p-0.5 backdrop-blur-xl lg:flex">
+          <nav className="hidden min-w-0 flex-none items-center justify-center gap-0.5 rounded-full border border-border/50 bg-muted/35 p-0.5 backdrop-blur-xl lg:flex">
             <HeaderLink href="/team" variant="ghost" size="sm" className="gap-1.5 px-2 py-1 text-[9px] text-foreground/60 hover:text-primary">
               <Users className="h-3 w-3" /> {t('nav.team')}
             </HeaderLink>
@@ -213,7 +226,7 @@ export default function Header() {
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-1 md:gap-1.5">
-            <div className="relative group mr-0.5 hidden w-[clamp(180px,13vw,240px)] 2xl:block">
+            <div ref={searchRef} className="relative group mr-0.5 hidden w-[clamp(180px,13vw,240px)] 2xl:block">
               <div className="relative w-full">
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3 transition-colors duration-300 group-hover:text-primary">
                   <Search className="h-3.5 w-3.5 text-foreground/60 transition-colors duration-300 group-hover:text-primary" />
@@ -226,58 +239,17 @@ export default function Header() {
                   onChange={(event) => setLocalSearch(event.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                  className="h-8 w-full rounded-full border border-border/70 bg-background/80 pl-9 pr-3 text-[10px] font-semibold leading-none text-foreground shadow-[0_10px_20px_-22px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 placeholder:text-foreground/60 focus:border-primary/40 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/25"
+                  className="h-8 w-full rounded-full border border-border/60 bg-card/60 pl-9 pr-3 text-[10px] font-semibold leading-none text-foreground shadow-[0_10px_24px_-24px_rgba(24,36,54,0.28)] backdrop-blur-xl transition-all duration-300 placeholder:text-foreground/45 focus:border-primary/35 focus:bg-card/80 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
-              {isSearchFocused && localSearch && searchResults.length > 0 && (
-                  <div
-                    className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-[1.25rem] border border-border/70 bg-background/96 p-2 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.35)] backdrop-blur-3xl"
-                  >
-                    <div className="flex flex-col gap-1">
-                      {searchResults.map((pokemon) => {
-                        const speciesNames = pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
-                        const localized = speciesNames.find((speciesName) => speciesName.pokemon_v2_language?.name === resolvedLang);
-                        const displayName = localized?.name || pokemon.name;
-
-                        return (
-                          <button
-                            key={pokemon.name}
-                            type="button"
-                            onClick={() => {
-                              router.push(`/pokemon/${pokemon.name}`);
-                              setLocalSearch('');
-                              setSearchTerm('');
-                              setIsSearchFocused(false);
-                            }}
-                            className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-muted/70 group/item"
-                          >
-                            <div className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/60 p-1">
-                              <Image
-                                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
-                                alt={displayName}
-                                width={32}
-                                height={32}
-                                className="object-contain transition-transform drop-shadow-md group-hover/item:scale-110"
-                                unoptimized
-                              />
-                            </div>
-                            <span className="flex-1 truncate text-xs font-black capitalize text-foreground/80 group-hover/item:text-primary">
-                              {displayName}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
             </div>
 
             <Tooltip>
               <TooltipTrigger>
-                <Link href="/favorites" aria-label={t('nav.favorites')}>
+                <Link href="/favorites" aria-label={t('nav.favorites')} className="hidden sm:block">
                   <div
-                    className="flex h-8 items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-2.5 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-rose-500/25 hover:bg-rose-500/10 hover:text-rose-500 active:scale-95"
+                    className="glass-control flex h-8 items-center gap-1.5 px-2.5 text-foreground/70 hover:border-rose-500/25 hover:bg-rose-500/10 hover:text-rose-500 active:scale-95"
                   >
                     <Heart className="h-3.5 w-3.5" />
                     <span className="hidden text-[9px] font-black uppercase tracking-[0.15em] xl:inline">{t('nav.favorites')}</span>
@@ -294,11 +266,11 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={cycleLanguage}
-                  className="flex h-8 min-w-[56px] items-center justify-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-3 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-indigo-500/20 hover:bg-indigo-500/10 hover:text-indigo-500 active:scale-95"
+                  className="glass-control flex h-8 w-8 items-center justify-center gap-1.5 px-0 text-foreground/70 hover:border-indigo-500/20 hover:bg-indigo-500/10 hover:text-indigo-500 active:scale-95 sm:w-auto sm:min-w-[56px] sm:px-3"
                   aria-label={t('header.language_title', { language: languageLabel })}
                 >
                   <Languages className="h-4 w-4" />
-                  <span className="min-w-[24px] text-center text-[10px] font-black uppercase">{languageLabel}</span>
+                  <span className="hidden min-w-[24px] text-center text-[10px] font-black uppercase sm:inline">{languageLabel}</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
@@ -311,7 +283,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={cycleTheme}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-500 active:scale-95"
+                  className="glass-control flex h-8 w-8 items-center justify-center text-foreground/70 hover:border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-500 active:scale-95"
                   aria-label={themeLabel}
                 >
                   {!mounted ? (
@@ -333,7 +305,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={toggleSettings}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:rotate-45 hover:border-border/90 hover:bg-muted/70 hover:text-foreground active:scale-95"
+                  className="glass-control flex h-8 w-8 items-center justify-center text-foreground/70 hover:scale-105 hover:rotate-45 hover:border-border/80 hover:bg-muted/55 hover:text-foreground active:scale-95"
                   aria-label={t('settings.title')}
                 >
                   <Settings className="h-4 w-4 md:h-[18px] md:w-[18px]" />
@@ -350,14 +322,14 @@ export default function Header() {
                   render={
                     <button
                       type="button"
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 text-foreground/70 shadow-sm backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:border-border/90 hover:bg-muted/70 hover:text-foreground active:scale-95"
+                      className="glass-control flex h-8 w-8 items-center justify-center text-foreground/70 hover:scale-105 hover:border-border/80 hover:bg-muted/55 hover:text-foreground active:scale-95"
                       aria-label={t('header.open_menu') || 'Menu'}
                     >
                       <Menu className="h-4 w-4" />
                     </button>
                   }
                 />
-                <SheetContent side="right" className="w-[85vw] max-w-[350px] bg-background/96 p-0 backdrop-blur-3xl">
+                <SheetContent side="right" className="w-[85vw] max-w-[350px] p-0">
                   <SheetHeader className="border-b border-border/60 p-6">
                     <SheetTitle className="flex items-center text-left text-2xl font-black tracking-tighter">
                       <span className="gradient-text-primary">Prime</span>
@@ -367,49 +339,56 @@ export default function Header() {
                   <div className="flex flex-col gap-2 p-4">
                     <SheetClose
                       render={
-                        <Link href="/" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <PrimeDexLogo className="h-5 w-5 flex-shrink-0" /> {t('header.home_aria')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/team" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/favorites" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
+                          <Heart className="h-5 w-5 flex-shrink-0" /> {t('nav.favorites')}
+                        </Link>
+                      }
+                    />
+                    <SheetClose
+                      render={
+                        <Link href="/team" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <Users className="h-5 w-5 flex-shrink-0" /> {t('nav.team')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/compare" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/compare" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <ArrowLeftRight className="h-5 w-5 flex-shrink-0" /> {t('nav.compare')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/tcg" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/tcg" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <LayoutGrid className="h-5 w-5 flex-shrink-0" /> {t('nav.tcg')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/types" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/types" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <Shapes className="h-5 w-5 flex-shrink-0" /> {t('nav.types')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/moves" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/moves" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <Swords className="h-5 w-5 flex-shrink-0" /> {t('nav.moves')}
                         </Link>
                       }
                     />
                     <SheetClose
                       render={
-                        <Link href="/quiz" className="flex items-center gap-4 rounded-2xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/60 hover:text-primary">
+                        <Link href="/quiz" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
                           <BrainCircuit className="h-5 w-5 flex-shrink-0" /> {t('nav.quiz')}
                         </Link>
                       }
@@ -419,6 +398,49 @@ export default function Header() {
               </Sheet>
             </div>
           </div>
+          </div>
+
+          {isSearchFocused && localSearch && searchResults.length > 0 && (
+              <div
+                className="glass-surface !overflow-hidden rounded-xl p-2 w-72"
+                style={dropdownStyle}
+              >
+                <div className="flex flex-col gap-1">
+                  {searchResults.map((pokemon) => {
+                    const speciesNames = pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
+                    const localized = speciesNames.find((speciesName) => speciesName.pokemon_v2_language?.name === resolvedLang);
+                    const displayName = localized?.name || pokemon.name;
+
+                    return (
+                      <button
+                        key={pokemon.name}
+                        type="button"
+                          onClick={() => {
+                            router.push(`/pokemon/${pokemon.name}`);
+                            setLocalSearch('');
+                            setIsSearchFocused(false);
+                          }}
+                        className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-muted/70 group/item"
+                      >
+                        <div className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/60 p-1">
+                          <Image
+                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
+                            alt={displayName}
+                            width={32}
+                            height={32}
+                            className="object-contain transition-transform drop-shadow-md group-hover/item:scale-110"
+                            unoptimized
+                          />
+                        </div>
+                        <span className="flex-1 truncate text-xs font-black capitalize text-foreground/80 group-hover/item:text-primary">
+                          {displayName}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
         </div>
       </header>
       <SettingsModal />

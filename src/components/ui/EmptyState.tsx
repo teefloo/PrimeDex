@@ -28,7 +28,7 @@ export default function EmptyState({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        'section-frame flex flex-col items-center justify-center rounded-[2rem] border-dashed border border-border/70 py-24 text-foreground/50 md:py-28',
+        'section-frame flex flex-col items-center justify-center rounded-2xl border-dashed border border-border/70 py-24 text-foreground/50 md:py-28',
         className
       )}
     >

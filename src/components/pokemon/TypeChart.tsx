@@ -73,7 +73,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
       if (value === 2) return 'bg-emerald-500/70';
       if (value === 0.5) return 'bg-red-500/50';
       if (value === 0) return 'bg-zinc-800/90';
-      return 'bg-white/8';
+      return 'bg-card/50';
     }
     if (value === 2) return 'bg-emerald-500/50';
     if (value === 0.5) return 'bg-red-500/35';
@@ -82,8 +82,8 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
   };
 
   const getCellTextColor = (value: number): string => {
-    if (value === 2) return 'text-white font-black';
-    if (value === 0.5) return 'text-white/90 font-bold';
+    if (value === 2) return 'text-primary-foreground font-black';
+    if (value === 0.5) return 'text-foreground/90 font-bold';
     if (value === 0) return 'text-zinc-400 font-bold';
     return 'text-foreground/15';
   };
@@ -100,11 +100,11 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="rounded-[2rem] overflow-hidden border border-white/[0.06] dark:border-white/[0.04] shadow-[0_8px_40px_rgba(0,0,0,0.15)] relative"
+      className="glass-surface rounded-2xl overflow-hidden relative"
     >
       {/* Header */}
-      <div className="bg-white/[0.04] dark:bg-white/[0.03] border-b border-white/[0.06] dark:border-white/[0.04] p-5 md:p-6 relative">
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="bg-card/55 dark:bg-card/50 border-b border-border/50 dark:border-border/40 p-5 md:p-6 relative">
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -119,7 +119,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
           </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-xl bg-white/5 border border-white/[0.06] hover:bg-white/10 transition-colors"
+            className="p-2 rounded-xl bg-card/50 border border-border/50 hover:bg-card/70 transition-colors"
             aria-label={collapsed ? t('types_page.expand') : t('types_page.collapse')}
           >
             {collapsed ? <ChevronDown className="w-4 h-4 text-foreground/50" /> : <ChevronUp className="w-4 h-4 text-foreground/50" />}
@@ -158,7 +158,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
             </span>
           </motion.div>
         ) : (
-          <div className="mt-4 px-4 py-2.5 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] font-bold text-foreground/30 uppercase tracking-wider">
+          <div className="mt-4 px-4 py-2.5 bg-card/35 border border-border/40 rounded-xl text-[10px] font-bold text-foreground/30 uppercase tracking-wider">
             {t('types_page.hover_hint', { defaultValue: 'Survolez une case pour voir le multiplicateur' })}
           </div>
         )}
@@ -167,7 +167,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
         <div className="flex flex-wrap gap-4 mt-4">
           {[
             { label: t('types_page.super_effective'), color: 'bg-emerald-500/60', textColor: 'text-emerald-400' },
-            { label: t('types_page.normal_damage'), color: 'bg-white/5 border border-white/10', textColor: 'text-foreground/40' },
+            { label: t('types_page.normal_damage'), color: 'bg-card/50 border border-border/60', textColor: 'text-foreground/40' },
             { label: t('types_page.not_very_effective'), color: 'bg-red-500/40', textColor: 'text-red-400' },
             { label: t('types_page.no_effect'), color: 'bg-zinc-800/80', textColor: 'text-zinc-400' },
           ].map((item) => (
@@ -186,7 +186,7 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
         className="overflow-hidden"
       >
         <div className="bg-background/50 p-3 md:p-5">
-          <div className="rounded-xl overflow-hidden border border-white/[0.04]">
+          <div className="rounded-xl overflow-hidden border border-border/40">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="min-w-[750px]">
                 <table className="w-full border-separate border-spacing-[2px]" style={{ tableLayout: 'fixed' }} role="grid" aria-label={t('types_page.type_chart')}>
@@ -217,12 +217,12 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                             onClick={() => onTypeClick?.(defType)}
                             className={cn(
                               'w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all duration-200 group',
-                              isHighlighted(defType) ? 'bg-white/10' : 'hover:bg-white/5'
+                              isHighlighted(defType) ? 'bg-card/70' : 'hover:bg-card/50'
                             )}
                             aria-label={t(`types.${defType}`)}
                           >
                             <div
-                              className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full shadow-sm ring-1 ring-white/10 group-hover:ring-white/30 transition-all"
+                              className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full shadow-sm ring-1 ring-foreground/10 group-hover:ring-foreground/30 transition-all"
                               style={{ backgroundColor: TYPE_COLORS[defType] }}
                             />
                             <span className="text-[7px] md:text-[8px] font-black uppercase tracking-tight text-foreground/50 leading-none truncate max-w-[2.5rem]">
@@ -238,18 +238,18 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                       <tr key={atkType}>
                         <td className={cn(
                           'p-0.5 sticky left-0 z-20 bg-background/95 backdrop-blur-md transition-all duration-200 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.5)]',
-                          isHighlighted(atkType) && 'bg-white/5'
+                          isHighlighted(atkType) && 'bg-card/50'
                         )}>
                           <button
                             onClick={() => onTypeClick?.(atkType)}
                             className={cn(
                               'flex items-center gap-1.5 py-2 px-2 rounded-lg transition-all duration-200 w-full group',
-                              isHighlighted(atkType) ? 'bg-white/10' : 'hover:bg-white/5'
+                              isHighlighted(atkType) ? 'bg-card/70' : 'hover:bg-card/50'
                             )}
                             aria-label={t(`types.${atkType}`)}
                           >
                             <div
-                              className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full shadow-sm ring-1 ring-white/10 group-hover:ring-white/30 transition-all flex-shrink-0"
+                              className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-full shadow-sm ring-1 ring-foreground/10 group-hover:ring-foreground/30 transition-all flex-shrink-0"
                               style={{ backgroundColor: TYPE_COLORS[atkType] }}
                             />
                             <span className="text-[8px] md:text-[9px] font-black uppercase tracking-tight text-foreground/60 leading-none truncate max-w-[3rem]">
@@ -279,9 +279,9 @@ export default function TypeChart({ onTypeClick }: TypeChartProps) {
                                   isHovered
                                     ? 'ring-2 ring-primary/60 scale-110 z-10 relative shadow-lg'
                                     : (isRowHighlighted || isColHighlighted)
-                                      ? 'ring-1 ring-white/10'
+                                      ? 'ring-1 ring-foreground/10'
                                       : '',
-                                  val === 1 && 'border border-white/[0.02]'
+                                  val === 1 && 'border border-border/30'
                                 )}
                                 role="gridcell"
                                 aria-label={`${t(`types.${atkType}`)} vs ${t(`types.${defType}`)}: ${val}×`}

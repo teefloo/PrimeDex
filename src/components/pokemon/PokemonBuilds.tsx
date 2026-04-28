@@ -23,13 +23,13 @@ interface PokemonBuildsProps {
 }
 
 export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { language, systemLanguage } = usePrimeDexStore();
   const mounted = useMounted();
 
   const resolvedLang = mounted 
     ? (language === 'auto' ? systemLanguage : language) 
-    : i18n.language || 'en';
+    : 'en';
 
   const moveNames = pokemon.moves.slice(0, 20).map(m => m.move.name);
   
@@ -115,11 +115,11 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={cn("glass-panel p-6 md:p-8 rounded-[2.5rem] border", build.color)}
+            className={cn("glass-panel p-6 md:p-8 rounded-2xl border", build.color)}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-background/50 rounded-2xl border border-white/5 shadow-inner">
+                <div className="p-3 bg-background/50 rounded-2xl border border-border/40 shadow-inner">
                   {build.icon}
                 </div>
                 <div>
@@ -127,7 +127,7 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
                   <p className="text-xs text-foreground/50 font-medium">{build.desc}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-background/40 rounded-full border border-white/5">
+              <div className="flex items-center gap-2 px-4 py-2 bg-background/40 rounded-full border border-border/40">
                 <Trophy className="w-4 h-4 text-yellow-500" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{t('builds.recommended')}</span>
               </div>
@@ -140,13 +140,13 @@ export function PokemonBuilds({ pokemon }: PokemonBuildsProps) {
                   || formatName(move.name);
 
                 return (
-                  <div key={`${move.name}-${i}`} className="bg-background/40 p-4 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group">
+                  <div key={`${move.name}-${i}`} className="bg-background/40 p-4 rounded-2xl border border-border/40 hover:border-primary/30 transition-all group">
                     <div className="flex justify-between items-start mb-3">
                       <span className="font-black text-sm capitalize group-hover:text-primary transition-colors">
                         {localizedMoveName}
                       </span>
                       <span 
-                        className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase text-white shadow-sm"
+                        className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground shadow-sm"
                         style={{ backgroundColor: TYPE_COLORS[move.type.name] }}
                       >
                         {t(`types.${move.type.name}`)}

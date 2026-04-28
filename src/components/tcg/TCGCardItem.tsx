@@ -57,7 +57,7 @@ export const TCGCardItem = memo(function TCGCardItem({
 });
 
 export const TCGCardItemSkeleton = () => {
-  return <div className="aspect-[2.5/3.5] rounded-[1.25rem] bg-white/[0.03] animate-pulse" />;
+  return <div className="aspect-[2.5/3.5] rounded-[1.25rem] bg-card/50 animate-pulse" />;
 };
 
 export type { TCGCardItemProps };

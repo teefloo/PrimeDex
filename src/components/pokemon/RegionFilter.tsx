@@ -27,7 +27,7 @@ export default function RegionFilter() {
     >
       <div className="flex flex-nowrap items-center gap-2 md:gap-2.5 justify-start lg:justify-center px-4 mx-auto w-full max-w-7xl overflow-x-auto scrollbar-hide lg:flex-wrap">
         {/* Region label */}
-        <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/8 rounded-full border border-primary/15 shrink-0">
+        <div className="hidden sm:flex items-center gap-2 mr-1 px-3 py-2 bg-primary/10 rounded-full border border-primary/15 shrink-0">
           <Map className="w-3.5 h-3.5 text-primary/70" />
           <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-primary/60">{t('regions.title')}</span>
         </div>
@@ -57,13 +57,13 @@ export default function RegionFilter() {
               className={cn(
                 "relative px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-400 overflow-hidden group border hover:scale-105 active:scale-95",
                 isActive 
-                  ? "bg-primary text-white border-primary/50 shadow-[0_4px_20px_-4px_rgba(227,53,13,0.5)]"
-                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-white/[0.06] hover:border-white/[0.12]"
+                  ? "bg-primary text-primary-foreground border-primary/50 shadow-[0_4px_20px_-4px_rgba(227,53,13,0.5)]"
+                  : "bg-card/50 backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-border/50 hover:border-border/70"
               )}
             >
               {/* Hover glow */}
               {!isActive && (
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/8 transition-colors duration-400 rounded-full" />
+                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-400 rounded-full" />
               )}
               
               {/* Active inner shine */}

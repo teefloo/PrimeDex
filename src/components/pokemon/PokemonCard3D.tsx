@@ -25,7 +25,7 @@ export const PokemonCard3D: React.FC<PokemonCard3DProps> = ({
     <button
       type="button"
       className={cn(
-        'group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_12px_40px_rgba(0,0,0,0.18)] transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.02]',
+        'glass-card group relative overflow-hidden rounded-2xl transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.02]',
         loading && 'loading',
         className,
       )}

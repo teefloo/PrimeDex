@@ -3,16 +3,16 @@
 import { usePrimeDexStore } from '@/store/primedex';
 import { TYPE_COLORS } from '@/types/pokemon';
 import { cn } from '@/lib/utils';
-import { 
-  SlidersHorizontal, 
-  RotateCcw, 
+import {
+  SlidersHorizontal,
+  RotateCcw,
   Check
 } from 'lucide-react';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
   SheetFooter,
   SheetClose
@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { useTranslation } from '@/lib/i18n';
 
 const GENERATIONS = [
@@ -37,7 +37,7 @@ const GENERATIONS = [
 ];
 
 const EGG_GROUPS = [
-  'monster', 'bug', 'flying', 'field', 'fairy', 'grass', 'human-like', 
+  'monster', 'bug', 'flying', 'field', 'fairy', 'grass', 'human-like',
   'water1', 'water2', 'water3', 'mineral', 'amorphous', 'dragon', 'no-eggs'
 ];
 
@@ -46,15 +46,15 @@ const COLORS = [
 ];
 
 const SHAPES = [
-  'ball', 'squiggle', 'fish', 'arms', 'blob', 'upright', 'legs', 
+  'ball', 'squiggle', 'fish', 'arms', 'blob', 'upright', 'legs',
   'wings', 'tentacles', 'heads', 'humanoid', 'bug-wings', 'armor'
 ];
 
 export default function AdvancedFilters() {
-  const { 
-    selectedTypes, 
-    toggleType, 
-    selectedGeneration, 
+  const {
+    selectedTypes,
+    toggleType,
+    selectedGeneration,
     setSelectedGeneration,
     selectedEggGroups,
     toggleEggGroup,
@@ -103,10 +103,10 @@ export default function AdvancedFilters() {
 
   return (
     <Sheet>
-      <SheetTrigger 
+      <SheetTrigger
         render={
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="relative glass-btn px-6 py-6 rounded-2xl gap-2 group hover:border-primary/50 transition-all duration-300"
           />
         }
@@ -114,24 +114,24 @@ export default function AdvancedFilters() {
         <SlidersHorizontal className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
         <span className="font-bold uppercase tracking-widest text-xs">{t('filters.button')}</span>
         {activeFiltersCount > 0 && (
-          <Badge 
-            variant="default" 
-            className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center p-0 rounded-full bg-primary text-white border-2 border-background animate-in zoom-in"
+          <Badge
+            variant="default"
+            className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center p-0 rounded-full bg-primary text-primary-foreground border-2 border-background animate-in zoom-in"
           >
             {activeFiltersCount}
           </Badge>
         )}
       </SheetTrigger>
-      <SheetContent className="w-full bg-background/95 backdrop-blur-2xl border-l border-white/10 flex max-h-[calc(100dvh-1rem)] min-h-0 flex-col overflow-hidden p-0 data-[side=right]:sm:max-w-none data-[side=right]:lg:w-[min(56rem,calc(100vw-1rem))]">
-        <SheetHeader className="border-b border-white/5 p-5 pb-4 pr-16 sm:pr-20">
+      <SheetContent className="w-full bg-background/95 backdrop-blur-2xl border-l border-border/60 flex max-h-[calc(100dvh-1rem)] min-h-0 flex-col p-0 data-[side=right]:sm:max-w-none data-[side=right]:lg:w-[min(56rem,calc(100vw-1rem))]">
+        <SheetHeader className="border-b border-border/40 p-5 pb-4 pr-16 sm:pr-20 shrink-0">
           <div className="flex items-center justify-between gap-4">
             <SheetTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
               <SlidersHorizontal className="w-6 h-6 text-primary" />
               {t('filters.title')}
             </SheetTitle>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={resetFilters}
               className="hover:bg-primary/10 hover:text-primary rounded-full transition-colors"
               title={t('filters.reset')}
@@ -142,7 +142,7 @@ export default function AdvancedFilters() {
           </div>
         </SheetHeader>
 
-        <ScrollArea className="min-h-0 flex-1 px-5 py-4 md:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 md:px-6">
           <div className="grid gap-4 pb-6 xl:grid-cols-2">
             {/* Generation Filter */}
             <div className="space-y-4">
@@ -160,9 +160,9 @@ export default function AdvancedFilters() {
                       onClick={() => setSelectedGeneration(isActive ? null : gen.id)}
                       className={cn(
                         "flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 min-h-[64px]",
-                        isActive 
-                          ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(255,50,50,0.1)]" 
-                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                        isActive
+                          ? "bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(255,50,50,0.1)]"
+                          : "bg-secondary/20 border-border/40 text-foreground/60 hover:border-border/70 hover:text-foreground"
                       )}
                     >
                       <span className="text-xs font-black">{label}</span>
@@ -189,9 +189,9 @@ export default function AdvancedFilters() {
                       onClick={() => toggleType(type)}
                       className={cn(
                         "relative flex items-center gap-2 px-4 py-4 rounded-xl border transition-all duration-200 overflow-hidden group min-h-[56px]",
-                        isActive 
-                          ? "text-white border-transparent" 
-                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                        isActive
+                          ? "text-primary-foreground border-transparent"
+                          : "bg-secondary/20 border-border/40 text-foreground/60 hover:border-border/70 hover:text-foreground"
                       )}
                       style={isActive ? { backgroundColor: color } : {}}
                     >
@@ -209,23 +209,23 @@ export default function AdvancedFilters() {
                 {t('filters.special')}
               </h4>
               <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
+                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-border/40">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-bold">{t('filters.legendary')}</span>
                     <span className="text-[10px] text-foreground/40 font-medium">{t('filters.legendary_desc')}</span>
                   </div>
-                   <Switch 
+                   <Switch
                      id="filter-legendary"
                      checked={isLegendary === true}
                      onCheckedChange={(checked) => setIsLegendary(checked ? true : null)}
                    />
                 </div>
-                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-white/5">
+                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-2xl border border-border/40">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-bold">{t('filters.mythical')}</span>
                     <span className="text-[10px] text-foreground/40 font-medium">{t('filters.mythical_desc')}</span>
                   </div>
-                  <Switch 
+                  <Switch
                      id="filter-mythical"
                      checked={isMythical === true}
                      onCheckedChange={(checked) => setIsMythical(checked ? true : null)}
@@ -249,9 +249,9 @@ export default function AdvancedFilters() {
                       onClick={() => toggleEggGroup(group)}
                       className={cn(
                         "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
-                        isActive 
-                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
-                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                        isActive
+                          ? "bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20"
+                          : "bg-secondary/20 border-border/40 text-foreground/60 hover:border-border/70 hover:text-foreground"
                       )}
                     >
                       {label}
@@ -276,9 +276,9 @@ export default function AdvancedFilters() {
                       onClick={() => toggleColor(color)}
                       className={cn(
                         "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
-                        isActive 
-                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
-                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                        isActive
+                          ? "bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20"
+                          : "bg-secondary/20 border-border/40 text-foreground/60 hover:border-border/70 hover:text-foreground"
                       )}
                     >
                       {label}
@@ -303,9 +303,9 @@ export default function AdvancedFilters() {
                       onClick={() => toggleShape(shape)}
                       className={cn(
                         "px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-200",
-                        isActive 
-                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20" 
-                          : "bg-secondary/20 border-white/5 text-foreground/60 hover:border-white/20 hover:text-foreground"
+                        isActive
+                          ? "bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20"
+                          : "bg-secondary/20 border-border/40 text-foreground/60 hover:border-border/70 hover:text-foreground"
                       )}
                     >
                       {label}
@@ -340,69 +340,71 @@ export default function AdvancedFilters() {
             </div>
 
             {/* Individual Stats Sliders */}
-            <div className="space-y-8">
+            <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
                 {t('filters.min_stats')}
               </h4>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase">{t('stats.hp_short')}</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
-                    {minHp}+
-                  </Badge>
-                </div>
-                <Slider
-                  value={[minHp]}
-                  onValueChange={(val) => setMinHp(Array.isArray(val) ? val[0] : val as number)}
-                  max={255}
-                  step={5}
-                />
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase">{t('stats.attack_short')}</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
-                    {minAttack}+
-                  </Badge>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase">{t('stats.hp_short')}</span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                      {minHp}+
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[minHp]}
+                    onValueChange={(val) => setMinHp(Array.isArray(val) ? val[0] : val as number)}
+                    max={255}
+                    step={5}
+                  />
                 </div>
-                <Slider
-                  value={[minAttack]}
-                  onValueChange={(val) => setMinAttack(Array.isArray(val) ? val[0] : val as number)}
-                  max={255}
-                  step={5}
-                />
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase">{t('stats.defense_short')}</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
-                    {minDefense}+
-                  </Badge>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase">{t('stats.attack_short')}</span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                      {minAttack}+
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[minAttack]}
+                    onValueChange={(val) => setMinAttack(Array.isArray(val) ? val[0] : val as number)}
+                    max={255}
+                    step={5}
+                  />
                 </div>
-                <Slider
-                  value={[minDefense]}
-                  onValueChange={(val) => setMinDefense(Array.isArray(val) ? val[0] : val as number)}
-                  max={255}
-                  step={5}
-                />
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase">{t('stats.speed_short')}</span>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
-                    {minSpeed}+
-                  </Badge>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase">{t('stats.defense_short')}</span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                      {minDefense}+
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[minDefense]}
+                    onValueChange={(val) => setMinDefense(Array.isArray(val) ? val[0] : val as number)}
+                    max={255}
+                    step={5}
+                  />
                 </div>
-                <Slider
-                  value={[minSpeed]}
-                  onValueChange={(val) => setMinSpeed(Array.isArray(val) ? val[0] : val as number)}
-                  max={255}
-                  step={5}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase">{t('stats.speed_short')}</span>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">
+                      {minSpeed}+
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[minSpeed]}
+                    onValueChange={(val) => setMinSpeed(Array.isArray(val) ? val[0] : val as number)}
+                    max={255}
+                    step={5}
+                  />
+                </div>
               </div>
             </div>
 
@@ -413,9 +415,9 @@ export default function AdvancedFilters() {
                   {t('filters.height')}
                 </h4>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="font-black border-white/10">{heightRange[0].toFixed(1)}m</Badge>
+                  <Badge variant="outline" className="font-black border-border/60">{heightRange[0].toFixed(1)}m</Badge>
                   <span className="text-foreground/20">-</span>
-                  <Badge variant="outline" className="font-black border-white/10">{heightRange[1].toFixed(1)}m</Badge>
+                  <Badge variant="outline" className="font-black border-border/60">{heightRange[1].toFixed(1)}m</Badge>
                 </div>
               </div>
               <Slider
@@ -441,9 +443,9 @@ export default function AdvancedFilters() {
                   {t('filters.weight')}
                 </h4>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="font-black border-white/10">{weightRange[0]}kg</Badge>
+                  <Badge variant="outline" className="font-black border-border/60">{weightRange[0]}kg</Badge>
                   <span className="text-foreground/20">-</span>
-                  <Badge variant="outline" className="font-black border-white/10">{weightRange[1]}kg</Badge>
+                  <Badge variant="outline" className="font-black border-border/60">{weightRange[1]}kg</Badge>
                 </div>
               </div>
               <Slider
@@ -462,10 +464,10 @@ export default function AdvancedFilters() {
               />
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <SheetFooter className="border-t border-white/5 bg-background/50 p-4 md:p-5">
-          <SheetClose render={<Button className="h-12 w-full rounded-2xl text-sm font-black uppercase tracking-widest shadow-[0_8px_30px_rgb(255,50,50,0.3)] transition-all hover:scale-[1.01] active:scale-[0.98]" />}>
+        <SheetFooter className="border-t border-border/40 bg-background/50 p-4 md:p-5">
+          <SheetClose render={<Button className="h-12 w-full rounded-2xl text-sm font-black uppercase tracking-widest shadow-sm transition-all hover:scale-[1.01] active:scale-[0.98]" />}>
             {t('filters.apply')}
           </SheetClose>
         </SheetFooter>

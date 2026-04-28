@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TYPE_COLORS, GraphQLPokemonMoveData } from '@/types/pokemon';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMounted } from '@/hooks/useMounted';
+import { usePrimeDexStore } from '@/store/primedex';
 
 interface PokemonMovesProps {
   pokemonName: string;
@@ -26,8 +28,10 @@ const LANGUAGE_MAP: Record<string, number> = {
 };
 
 export const PokemonMoves = ({ pokemonName }: PokemonMovesProps) => {
-  const { t, i18n } = useTranslation();
-  const resolvedLang = i18n.resolvedLanguage || i18n.language || 'en';
+  const { t } = useTranslation();
+  const mounted = useMounted();
+  const { language, systemLanguage } = usePrimeDexStore();
+  const resolvedLang = mounted ? (language === 'auto' ? systemLanguage : language) : 'en';
 
   const languageId = LANGUAGE_MAP[resolvedLang] || 9;
 
@@ -49,8 +53,8 @@ export const PokemonMoves = ({ pokemonName }: PokemonMovesProps) => {
 
   if (error || !moves || moves.length === 0) {
     return (
-      <Card className="bg-white/5 border-white/10">
-        <CardContent className="p-6 text-center text-white/50">
+      <Card className="bg-card/50 border-border/60">
+        <CardContent className="p-6 text-center text-foreground/50">
           <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>{t('pokemon.errors.noMoves') || 'No moves found'}</p>
         </CardContent>
@@ -85,45 +89,45 @@ export const PokemonMoves = ({ pokemonName }: PokemonMovesProps) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="h-full bg-black/20 border-white/10 backdrop-blur-sm overflow-hidden hover:bg-black/30 transition-colors">
-              <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-white/5">
+            <Card className="h-full bg-muted/40 border-border/60 backdrop-blur-sm overflow-hidden hover:bg-muted/50 transition-colors">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between border-b border-border/40">
                 <div>
-                  <CardTitle className="text-lg font-bold text-white capitalize">{localizedName}</CardTitle>
-                  <CardDescription className="text-white/60 capitalize mt-1">
+                  <CardTitle className="text-lg font-bold text-foreground capitalize">{localizedName}</CardTitle>
+                  <CardDescription className="text-foreground/60 capitalize mt-1">
                     {t(`moves.damage_class.${damageClass}`) || damageClass}
                   </CardDescription>
                 </div>
-                <Badge className="text-white whitespace-nowrap px-2 py-1" style={{ backgroundColor: typeColor }}>
+                <Badge className="text-primary-foreground whitespace-nowrap px-2 py-1" style={{ backgroundColor: typeColor }}>
                   {t(`types.${typeInternal}`)}
                 </Badge>
               </CardHeader>
               <CardContent className="p-4 flex flex-col gap-3">
-                <div className="flex items-center gap-4 text-sm text-white/70">
+                <div className="flex items-center gap-4 text-sm text-foreground/70">
                   {power !== null ? (
-                    <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-md">
+                    <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-1 rounded-md">
                       <Trophy className="w-4 h-4 text-orange-400" />
-                      <span className="font-semibold text-white">{power}</span>
+                      <span className="font-semibold text-foreground">{power}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-md opacity-50">
+                    <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-1 rounded-md opacity-50">
                       <Trophy className="w-4 h-4" />
                       <span>-</span>
                     </div>
                   )}
 
                   {accuracy !== null ? (
-                    <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-md">
+                    <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-1 rounded-md">
                       <Target className="w-4 h-4 text-green-400" />
-                      <span className="font-semibold text-white">{accuracy}%</span>
+                      <span className="font-semibold text-foreground">{accuracy}%</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-md opacity-50">
+                    <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-1 rounded-md opacity-50">
                       <Target className="w-4 h-4" />
                       <span>-</span>
                     </div>
                   )}
                 </div>
-                <div className="text-sm text-white/80 line-clamp-3" title={description}>
+                <div className="text-sm text-foreground/80 line-clamp-3" title={description}>
                   {description}
                 </div>
               </CardContent>

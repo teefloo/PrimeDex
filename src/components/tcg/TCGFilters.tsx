@@ -315,7 +315,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className="w-full space-y-4"
     >
-      <div className="rounded-[2rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+      <div className="glass-surface rounded-2xl p-4">
         <CatalogSearchInput
           key={filters.searchTerm ?? '__empty__'}
           initialValue={filters.searchTerm || ''}
@@ -339,7 +339,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                   'group relative overflow-hidden rounded-2xl border px-2.5 py-2.5 text-left transition-all duration-300',
                   isActive
                     ? `${toneClass.active} shadow-lg`
-                    : 'border-white/[0.05] bg-white/[0.02] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-foreground',
+                    : 'border-border/40 bg-card/35 text-foreground/55 hover:border-border/70 hover:bg-card/60 hover:text-foreground',
                 )}
                 aria-pressed={isActive}
               >
@@ -390,7 +390,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
           <div className="grid grid-cols-1 gap-2 max-h-[360px] overflow-y-auto pr-2 scrollbar-premium">
             {isLoading ? (
               Array.from({ length: 10 }).map((_, index) => (
-                <div key={index} className="h-14 animate-pulse rounded-2xl bg-white/[0.03]" />
+                <div key={index} className="h-14 animate-pulse rounded-2xl bg-card/50" />
               ))
             ) : (
               setOptions.map((set) => {
@@ -406,10 +406,10 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                       'group relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3 text-left transition-all duration-300',
                       isActive
                         ? 'border-primary/40 bg-primary/15 text-primary shadow-[0_0_30px_rgba(227,53,13,0.14)]'
-                        : 'border-white/[0.05] bg-white/[0.02] text-foreground/65 hover:border-white/[0.1] hover:bg-white/[0.05] hover:text-foreground',
+                        : 'border-border/40 bg-card/35 text-foreground/65 hover:border-border/70 hover:bg-card/60 hover:text-foreground',
                     )}
                   >
-                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.05] bg-black/35 p-2">
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border/40 bg-muted/50 p-2">
                       {logoSrc ? (
                         <Image
                           src={logoSrc}
@@ -461,7 +461,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
           <div className="flex flex-wrap gap-2">
             {raritiesLoading ? (
               Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="h-8 w-20 animate-pulse rounded-full bg-white/[0.03]" />
+                <div key={index} className="h-8 w-20 animate-pulse rounded-full bg-card/50" />
               ))
             ) : rarityOptions.length === 0 ? (
               <p className="text-[10px] italic text-foreground/30">{t('tcg.no_rarities')}</p>
@@ -477,7 +477,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                       'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
                       isActive
                         ? 'border-amber-400/40 bg-amber-500/20 text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.18)]'
-                        : 'border-white/[0.06] bg-white/[0.03] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground',
+                        : 'border-border/50 bg-card/50 text-foreground/55 hover:border-border/70 hover:bg-card/65 hover:text-foreground',
                     )}
                   >
                     {rarity}
@@ -516,7 +516,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                       'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
                       isActive
                         ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.18)]'
-                        : 'border-white/[0.06] bg-white/[0.03] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground',
+                        : 'border-border/50 bg-card/50 text-foreground/55 hover:border-border/70 hover:bg-card/65 hover:text-foreground',
                     )}
                   >
                     {getPokemonTypeLabel(type)}
@@ -536,7 +536,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                   placeholder="0"
                   value={typeof filters.minHp === 'number' ? filters.minHp : ''}
                   onChange={(event) => updateFilter('minHp', event.target.value ? Number(event.target.value) : undefined)}
-                  className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 text-xs font-bold transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+                  className="h-10 w-full rounded-xl border border-border/50 bg-card/50 px-3 text-xs font-bold transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 />
               </div>
 
@@ -550,7 +550,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                   placeholder="340"
                   value={typeof filters.maxHp === 'number' ? filters.maxHp : ''}
                   onChange={(event) => updateFilter('maxHp', event.target.value ? Number(event.target.value) : undefined)}
-                  className="h-10 w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 text-xs font-bold transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+                  className="h-10 w-full rounded-xl border border-border/50 bg-card/50 px-3 text-xs font-bold transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -567,7 +567,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                       'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
                       isActive
                         ? 'border-primary/40 bg-primary/20 text-primary shadow-[0_0_16px_rgba(227,53,13,0.18)]'
-                        : 'border-white/[0.06] bg-white/[0.03] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground',
+                        : 'border-border/50 bg-card/50 text-foreground/55 hover:border-border/70 hover:bg-card/65 hover:text-foreground',
                     )}
                   >
                     {getStageLabel(stage)}
@@ -605,7 +605,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                     'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
                     isActive
                       ? 'border-amber-400/40 bg-amber-500/20 text-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.18)]'
-                      : 'border-white/[0.06] bg-white/[0.03] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground',
+                      : 'border-border/50 bg-card/50 text-foreground/55 hover:border-border/70 hover:bg-card/65 hover:text-foreground',
                   )}
                 >
                   {getTrainerTypeLabel(type)}
@@ -642,7 +642,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                     'rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] transition-all',
                     isActive
                       ? 'border-cyan-400/40 bg-cyan-500/20 text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.18)]'
-                      : 'border-white/[0.06] bg-white/[0.03] text-foreground/55 hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground',
+                      : 'border-border/50 bg-card/50 text-foreground/55 hover:border-border/70 hover:bg-card/65 hover:text-foreground',
                   )}
                 >
                   {getEnergyTypeLabel(type)}
@@ -653,7 +653,7 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
         </FilterSection>
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/[0.05] bg-white/[0.02] p-4 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/35">
+      <div className="rounded-xl border border-border/40 bg-card/35 p-4 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/35">
         {t('tcg.catalog_filters_hint')}
       </div>
     </motion.div>
@@ -672,10 +672,10 @@ interface FilterSectionProps {
 function FilterSection({ icon: Icon, title, isOpen, onToggle, children, badge }: FilterSectionProps) {
   return (
     <div className={cn(
-      'overflow-hidden rounded-[1.75rem] border transition-all duration-300',
+      'overflow-hidden rounded-xl border transition-all duration-300',
       isOpen
-        ? 'border-white/[0.08] bg-white/[0.04] shadow-[0_18px_60px_rgba(0,0,0,0.2)]'
-        : 'border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.03]',
+        ? 'border-border/60 bg-card/55 shadow-[0_18px_60px_rgba(0,0,0,0.2)]'
+        : 'border-border/40 bg-card/25 hover:bg-card/50',
     )}>
       <button
         type="button"
@@ -683,7 +683,7 @@ function FilterSection({ icon: Icon, title, isOpen, onToggle, children, badge }:
         className="flex w-full items-center justify-between px-4 py-3.5 text-left"
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className={cn('flex h-8 w-8 items-center justify-center rounded-xl border', isOpen ? 'border-primary/20 bg-primary/10' : 'border-white/[0.06] bg-white/[0.02]')}>
+          <span className={cn('flex h-8 w-8 items-center justify-center rounded-xl border', isOpen ? 'border-primary/20 bg-primary/10' : 'border-border/50 bg-card/35')}>
             <Icon className={cn('h-4 w-4', isOpen ? 'text-primary' : 'text-foreground/35')} />
           </span>
           <div className="min-w-0">
@@ -709,7 +709,7 @@ function FilterSection({ icon: Icon, title, isOpen, onToggle, children, badge }:
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="px-4 pb-4">
-              <div className="mb-4 h-px w-full bg-white/[0.05]" />
+              <div className="mb-4 h-px w-full bg-card/60" />
               {children}
             </div>
           </motion.div>
@@ -744,7 +744,7 @@ function CatalogSearchInput({ initialValue, onChange, onClear, placeholder, clea
           setValue(nextValue);
           onChange(nextValue);
         }}
-        className="w-full rounded-2xl border border-white/[0.06] bg-black/20 py-3.5 pl-11 pr-11 text-sm text-foreground placeholder:text-foreground/30 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+        className="w-full rounded-2xl border border-border/50 bg-muted/40 py-3.5 pl-11 pr-11 text-sm text-foreground placeholder:text-foreground/30 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
       />
       {value && (
         <button
@@ -785,9 +785,9 @@ function getCategoryTone(category: TCGCardCategoryFilter) {
       };
     default:
       return {
-        active: 'border-white/20 bg-white/10 text-white',
-        glow: 'bg-gradient-to-br from-white/10 via-transparent to-white/5',
-        dot: 'bg-white/70',
+        active: 'border-primary/25 bg-primary/10 text-foreground',
+        glow: 'bg-gradient-to-br from-foreground/10 via-transparent to-foreground/5',
+        dot: 'bg-foreground/45',
       };
   }
 }

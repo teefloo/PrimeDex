@@ -33,7 +33,7 @@ export default function SortSelector() {
     <div className="flex items-center gap-3">
       <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-foreground/70 hidden sm:block">{t('sort.label')}</span>
       <Select value={sortBy} onValueChange={(val: SortValue | null) => val && setSortBy(val)}>
-        <SelectTrigger className="w-[200px] rounded-full bg-white/[0.03] backdrop-blur-xl border-white/[0.06] text-[11px] font-bold uppercase tracking-wider h-10 focus:ring-primary/20 hover:border-white/[0.12] transition-all">
+        <SelectTrigger className="w-[200px] rounded-full bg-card/50 backdrop-blur-xl border-border/50 text-[11px] font-bold uppercase tracking-wider h-10 focus:ring-primary/20 hover:border-border/70 transition-all">
           <SelectValue>
             {(() => {
               const current = options.find(o => o.value === sortBy);
@@ -41,7 +41,7 @@ export default function SortSelector() {
             })()}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-background/95 backdrop-blur-2xl border-white/[0.08] rounded-2xl p-1 shadow-[0_16px_64px_rgba(0,0,0,0.3)]">
+        <SelectContent className="glass-surface rounded-2xl p-1">
           {options.map((opt) => (
             <SelectItem 
               key={opt.value} 

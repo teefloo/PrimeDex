@@ -3,16 +3,13 @@ import HeroControls from '@/components/pokemon/HeroControls';
 
 export default function HeroSection() {
   return (
-    <section className="pt-10 pb-8">
+    <section className="pt-8 pb-8">
       <div 
-        className="page-shell page-surface relative z-10 overflow-hidden px-5 py-8 md:px-8 md:py-10 shadow-[0_24px_72px_-34px_rgba(0,0,0,0.32)]"
+        className="page-shell page-surface relative z-10 overflow-clip px-5 py-8 md:px-8 md:py-10"
       >
         <div className="mx-auto max-w-5xl text-center">
-          <p className="page-eyebrow justify-center">
-            PrimeDex
-          </p>
           <h1 
-            className="mx-auto max-w-4xl text-5xl font-black tracking-tight leading-[0.9] md:text-7xl lg:text-[5.8rem]"
+            className="mx-auto max-w-4xl text-5xl font-black leading-[0.98] md:text-7xl lg:text-[5.8rem]"
           >
             <span className="gradient-text-hero">
               {t('home.hero_title')}

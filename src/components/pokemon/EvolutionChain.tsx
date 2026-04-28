@@ -146,7 +146,7 @@ function EvolutionItem({ name, isCurrent }: { name: string; isCurrent?: boolean 
         )}
       >
         <div className={cn(
-          "w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center p-4 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all duration-500 relative overflow-hidden shadow-sm",
+          "w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-border/40 rounded-2xl flex items-center justify-center p-4 group-hover:bg-primary/10 group-hover:border-primary/30 transition-all duration-500 relative overflow-hidden shadow-sm",
           isCurrent && "bg-primary/10 border-primary/40 ring-2 ring-primary/30 shadow-lg shadow-primary/20"
         )}>
           <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -857,7 +857,7 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center">
+        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-border/40 rounded-2xl flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
         </div>
       </div>
@@ -867,7 +867,7 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
   if (isError || !pokemonData) {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-white/5 rounded-[2.5rem] flex items-center justify-center">
+        <div className="w-24 h-24 md:w-32 md:h-32 bg-secondary/30 border border-border/40 rounded-2xl flex items-center justify-center">
           <AlertCircle className="w-6 h-6 text-red-400/60" />
         </div>
         <span className="mt-2 text-[10px] sm:text-[11px] font-black text-red-400/60 uppercase tracking-wider">
@@ -884,7 +884,7 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
         whileTap={{ scale: 0.95 }}
         className="flex flex-col items-center cursor-pointer group"
       >
-        <div className={`w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br ${config.gradient} border ${config.border} rounded-[2.5rem] flex items-center justify-center p-4 ${config.borderHover} ${config.shadow} transition-all duration-500 relative overflow-hidden`}>
+        <div className={`w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br ${config.gradient} border ${config.border} rounded-2xl flex items-center justify-center p-4 ${config.borderHover} ${config.shadow} transition-all duration-500 relative overflow-hidden`}>
           <div className={`absolute inset-0 bg-gradient-to-tr ${config.innerGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
           {sprite ? (
             <Image
@@ -919,7 +919,7 @@ function AlternateFormsSection({ allForms, isLoading }: { allForms: AlternateFor
 
   if (isLoading) {
     return (
-      <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-center gap-3">
+      <div className="mt-12 pt-8 border-t border-border/60 flex items-center justify-center gap-3">
         <Loader2 className="w-5 h-5 animate-spin text-primary/40" />
         <span className="text-sm font-bold text-foreground/40 uppercase tracking-wider">
           {t('detail.loading_forms', { defaultValue: 'Loading alternate forms...' })}
@@ -933,7 +933,7 @@ function AlternateFormsSection({ allForms, isLoading }: { allForms: AlternateFor
   }
 
   return (
-    <div className="mt-12 pt-8 border-t border-white/10">
+    <div className="mt-12 pt-8 border-t border-border/60">
       <div className="flex items-center justify-center gap-3 mb-8">
         <Layers className="w-5 h-5 text-purple-400" />
         <h3 className="text-lg font-black uppercase tracking-wider text-foreground/80">
@@ -965,11 +965,11 @@ function ChainNode({ node, currentSpeciesName, allForms }: { node: ChainLink; cu
 
       {node.evolves_to.length > 0 && (
         <div className="flex flex-col gap-12 md:gap-16 relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/5 md:hidden -translate-x-1/2 -z-10" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-card/50 md:hidden -translate-x-1/2 -z-10" />
           
           {node.evolves_to.map((evolution) => (
             <div key={evolution.species.name} className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative">
-              <div className="p-3 bg-secondary/40 rounded-full border border-white/10 text-foreground/30 shadow-inner z-10 group-hover:text-primary/50 transition-colors">
+              <div className="p-3 bg-secondary/40 rounded-full border border-border/60 text-foreground/30 shadow-inner z-10 group-hover:text-primary/50 transition-colors">
                 <ArrowRight className="w-5 h-5 rotate-90 md:rotate-0" />
               </div>
               <ChainNode node={evolution} currentSpeciesName={currentSpeciesName} allForms={allForms} />

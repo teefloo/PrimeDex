@@ -6,8 +6,8 @@ import { TYPE_COLORS } from '@/types/pokemon';
 import { useQuery } from '@tanstack/react-query';
 import { getTypeRelations } from '@/lib/api';
 import { getPokemonDetailedByType } from '@/lib/api/graphql';
-import { 
-  ShieldCheck, 
+import {
+  ShieldCheck,
   ShieldAlert,
   Info,
   Flame,
@@ -66,18 +66,17 @@ export default function TypesPage() {
 
   return (
     <div className="app-page text-foreground pb-20 overflow-x-hidden relative">
-      {/* Decorative background orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none z-0 overflow-hidden">
-        <div 
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-[120px] animate-pulse-glow opacity-30"
-          style={{ backgroundColor: TYPE_COLORS[selectedType] }}
-        />
-        <div className="absolute top-1/3 right-1/4 w-[200px] h-[100px] bg-violet-500/10 rounded-full blur-[80px] animate-pulse-glow" style={{ animationDelay: '-3s' }} />
-        <div className="absolute top-2/3 left-1/4 w-[150px] h-[80px] bg-amber-500/8 rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: '-2s' }} />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[34rem] opacity-55"
+        style={{
+          background: `linear-gradient(180deg, ${TYPE_COLORS[selectedType]}22, transparent 70%), linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)`,
+        }}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,var(--background)_100%)]" />
       </div>
 
       <Header />
-      
+
       <main className="page-shell py-8 relative z-10">
         <PageHeader
           icon={Target}
@@ -88,14 +87,14 @@ export default function TypesPage() {
         />
 
         {/* Type Selector - Horizontal Pills */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8"
         >
-          <div className="page-surface p-4 md:p-6 rounded-[2rem] relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="page-surface p-4 md:p-6 rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-secondary/30 rounded-xl">
                 <Flame className="w-4 h-4 text-foreground/60" />
@@ -111,14 +110,14 @@ export default function TypesPage() {
                   onClick={() => setSelectedType(type)}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300",
-                    selectedType === type 
-                      ? "bg-white/10 border-white/20 shadow-lg" 
-                      : "bg-secondary/20 border-white/5 opacity-60 hover:opacity-100 hover:bg-secondary/30"
+                    selectedType === type
+                      ? "bg-card/70 border-border/70 shadow-lg"
+                      : "bg-secondary/20 border-border/40 opacity-60 hover:opacity-100 hover:bg-secondary/30"
                   )}
                 >
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full shadow-sm" 
-                    style={{ backgroundColor: TYPE_COLORS[type] }} 
+                  <div
+                    className="w-2.5 h-2.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: TYPE_COLORS[type] }}
                   />
                   <span className="text-[10px] font-black uppercase tracking-wider">{t(`types.${type}`)}</span>
                 </motion.button>
@@ -148,17 +147,17 @@ export default function TypesPage() {
             className="space-y-8"
           >
             {/* Type Header Card */}
-            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden group">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <div 
-                className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[80px] opacity-15 transition-all duration-700 group-hover:scale-110 group-hover:opacity-25"
-                style={{ backgroundColor: TYPE_COLORS[selectedType] }}
+            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-2xl relative overflow-hidden group">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+              <div
+                className="absolute inset-x-0 top-0 h-32 opacity-60 transition-opacity duration-700 group-hover:opacity-80"
+                style={{ background: `linear-gradient(180deg, ${TYPE_COLORS[selectedType]}18, transparent)` }}
               />
-              
+
               <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-8">
-                  <div 
-                    className="p-4 rounded-2xl text-white shadow-xl"
+                  <div
+                    className="p-4 rounded-2xl text-primary-foreground shadow-xl"
                     style={{ backgroundColor: TYPE_COLORS[selectedType] }}
                   >
                     {(() => {
@@ -180,12 +179,12 @@ export default function TypesPage() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {typeRels?.damage_relations.double_damage_to.map(t_rel => (
-                        <motion.div 
+                        <motion.div
                           key={t_rel.name}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="px-3 py-1.5 rounded-xl bg-yellow-500/5 border border-yellow-500/10 text-[10px] font-black uppercase hover:bg-yellow-500/10 transition-colors" 
+                          className="px-3 py-1.5 rounded-xl bg-yellow-500/5 border border-yellow-500/10 text-[10px] font-black uppercase hover:bg-yellow-500/10 transition-colors"
                           style={{ color: TYPE_COLORS[t_rel.name] }}
                         >
                           {t(`types.${t_rel.name}`)}
@@ -201,19 +200,19 @@ export default function TypesPage() {
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {typeRels?.damage_relations.half_damage_from.map(t_rel => (
-                        <motion.div 
+                        <motion.div
                           key={t_rel.name}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.15 }}
-                          className="px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-[10px] font-black uppercase hover:bg-green-500/10 transition-colors" 
+                          className="px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-[10px] font-black uppercase hover:bg-green-500/10 transition-colors"
                           style={{ color: TYPE_COLORS[t_rel.name] }}
                         >
                           {t(`types.${t_rel.name}`)}
                         </motion.div>
                       ))}
                       {typeRels?.damage_relations.no_damage_from.map(t_rel => (
-                        <motion.div 
+                        <motion.div
                           key={t_rel.name}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -271,23 +270,23 @@ export default function TypesPage() {
                 </div>
                 {t('types_page.emblematic')}
               </h3>
-              
+
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {emblematicPokemon.map((p, idx) => (
                   <Link key={p.id} href={`/pokemon/${p.name}`}>
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="bg-white/[0.03] dark:bg-white/[0.02] border border-white/[0.06] dark:border-white/[0.04] p-4 rounded-2xl flex flex-col items-center group hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 active:scale-95 relative overflow-hidden"
+                      className="bg-card/50 dark:bg-card/35 border border-border/50 dark:border-border/40 p-4 rounded-2xl flex flex-col items-center group hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 active:scale-95 relative overflow-hidden"
                     >
-                      <div 
-                        className="absolute -top-8 -right-8 w-16 h-16 rounded-full blur-[30px] opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                        style={{ backgroundColor: TYPE_COLORS[selectedType] }}
+                      <div
+                        className="absolute inset-x-0 top-0 h-12 opacity-0 transition-opacity duration-500 group-hover:opacity-70"
+                        style={{ background: `linear-gradient(180deg, ${TYPE_COLORS[selectedType]}16, transparent)` }}
                       />
                       <div className="relative w-20 h-20 mb-3">
-                        <Image 
-                          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`} 
+                        <Image
+                          src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`}
                           alt={p.name}
                           width={80}
                           height={80}
@@ -303,30 +302,30 @@ export default function TypesPage() {
             </motion.div>
 
             {/* Learning Tips */}
-            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <motion.div variants={itemVariants} className="page-surface p-6 md:p-8 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
               <h3 className="text-lg font-black mb-4 flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" />
                 {t('types_page.tips_title', { type: t(`types.${selectedType}`) })}
               </h3>
               <div className="space-y-3">
-                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
+                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-border/40">
                   <div className="p-2 bg-red-500/10 rounded-xl h-fit flex-shrink-0">
                     <ShieldAlert className="w-4 h-4 text-red-500" />
                   </div>
                   <p className="text-xs text-foreground/60 leading-relaxed">
-                    {t('types_page.watch_out', { 
+                    {t('types_page.watch_out', {
                       types: typeRels?.damage_relations.double_damage_from.map(t_rel => t(`types.${t_rel.name}`)).join(', '),
                       type: t(`types.${selectedType}`)
                     })}
                   </p>
                 </div>
-                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-white/5">
+                <div className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-border/40">
                   <div className="p-2 bg-blue-500/10 rounded-xl h-fit flex-shrink-0">
                     <Sword className="w-4 h-4 text-blue-500" />
                   </div>
                   <p className="text-xs text-foreground/60 leading-relaxed">
-                    {t('types_page.not_effective', { 
+                    {t('types_page.not_effective', {
                       type: t(`types.${selectedType}`),
                       types: typeRels?.damage_relations.half_damage_to.map(t_rel => t(`types.${t_rel.name}`)).join(', ')
                     })}

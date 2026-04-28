@@ -43,7 +43,7 @@ export type { GqlPokemonData, PokemonCardProps };
 export function PokemonCardSkeleton() {
   return (
     <div className="py-2 px-2 h-[22rem]">
-      <div className="glass-panel h-full p-6 flex flex-col items-center rounded-3xl animate-pulse">
+      <div className="glass-card h-full p-6 flex flex-col items-center rounded-xl animate-pulse">
         <div className="flex justify-between items-center w-full mb-4">
           <Skeleton className="h-5 w-14 bg-muted/60" />
           <div className="flex gap-2">
@@ -214,22 +214,21 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
   return (
     <div className="relative block h-full py-1 px-1 sm:px-2" onMouseEnter={prefetchDetails}>
       <div
-        className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-secondary/25 p-2 transition-all duration-500 sm:p-4"
+        className="glass-card type-accent group relative flex h-full flex-col overflow-hidden rounded-xl p-2 transition-all duration-500 hover:-translate-y-1 sm:p-4"
         style={{
-          '--type-color': `${color}50`,
-          boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08), inset 0 1px 0 0 rgba(255,255,255,0.1)',
+          '--type-color': color,
         } as CSSProperties}
       >
         <Link
           href={`/pokemon/${name}`}
           aria-label={cardLabel}
-          className="absolute inset-0 z-0 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="absolute inset-0 z-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         />
 
         <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-28 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
           style={{
-            background: `radial-gradient(ellipse 120% 80% at 50% 120%, ${color}15 0%, transparent 60%)`,
+            background: `linear-gradient(180deg, ${color}18 0%, transparent 100%)`,
           }}
         />
 
@@ -242,34 +241,18 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
           className={cn(
             'absolute bottom-2 left-2 z-20 flex min-h-[32px] min-w-[32px] items-center justify-center rounded-full border shadow-lg transition-all duration-400 hover:scale-110 active:scale-95 sm:bottom-3 sm:left-3 sm:min-h-[40px] sm:min-w-[40px]',
             caught
-              ? 'border-primary/60 bg-primary text-white shadow-[0_4px_20px_-4px_rgba(227,53,13,0.6)]'
+              ? 'border-primary/45 bg-primary text-primary-foreground shadow-sm'
               : 'border-border/60 bg-background/75 text-foreground/70 backdrop-blur-md hover:bg-muted/70 hover:text-foreground/90'
           )}
           aria-label={caught ? t('card.caught') : t('card.mark_caught')}
         >
-          <PokeballIcon className={cn('h-4 w-4 sm:h-5 sm:w-5', caught ? 'text-white' : 'text-foreground/50')} />
+          <PokeballIcon className={cn('h-4 w-4 sm:h-5 sm:w-5', caught ? 'text-primary-foreground' : 'text-foreground/50')} />
         </button>
 
         <div
-          className="pointer-events-none absolute -right-20 -top-20 z-0 h-48 w-48 rounded-full blur-[90px] opacity-20 transition-all duration-700 group-hover:opacity-40"
+          className="pointer-events-none absolute inset-0 z-0 rounded-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           style={{
-            backgroundColor: color,
-            filter: 'blur(90px)',
-          }}
-        />
-
-        <div
-          className="pointer-events-none absolute -bottom-12 -left-12 z-0 h-36 w-36 rounded-full blur-[60px] opacity-0 transition-all duration-700 group-hover:opacity-25"
-          style={{
-            backgroundColor: color,
-            filter: 'blur(60px)',
-          }}
-        />
-
-        <div
-          className="pointer-events-none absolute inset-0 z-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{
-            boxShadow: `inset 0 0 0 1px ${color}30, 0 0 30px -10px ${color}40`,
+            boxShadow: `inset 0 0 0 1px ${color}28`,
           }}
         />
 

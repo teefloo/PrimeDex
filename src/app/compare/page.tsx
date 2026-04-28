@@ -238,7 +238,7 @@ export default function ComparePage() {
           )}
         />
 
-        <section className="page-surface mb-8 rounded-[2rem] p-5 shadow-xl">
+        <section className="page-surface mb-8 rounded-2xl p-5 shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-xl">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/35" />
@@ -248,7 +248,7 @@ export default function ComparePage() {
                 onChange={(event) => setCompareSearch(event.target.value)}
                 placeholder={t('search.placeholder')}
                 aria-label={t('search.placeholder')}
-                className="h-12 w-full rounded-2xl border border-white/[0.06] bg-white/[0.04] pl-11 pr-4 text-sm font-semibold text-foreground placeholder:text-foreground/30 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
+                className="h-12 w-full rounded-2xl border border-border/50 bg-card/55 pl-11 pr-4 text-sm font-semibold text-foreground placeholder:text-foreground/30 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
               />
             </div>
 
@@ -289,9 +289,9 @@ export default function ComparePage() {
                     type="button"
                     onClick={() => handleAddToCompare(pokemon.id)}
                     disabled={activeCompareIds.length >= 3}
-                    className="flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3 text-left transition-all hover:border-primary/30 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/50 p-3 text-left transition-all hover:border-primary/30 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-white/[0.04] p-1">
+                    <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-card/55 p-1">
                       <Image
                         src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
                         alt={displayName}
@@ -311,7 +311,7 @@ export default function ComparePage() {
                   </button>
                 );
               }) : (
-                <div className="rounded-2xl border border-dashed border-white/[0.08] px-4 py-6 text-sm font-medium text-foreground/35">
+                <div className="rounded-2xl border border-dashed border-border/60 px-4 py-6 text-sm font-medium text-foreground/35">
                   {t('list.no_results')}
                 </div>
               )}
@@ -325,7 +325,7 @@ export default function ComparePage() {
             <p className="text-foreground/40 font-semibold tracking-widest uppercase text-sm">{t('list.loading')}</p>
           </div>
         ) : compareData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-[3rem] border-dashed border-2 border-white/10">
+          <div className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-2xl border-dashed border-2 border-border/60">
             <Scale className="w-16 h-16 text-foreground/20 mb-6" />
             <h3 className="text-2xl font-black mb-2 text-foreground/80">{t('compare.no_compare')}</h3>
             <p className="text-base text-foreground/50 font-medium mb-8">{t('compare.no_compare_desc')}</p>
@@ -338,7 +338,7 @@ export default function ComparePage() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="glass-panel p-8 rounded-[3rem] overflow-hidden"
+                className="glass-panel p-8 rounded-2xl overflow-hidden"
               >
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                   <div className="h-[400px] w-full">
@@ -377,7 +377,7 @@ export default function ComparePage() {
                         if (!winner || !winner.pokemon) return null;
                         const winnerName = winner.species?.names?.find((n) => n.language.name === resolvedLang)?.name || winner.pokemon.name;
                         return (
-                          <div key={key} className="bg-secondary/20 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 hover:border-primary/30 transition-all">
+                          <div key={key} className="bg-secondary/20 p-4 rounded-2xl border border-border/40 flex flex-col gap-1 hover:border-primary/30 transition-all">
                             <span className="text-[10px] font-black uppercase text-foreground/40">{statLabels[key]}</span>
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-black text-sm capitalize truncate">{winnerName}</span>
@@ -389,9 +389,9 @@ export default function ComparePage() {
                     </div>
 
                     {bestStats.total && (
-                      <div className="bg-primary/10 p-6 rounded-3xl border border-primary/20 flex items-center justify-between gap-4">
+                      <div className="bg-primary/10 p-6 rounded-2xl border border-primary/20 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
+                          <div className="p-3 bg-primary rounded-2xl text-primary-foreground shadow-lg shadow-primary/20">
                             <Trophy className="w-6 h-6" />
                           </div>
                           <div>
@@ -433,7 +433,7 @@ export default function ComparePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="glass-panel p-6 rounded-[2.5rem] relative overflow-hidden flex flex-col group"
+                    className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col group"
                     style={{ '--type-color': `${color}20` } as React.CSSProperties}
                   >
                     <button 
@@ -447,7 +447,7 @@ export default function ComparePage() {
                     <div className="flex flex-col items-center text-center mb-8 relative z-10">
                       <div className="text-xs font-black text-foreground/30 mb-2">{formatId(p.id)}</div>
                       <div className="relative w-40 h-40 mb-4">
-                        <div className="absolute inset-0 bg-white/5 rounded-full blur-2xl group-hover:bg-primary/5 transition-colors" />
+                        <div className="absolute inset-x-6 bottom-4 top-12 rounded-2xl bg-gradient-to-t from-primary/10 to-transparent transition-opacity group-hover:opacity-80" />
                         <Image 
                           src={p.sprites.other['official-artwork'].front_default || p.sprites.front_default} 
                           alt={displayName} 
@@ -535,7 +535,7 @@ export default function ComparePage() {
                           {p.abilities.map((a) => (
                             <div 
                               key={a.ability.name} 
-                              className="px-3 py-1.5 bg-secondary/20 border border-white/5 rounded-xl text-[10px] font-bold capitalize"
+                              className="px-3 py-1.5 bg-secondary/20 border border-border/40 rounded-xl text-[10px] font-bold capitalize"
                             >
                               {a.ability.name.replace('-', ' ')}
                               {a.is_hidden && <span className="ml-1 opacity-40 text-[10px] sm:text-[11px]">{t('detail.hidden')}</span>}

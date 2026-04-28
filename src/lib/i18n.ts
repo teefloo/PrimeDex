@@ -2,9 +2,12 @@
 
 import i18n from 'i18next';
 import type { TOptions } from 'i18next';
+import { useMemo, useSyncExternalStore } from 'react';
 import { initReactI18next, useTranslation as useReactTranslation } from 'react-i18next';
 import enTranslations from './i18n/en';
-import { getBrowserLanguage, resolveLanguage, type SupportedLanguage } from './languages';
+import type { SupportedLanguage } from './languages';
+
+const emptySubscribe = () => () => {};
 
 // Lazy-load map for on-demand language loading
 type TranslationBundle = {
@@ -22,21 +25,14 @@ const languageResources: Partial<Record<SupportedLanguage, () => Promise<Transla
   ko: () => import('./i18n/ko'),
 };
 
-// Try to get initial language synchronously from localStorage
-const getInitialLang = () => {
-  if (typeof window === 'undefined') return 'en';
-  const storedLanguage = localStorage.getItem('primedex-lang');
-  return resolveLanguage(storedLanguage, getBrowserLanguage());
-};
-
-// Initialize with English only (smallest initial bundle)
+// Initialize with the same language as server rendering, then switch after hydration.
 i18n
   .use(initReactI18next)
   .init({
     resources: {
       en: enTranslations,
     },
-    lng: getInitialLang(),
+    lng: 'en',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
@@ -59,7 +55,14 @@ export const loadLanguage = async (lang: string): Promise<void> => {
   }
 };
 
-export const useTranslation = () => useReactTranslation();
+export const useTranslation = () => {
+  const translation = useReactTranslation();
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const hydrationT = useMemo(() => i18n.getFixedT('en'), []);
+
+  return mounted ? translation : { ...translation, t: hydrationT };
+};
+
 export const t = (key: string, options?: TOptions) => i18n.t(key, options);
 
 export default i18n;

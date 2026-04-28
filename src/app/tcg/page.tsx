@@ -18,9 +18,8 @@ export default function TCGPage() {
 
       {/* ── IMMERSIVE BACKDROP ── */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[10%] -left-[5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] animate-pulse-slow" />
-        <div className="absolute bottom-[10%] -right-[5%] w-[35%] h-[35%] bg-blue-500/5 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,transparent_0%,var(--background)_80%)] opacity-40" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_34%),linear-gradient(315deg,rgba(34,211,238,0.08),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,var(--background)_88%)] opacity-70" />
       </div>
 
       <main className="page-shell py-8 pb-24 relative">

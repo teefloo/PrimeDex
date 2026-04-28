@@ -449,7 +449,7 @@ export default function PokemonList() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
       {!isBasicMode && (
-        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-white/5 mx-2 mt-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2 bg-secondary/10 rounded-2xl border border-border/40 mx-2 mt-4">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/70">{t('list.results')}</span>
             <Badge variant="secondary" className="bg-primary/10 text-primary font-black border-none text-[10px]">

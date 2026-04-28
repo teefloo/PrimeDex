@@ -98,7 +98,7 @@ export function TCGCardGrid() {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[2rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+        <div className="glass-toolbar mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4">
           <div className="flex items-center gap-3.5">
             <div className="group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-primary/10">
               <div className="absolute inset-0 bg-primary/15 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -109,7 +109,7 @@ export function TCGCardGrid() {
                 <h4 className="text-xs font-display font-black uppercase tracking-[0.2em] text-foreground/90 leading-none">
                   {t('tcg.catalog_workspace')}
                 </h4>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.24em] text-foreground/35">
+                <span className="rounded-full border border-border/60 bg-card/55 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.24em] text-foreground/35">
                   {t('tcg.catalog_version')}
                 </span>
               </div>
@@ -135,15 +135,15 @@ export function TCGCardGrid() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex rounded-2xl border border-white/[0.06] bg-black/35 p-1.5 shadow-inner">
+            <div className="flex rounded-2xl border border-border/50 bg-muted/50 p-1.5 shadow-inner">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   'rounded-xl p-2 transition-all duration-300',
                   viewMode === 'grid'
-                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-1 ring-white/20'
-                    : 'text-foreground/30 hover:bg-white/5 hover:text-foreground/60',
+                    ? 'bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/25'
+                    : 'text-foreground/30 hover:bg-card/50 hover:text-foreground/60',
                 )}
                 title={t('tcg.grid_view')}
                 aria-label={t('tcg.grid_view')}
@@ -156,8 +156,8 @@ export function TCGCardGrid() {
                 className={cn(
                   'rounded-xl p-2 transition-all duration-300',
                   viewMode === 'list'
-                    ? 'bg-primary text-white shadow-lg shadow-primary/40 ring-1 ring-white/20'
-                    : 'text-foreground/30 hover:bg-white/5 hover:text-foreground/60',
+                    ? 'bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/25'
+                    : 'text-foreground/30 hover:bg-card/50 hover:text-foreground/60',
                 )}
                 title={t('tcg.list_view')}
                 aria-label={t('tcg.list_view')}
@@ -177,7 +177,7 @@ export function TCGCardGrid() {
                     sortOrder,
                   });
                 }}
-                className="appearance-none h-10 rounded-2xl border border-white/[0.06] bg-white/[0.04] pl-10 pr-12 text-[10px] font-black uppercase tracking-widest text-foreground/70 transition-all hover:bg-white/[0.08] focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
+                className="appearance-none h-10 rounded-2xl border border-border/50 bg-card/55 pl-10 pr-12 text-[10px] font-black uppercase tracking-widest text-foreground/70 transition-all hover:bg-card/75 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10"
               >
                 <option value="name-asc">{t('tcg.sort_name_asc')}</option>
                 <option value="name-desc">{t('tcg.sort_name_desc')}</option>
@@ -248,7 +248,7 @@ export function TCGCardGrid() {
                     disabled={isFetchingNextPage}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="group relative overflow-hidden rounded-2xl border border-white/[0.1] px-10 py-3.5 transition-all duration-300 hover:border-primary/40"
+                    className="group relative overflow-hidden rounded-2xl border border-border/70 px-10 py-3.5 transition-all duration-300 hover:border-primary/40"
                   >
                     <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
                     <div className="relative z-10 flex items-center gap-3">
@@ -276,9 +276,9 @@ export function TCGCardGrid() {
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="relative flex flex-col items-center justify-center overflow-hidden rounded-[3rem] border border-dashed border-white/[0.08] bg-white/[0.02] py-28 text-center shadow-[0_24px_80px_rgba(0,0,0,0.25)]"
+              className="glass-card relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border-dashed py-28 text-center"
             >
-              <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.015] blur-[100px]" />
+              <div className="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary)_10%,transparent),transparent)]" />
 
               <div className="relative mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-primary/5">
                 <AlertCircle className="h-12 w-12 text-primary/35" />
@@ -298,7 +298,7 @@ export function TCGCardGrid() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="rounded-2xl bg-primary px-8 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-primary-hover hover:-translate-y-0.5 active:scale-95"
+                  className="rounded-2xl bg-primary px-8 py-3 text-[11px] font-black uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary-hover hover:-translate-y-0.5 active:scale-95"
                 >
                   {t('tcg.reset_filters')}
                 </button>
@@ -308,7 +308,7 @@ export function TCGCardGrid() {
                     clearFilters();
                     setViewMode('grid');
                   }}
-                  className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-8 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40 transition-all hover:bg-white/[0.06] hover:text-foreground"
+                  className="rounded-2xl border border-border/60 bg-card/50 px-8 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40 transition-all hover:bg-card/65 hover:text-foreground"
                 >
                   {t('tcg.browse_all_cards')}
                 </button>

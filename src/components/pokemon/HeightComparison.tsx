@@ -26,11 +26,11 @@ export function HeightComparison({ pokemonHeight, pokemonName, pokemonImage }: H
 
   return (
     <div className="w-full flex flex-col items-center">
-      <h3 className="text-xl font-black mb-10 text-foreground/90 border-b border-white/10 pb-4 w-full text-center uppercase tracking-widest">
+      <h3 className="text-xl font-black mb-10 text-foreground/90 border-b border-border/60 pb-4 w-full text-center uppercase tracking-widest">
         {t('detail.size_comparison')}
       </h3>
       
-      <div className="relative w-full h-80 flex items-end justify-center gap-16 md:gap-24 overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-white/5 p-8">
+      <div className="glass-card relative w-full h-80 flex items-end justify-center gap-16 md:gap-24 overflow-hidden rounded-2xl p-8">
         {/* Background Grid/Scanline effect */}
         <div className="absolute inset-0 opacity-10 pointer-events-none" 
           style={{ 

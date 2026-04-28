@@ -32,7 +32,7 @@ export default function CompareBar() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="glass-panel p-4 rounded-[2rem] border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.22)] flex items-center justify-between gap-4"
+        className="glass-toolbar flex items-center justify-between gap-4 rounded-2xl border-primary/20 p-4"
       >
         <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
           <AnimatePresence mode="popLayout">
@@ -49,7 +49,7 @@ export default function CompareBar() {
                   exit={{ scale: 0.8, opacity: 0 }}
                   className="relative group shrink-0"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/50 border border-border/60 flex items-center justify-center p-2">
+                  <div className="glass-card flex h-14 w-14 items-center justify-center rounded-xl p-2">
                     {q.isLoading ? (
                       <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     ) : p ? (
@@ -65,7 +65,7 @@ export default function CompareBar() {
                   </div>
                   <button 
                     onClick={() => removeFromCompare(id)}
-                    className="absolute -top-3 -right-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-destructive text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-lg"
+                    className="absolute -top-3 -right-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-destructive text-primary-foreground rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-lg"
                     aria-label={t('card.remove_compare')}
                   >
                     <X className="w-4 h-4" />

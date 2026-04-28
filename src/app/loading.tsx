@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-2xl">
       <div role="status" aria-live="polite" className="relative">
-        <div className="absolute inset-0 rounded-full bg-primary/20 blur-3xl animate-pulse" />
+        <div className="absolute inset-x-2 bottom-0 h-8 rounded-full bg-primary/10 animate-pulse" />
         <Loader2 className="w-16 h-16 animate-spin text-primary relative z-10" />
         <span className="sr-only">{t('loading.title')}</span>
       </div>

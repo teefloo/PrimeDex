@@ -60,7 +60,7 @@ export default function TermsPage() {
             {sections.map((section, index) => (
               <div
                 key={index}
-                className="section-frame p-6 hover:bg-white/[0.03] transition-colors"
+                className="section-frame p-6 hover:bg-card/50 transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">

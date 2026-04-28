@@ -51,7 +51,7 @@ export default function RecentlyViewed() {
               className="glass-panel p-3 rounded-2xl flex flex-col items-center text-center gap-2 group border-border/60 hover:border-primary/20 transition-all"
             >
               <div className="relative w-12 h-12">
-                <div className="absolute inset-0 bg-primary/5 rounded-full blur-lg group-hover:bg-primary/10 transition-colors" />
+                <div className="absolute inset-x-2 bottom-1 h-3 rounded-full bg-primary/10 transition-opacity group-hover:opacity-80" />
                 <Image 
                   src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`} 
                   alt={p.name} 

@@ -53,9 +53,9 @@ export default function FavoritesPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-[3rem] max-w-2xl mx-auto border-dashed border border-white/[0.06]"
+            className="flex flex-col items-center justify-center py-32 text-foreground/50 glass-panel rounded-2xl max-w-2xl mx-auto border-dashed border border-border/50"
           >
-            <div className="p-6 bg-white/[0.03] rounded-full mb-6">
+            <div className="p-6 bg-card/50 rounded-full mb-6">
               <Ghost className="w-16 h-16 text-foreground/20" />
             </div>
             <h3 className="text-2xl font-black mb-2 text-foreground/70 tracking-tight">{t('favorites.empty_title')}</h3>
@@ -79,7 +79,7 @@ export default function FavoritesPage() {
         )}
       </main>
 
-      <footer className="relative z-10 mt-24 border-t border-white/[0.04]">
+      <footer className="relative z-10 mt-24 border-t border-border/40">
         <div className="py-16 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary/20" />

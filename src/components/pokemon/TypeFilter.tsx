@@ -12,7 +12,7 @@ export default function TypeFilter() {
   const { t } = useTranslation();
 
   return (
-    <div 
+    <div
       className="w-full overflow-x-auto pb-8 pt-4 scrollbar-hide"
     >
       <div className="flex flex-nowrap lg:flex-wrap gap-2 justify-start lg:justify-center px-4 min-w-max lg:min-w-0 mx-auto max-w-7xl">
@@ -27,12 +27,12 @@ export default function TypeFilter() {
             <span className="uppercase tracking-wider">{t('filters.clear_types', { count: selectedTypes.length })}</span>
           </button>
         )}
-        
+
         {types.map((type) => {
           const isActive = selectedTypes.includes(type);
           const color = TYPE_COLORS[type];
           const label = t(`types.${type}`);
-          
+
           return (
             <button
               key={type}
@@ -41,9 +41,9 @@ export default function TypeFilter() {
               aria-label={label}
               className={cn(
                 "relative px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-400 overflow-hidden group border hover:scale-105 active:scale-95",
-                isActive 
-                  ? "text-white border-transparent" 
-                  : "bg-white/[0.03] backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-white/[0.06] hover:border-white/[0.12]"
+                isActive
+                  ? "text-primary-foreground border-transparent"
+                  : "bg-card/50 backdrop-blur-xl text-foreground/70 hover:text-foreground/90 border-border/50 hover:border-border/70"
               )}
               style={isActive ? {
                 backgroundColor: color,
@@ -52,20 +52,20 @@ export default function TypeFilter() {
             >
               {/* Hover color preview */}
               {!isActive && (
-                <div 
+                <div
                   className="absolute inset-0 opacity-0 group-hover:opacity-15 transition-opacity duration-400 rounded-full"
                   style={{ backgroundColor: color }}
                 />
               )}
-              
+
               {/* Inner glow for active */}
               {isActive && (
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
               )}
-              
+
               <span className="relative z-10 flex items-center gap-2">
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground shadow-sm" />
                 )}
                 {label}
               </span>
