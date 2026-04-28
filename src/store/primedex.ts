@@ -324,7 +324,7 @@ export const usePrimeDexStore = create<PrimeDexStore>()(
       getLanguageId: () => {
         return getResolvedLanguageId(get().language, get().systemLanguage);
       },
-      systemLanguage: 'en',
+      systemLanguage: typeof window !== 'undefined' ? (navigator.language.split('-')[0] || 'en') : 'en',
       setSystemLanguage: (lang) => set({ systemLanguage: lang }),
 
       _hasHydrated: false,
