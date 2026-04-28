@@ -40,6 +40,24 @@ interface PokemonCardProps {
 
 export type { GqlPokemonData, PokemonCardProps };
 
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.replace('#', '');
+  const expanded = normalized.length === 3
+    ? normalized.split('').map(char => char + char).join('')
+    : normalized;
+  const value = Number.parseInt(expanded, 16);
+
+  if (Number.isNaN(value)) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 export function PokemonCardSkeleton() {
   return (
     <div className="py-2 px-2 h-[22rem]">
@@ -210,25 +228,37 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
   const mainType = types[0]?.type?.name || 'normal';
   const color = TYPE_COLORS[mainType] || '#A8A77A';
   const cardLabel = t('detail.view_card_aria', { name: displayName });
+  const cardBackground = [
+    `radial-gradient(circle at 50% 16%, ${hexToRgba(color, 0.34)} 0%, transparent 44%)`,
+    `radial-gradient(circle at 50% 100%, ${hexToRgba(color, 0.12)} 0%, transparent 34%)`,
+    `linear-gradient(180deg, ${hexToRgba(color, 0.22)} 0%, rgba(8, 12, 22, 0.94) 44%, rgba(4, 7, 14, 1) 100%)`,
+  ].join(', ');
+  const cardShadow = `0 22px 58px -34px ${hexToRgba(color, 0.58)}, inset 0 1px 0 rgba(255, 255, 255, 0.08)`;
 
   return (
     <div className="relative block h-full py-1 px-1 sm:px-2" onMouseEnter={prefetchDetails}>
       <div
-        className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 transition-all duration-500 hover:-translate-y-1 sm:p-4"
+        className="group relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border p-2 transition-all duration-500 hover:-translate-y-1 sm:p-4"
         style={{
           '--type-color': color,
+          backgroundImage: cardBackground,
+          borderColor: hexToRgba(color, 0.28),
+          boxShadow: cardShadow,
         } as CSSProperties}
       >
         <Link
           href={`/pokemon/${name}`}
           aria-label={cardLabel}
-          className="absolute inset-0 z-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="absolute inset-0 z-0 rounded-[1.35rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         />
 
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-28 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 z-0 opacity-95 transition-opacity duration-500 group-hover:opacity-100"
           style={{
-            background: `linear-gradient(180deg, ${color}18 0%, transparent 100%)`,
+            background: [
+              `radial-gradient(circle at 50% 18%, ${hexToRgba(color, 0.24)} 0%, transparent 44%)`,
+              `linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.18) 48%, rgba(0, 0, 0, 0.42) 100%)`,
+            ].join(', '),
           }}
         />
 
@@ -311,20 +341,20 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
           </div>
         </div>
 
-        <div className="relative mx-auto h-20 w-20 transition-transform duration-500 group-hover:scale-105 sm:h-32 sm:w-32">
+        <div className="relative mx-auto h-24 w-24 transition-transform duration-500 group-hover:scale-110 sm:h-36 sm:w-36">
           <div className="absolute inset-0 rounded-full" />
           <Image
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`}
             alt={displayName}
             fill
             sizes="(max-width: 640px) 40vw, (max-width: 1024px) 33vw, 20vw"
-            className="object-contain filter drop-shadow-lg transition-all duration-500 group-hover:drop-shadow-xl"
+            className="object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.42)] transition-all duration-500 group-hover:drop-shadow-[0_22px_38px_rgba(0,0,0,0.55)]"
             priority={index === 0}
           />
         </div>
 
         <div className="relative z-10 mt-1 space-y-1 text-center sm:mt-4 sm:space-y-2">
-          <h3 className="truncate px-1 text-xs font-bold uppercase tracking-wide text-foreground/85 transition-colors duration-300 group-hover:text-primary sm:text-lg">
+          <h3 className="truncate px-1 text-xs font-bold uppercase tracking-wide text-foreground/90 transition-colors duration-300 group-hover:text-white sm:text-lg">
             {displayName}
           </h3>
           <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">

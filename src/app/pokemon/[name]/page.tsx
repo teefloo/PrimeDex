@@ -11,6 +11,9 @@ import { formatPokemonSlugName } from '@/lib/utils';
 export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true; // Allow dynamic params for non-static pages
 
+const normalizeDescription = (value?: string | null) =>
+  value?.replace(/\f/g, ' ').replace(/\s+/g, ' ').trim() || '';
+
 interface Props {
   params: Promise<{ name: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -40,7 +43,7 @@ export async function generateMetadata(
       || baseName;
     const displayName = name.includes('-') ? formatPokemonSlugName(name) : localizedName;
     const flavorTexts = localizedData?.pokemon_v2_pokemonspeciesflavortexts || [];
-    const description = flavorTexts[0]?.flavor_text?.replace(/\f/g, ' ') || '';
+    const description = normalizeDescription(flavorTexts[0]?.flavor_text);
 
     const title = `${displayName} | PrimeDex`;
     const seoDescription = description || `Detailed information about ${displayName}, including stats, abilities, types, and evolutions.`;
@@ -140,11 +143,11 @@ export default async function PokemonPage({ params, searchParams }: Props) {
   const displayName = name.includes('-') ? formatPokemonSlugName(name) : baseLocalizedName;
 
   // JSON-LD structured data for Pokemon
-  const jsonLd = {
+    const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'IndividualProduct',
     name: displayName,
-    description: localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ') || `Stats and details for ${displayName}`,
+    description: normalizeDescription(localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text) || `Stats and details for ${displayName}`,
     image: pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default,
     sku: pokemon.id.toString(),
     brand: {

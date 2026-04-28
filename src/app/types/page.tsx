@@ -23,8 +23,50 @@ import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const TypeChart = dynamic(() => import('@/components/pokemon/TypeChart'), { ssr: false });
+function TypeChartSkeleton() {
+  return (
+    <div className="glass-surface rounded-2xl overflow-hidden p-5 md:p-6 min-h-[44rem] animate-pulse">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-11 w-11 rounded-xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-44 rounded-full" />
+            <Skeleton className="h-3 w-64 rounded-full" />
+          </div>
+        </div>
+        <Skeleton className="h-10 w-10 rounded-xl" />
+      </div>
+
+      <Skeleton className="mt-4 h-14 w-full rounded-xl" />
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-4 w-24 rounded-full" />
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-border/40 bg-background/40 p-3 md:p-5">
+        <div className="min-w-[750px] space-y-2">
+          {Array.from({ length: 19 }).map((_, rowIdx) => (
+            <div key={rowIdx} className="grid grid-cols-[80px_repeat(18,minmax(0,1fr))] gap-[2px]">
+              <Skeleton className="h-10 rounded-lg" />
+              {Array.from({ length: 18 }).map((__, colIdx) => (
+                <Skeleton key={colIdx} className="h-10 rounded-md" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const TypeChart = dynamic(() => import('@/components/pokemon/TypeChart'), {
+  ssr: false,
+  loading: () => <TypeChartSkeleton />,
+});
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -40,17 +82,18 @@ export default function TypesPage() {
   const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<string>('fire');
 
-  const { data: typeRels } = useQuery({
+  const { data: typeRels, isLoading: isTypeRelationsLoading } = useQuery({
     queryKey: ['typeRelations', selectedType],
     queryFn: () => getTypeRelations(selectedType),
     staleTime: 24 * 60 * 60 * 1000,
   });
 
-  const { data: allPokemon } = useQuery({
+  const { data: allPokemon, isLoading: isPokemonLoading } = useQuery({
     queryKey: ['pokemonDetailedByType', selectedType],
     queryFn: () => getPokemonDetailedByType(selectedType),
     staleTime: 30 * 60 * 1000,
   });
+  const isLoadingPage = isTypeRelationsLoading || isPokemonLoading;
 
   const emblematicPokemon = useMemo(() => {
     if (!allPokemon) return [];
@@ -63,6 +106,143 @@ export default function TypesPage() {
       })
       .slice(0, 6);
   }, [allPokemon, selectedType]);
+
+  if (isLoadingPage) {
+    return (
+      <div className="app-page text-foreground pb-20 overflow-x-hidden relative">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[34rem] opacity-55"
+          style={{
+            background: `linear-gradient(180deg, ${TYPE_COLORS[selectedType]}22, transparent 70%), linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)`,
+          }}
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,var(--background)_100%)]" />
+        </div>
+
+        <Header />
+
+        <main className="page-shell py-8 relative z-10">
+          <PageHeader
+            icon={Target}
+            title={t('types_page.title')}
+            subtitle={t('types_page.subtitle')}
+            eyebrow={t('types_page.eyebrow', { defaultValue: 'PrimeDex' })}
+            className="mt-16 md:mt-20"
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-8"
+          >
+            <div className="page-surface p-4 md:p-6 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-secondary/30 rounded-xl">
+                  <Flame className="w-4 h-4 text-foreground/60" />
+                </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/50">{t('types_page.select_type')}</h3>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {Object.keys(TYPE_COLORS).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300",
+                      selectedType === type
+                        ? "bg-card/70 border-border/70 shadow-lg"
+                        : "bg-secondary/20 border-border/40 opacity-60 hover:opacity-100 hover:bg-secondary/30"
+                    )}
+                    aria-label={t(`types.${type}`)}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shadow-sm"
+                      style={{ backgroundColor: TYPE_COLORS[type] }}
+                    />
+                    <span className="text-[10px] font-black uppercase tracking-wider">{t(`types.${type}`)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="mb-10">
+            <TypeChartSkeleton />
+          </div>
+
+          <div className="space-y-8">
+            <div className="page-surface p-6 md:p-8 rounded-2xl relative overflow-hidden group">
+              <Skeleton className="h-5 w-48 rounded-full mb-6" />
+              <div className="flex items-center gap-4 mb-8">
+                <Skeleton className="h-16 w-16 rounded-2xl" />
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-48 rounded-full" />
+                  <Skeleton className="h-3 w-36 rounded-full" />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {Array.from({ length: 2 }).map((_, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <Skeleton className="h-3 w-32 rounded-full" />
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: 5 }).map((__, pillIdx) => (
+                        <Skeleton key={pillIdx} className="h-8 w-20 rounded-xl" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {Array.from({ length: 2 }).map((_, idx) => (
+                <div key={idx} className="bg-card/30 border border-border/40 backdrop-blur-xl p-5 rounded-2xl">
+                  <Skeleton className="h-3 w-24 rounded-full mb-3" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: 4 }).map((__, pillIdx) => (
+                      <Skeleton key={pillIdx} className="h-6 w-16 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-6">
+              <Skeleton className="h-6 w-48 rounded-full" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="bg-card/50 border border-border/50 p-4 rounded-2xl flex flex-col items-center gap-3">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-16 rounded-full" />
+                    <Skeleton className="h-3 w-10 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="page-surface p-6 md:p-8 rounded-2xl relative overflow-hidden">
+              <Skeleton className="h-6 w-40 rounded-full mb-4" />
+              <div className="space-y-3">
+                {Array.from({ length: 2 }).map((_, idx) => (
+                  <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-background/40 border border-border/40">
+                    <Skeleton className="h-9 w-9 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-28 rounded-full" />
+                      <Skeleton className="h-3 w-full rounded-full" />
+                      <Skeleton className="h-3 w-5/6 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-page text-foreground pb-20 overflow-x-hidden relative">

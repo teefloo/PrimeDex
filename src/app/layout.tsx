@@ -34,10 +34,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: t("meta.title"),
-    template: "%s | PrimeDex",
-  },
+  title: t("meta.title"),
   description: t("meta.description"),
   keywords: t("meta.keywords", { returnObjects: true }) as unknown as string[],
   authors: [{ name: t("meta.author"), url: SITE_URL }],

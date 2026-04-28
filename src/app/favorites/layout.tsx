@@ -4,6 +4,10 @@ import { t } from '@/lib/server-i18n';
 export const metadata: Metadata = {
   title: t('meta.favorites_title'),
   description: t('meta.favorites_description'),
+  robots: {
+    index: false,
+    follow: true,
+  },
   alternates: {
     canonical: '/favorites',
   },

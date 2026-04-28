@@ -122,7 +122,7 @@ export default {
       types_description: 'Explore types.',
       pokemon_title: '{{name}} - PrimeDex',
       pokemon_description: '{{name}} info.',
-      pokemon_fallback_title: 'Pokémon',
+      pokemon_fallback_title: 'Pokémon | PrimeDex',
     },
     settings: {
       title: '設定',

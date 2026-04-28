@@ -122,7 +122,7 @@ export default {
       types_description: 'Esplora i tipi di Pokémon.',
       pokemon_title: '{{name}} - PrimeDex',
       pokemon_description: 'Dettagli su {{name}}, incluse statistiche e tipi.',
-      pokemon_fallback_title: 'Dettagli Pokémon',
+      pokemon_fallback_title: 'Dettagli Pokémon | PrimeDex',
     },
     settings: {
       title: 'Impostazioni',

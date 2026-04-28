@@ -122,7 +122,7 @@ export default {
       types_description: 'Explora los tipos Pokémon y su efectividad.',
       pokemon_title: '{{name}} - PrimeDex',
       pokemon_description: 'Detalles sobre {{name}}, incluyendo estadísticas y tipos.',
-      pokemon_fallback_title: 'Detalles del Pokémon',
+      pokemon_fallback_title: 'Detalles del Pokémon | PrimeDex',
     },
     settings: {
       title: 'Ajustes',

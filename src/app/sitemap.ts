@@ -2,8 +2,6 @@ import { MetadataRoute } from 'next';
 import { getAllPokemonNames } from '@/lib/api';
 import { SITE_URL } from '@/lib/site';
 
-const stableLastModified = new Date('2026-04-21T00:00:00.000Z');
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_URL;
 
@@ -12,7 +10,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const pokemonUrls: MetadataRoute.Sitemap = pokemonList.map((pokemon) => ({
     url: `${baseUrl}/pokemon/${pokemon.name}`,
-    lastModified: stableLastModified,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
     images: [
@@ -24,61 +21,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: stableLastModified,
       changeFrequency: 'daily',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/types`,
-      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/compare`,
-      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/favorites`,
-      lastModified: stableLastModified,
-      changeFrequency: 'weekly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/team`,
-      lastModified: stableLastModified,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
       url: `${baseUrl}/quiz`,
-      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/tcg`,
-      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/moves`,
-      lastModified: stableLastModified,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: stableLastModified,
       changeFrequency: 'yearly',
       priority: 0.2,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: stableLastModified,
       changeFrequency: 'yearly',
       priority: 0.2,
     },

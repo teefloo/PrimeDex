@@ -5,6 +5,10 @@ import { SITE_URL } from '@/lib/site';
 export const metadata: Metadata = {
   title: t('meta.team_title'),
   description: t('meta.team_description'),
+  robots: {
+    index: false,
+    follow: true,
+  },
   alternates: {
     canonical: '/team',
   },

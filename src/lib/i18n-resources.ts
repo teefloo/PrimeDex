@@ -1576,7 +1576,7 @@ community: {
         types_description: 'Explora los tipos Pokémon y su efectividad.',
         pokemon_title: '{{name}} - PrimeDex',
         pokemon_description: 'Detalles sobre {{name}}, incluyendo estadísticas y tipos.',
-        pokemon_fallback_title: 'Detalles del Pokémon',
+        pokemon_fallback_title: 'Detalles del Pokémon | PrimeDex',
       },
       settings: {
         title: 'Ajustes',
@@ -2770,7 +2770,7 @@ community: {
         types_description: 'Esplora i tipi di Pokémon.',
         pokemon_title: '{{name}} - PrimeDex',
         pokemon_description: 'Dettagli su {{name}}, incluse statistiche e tipi.',
-        pokemon_fallback_title: 'Dettagli Pokémon',
+        pokemon_fallback_title: 'Dettagli Pokémon | PrimeDex',
       },
       settings: {
         title: 'Impostazioni',
@@ -3350,7 +3350,7 @@ community: {
         types_description: 'Explore types.',
         pokemon_title: '{{name}} - PrimeDex',
         pokemon_description: '{{name}} info.',
-        pokemon_fallback_title: 'Pokémon',
+        pokemon_fallback_title: 'Pokémon | PrimeDex',
       },
       settings: {
         title: '設定',
@@ -3923,7 +3923,7 @@ community: {
         types_description: 'Explore types.',
         pokemon_title: '{{name}} - PrimeDex',
         pokemon_description: '{{name}} info.',
-        pokemon_fallback_title: 'Pokémon',
+        pokemon_fallback_title: 'Pokémon | PrimeDex',
       },
       settings: {
         title: '설정',
