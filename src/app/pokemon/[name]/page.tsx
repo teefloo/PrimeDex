@@ -145,10 +145,11 @@ export default async function PokemonPage({ params, searchParams }: Props) {
   // JSON-LD structured data for Pokemon
     const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'IndividualProduct',
+    '@type': 'Thing',
     name: displayName,
     description: normalizeDescription(localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text) || `Stats and details for ${displayName}`,
     image: pokemon.sprites.other?.['official-artwork'].front_default || pokemon.sprites.front_default,
+    url: `/pokemon/${name}`,
     sku: pokemon.id.toString(),
     brand: {
       '@type': 'Brand',

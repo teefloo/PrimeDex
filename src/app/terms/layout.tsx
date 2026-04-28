@@ -4,6 +4,10 @@ import { t } from '@/lib/server-i18n';
 export const metadata: Metadata = {
   title: t('legal.terms.title') + ' | PrimeDex',
   description: t('legal.terms.intro'),
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function TermsLayout({

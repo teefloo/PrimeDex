@@ -4,6 +4,10 @@ import { t } from '@/lib/server-i18n';
 export const metadata: Metadata = {
   title: t('legal.privacy.title') + ' | PrimeDex',
   description: t('legal.privacy.intro'),
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function PrivacyLayout({

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { t } from '@/lib/server-i18n';
 import { AppContent } from "./AppContent";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { getLanguageAlternates, languageToOpenGraphLocale } from "@/lib/languages";
+import { languageToOpenGraphLocale } from "@/lib/languages";
 import { GITHUB_REPO_URL, SITE_URL } from "@/lib/site";
 
 const displayFont = Fraunces({
@@ -44,7 +44,6 @@ export const metadata: Metadata = {
   category: "games",
   alternates: {
     canonical: "/",
-    languages: getLanguageAlternates("/"),
   },
   robots: {
     index: true,
@@ -71,7 +70,6 @@ export const metadata: Metadata = {
       },
     ],
     locale: languageToOpenGraphLocale.en,
-    alternateLocale: Object.values(languageToOpenGraphLocale).filter((locale) => locale !== languageToOpenGraphLocale.en),
   },
   twitter: {
     card: "summary_large_image",

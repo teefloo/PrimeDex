@@ -4,10 +4,25 @@ import { TCGCardGrid } from '@/components/tcg/TCGCardGrid';
 import Header from '@/components/layout/Header';
 import PageHeader from '@/components/layout/PageHeader';
 import { t } from '@/lib/server-i18n';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: t('tcg.page_title'),
   description: t('tcg.page_description'),
+  alternates: {
+    canonical: '/tcg',
+  },
+  openGraph: {
+    title: t('tcg.page_title'),
+    description: t('tcg.page_description'),
+    url: `${SITE_URL}/tcg`,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: t('tcg.page_title'),
+    description: t('tcg.page_description'),
+  },
 };
 
 export default function TCGPage() {

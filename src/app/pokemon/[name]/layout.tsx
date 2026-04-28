@@ -92,12 +92,22 @@ export default async function PokemonLayout({
 
     jsonLd = {
       '@context': 'https://schema.org',
-      '@type': 'Article',
+      '@type': 'WebPage',
       name: `${displayName} — Complete Pokémon Guide`,
       headline: `${displayName} — Stats, Evolutions, Moves & Builds`,
       description: `Comprehensive data for ${displayName}: base stat total of ${totalStats}, ${typesArr.join('/')} type. Full evolution chain, competitive builds, moveset analysis, abilities, and TCG cards.`,
       url: `${baseUrl}/pokemon/${name}`,
-      image: imageUrl,
+      primaryImageOfPage: imageUrl ? {
+        '@type': 'ImageObject',
+        url: imageUrl,
+      } : undefined,
+      about: {
+        '@type': 'Thing',
+        name: displayName,
+        description: `Pokemon data for ${displayName}`,
+        image: imageUrl,
+        url: `${baseUrl}/pokemon/${name}`,
+      },
       author: {
         '@type': 'Organization',
         name: 'PrimeDex',
