@@ -214,7 +214,7 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
   return (
     <div className="relative block h-full py-1 px-1 sm:px-2" onMouseEnter={prefetchDetails}>
       <div
-        className="glass-card type-accent group relative flex h-full flex-col overflow-hidden rounded-xl p-2 transition-all duration-500 hover:-translate-y-1 sm:p-4"
+        className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-card/70 p-2 transition-all duration-500 hover:-translate-y-1 sm:p-4"
         style={{
           '--type-color': color,
         } as CSSProperties}
