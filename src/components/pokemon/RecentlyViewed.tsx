@@ -56,7 +56,7 @@ export default function RecentlyViewed() {
             <History className="w-5 h-5 text-foreground/60" />
           </div>
           <div>
-            <h3 className="text-xl font-black uppercase tracking-tight">{t('recently_viewed.title')}</h3>
+            <h2 className="text-xl font-black uppercase tracking-tight">{t('recently_viewed.title')}</h2>
             <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5">
               {t('recently_viewed.subtitle', { count: history.length })}
             </p>

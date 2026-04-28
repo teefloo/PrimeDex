@@ -444,6 +444,7 @@ export default function PokemonList() {
 
   return (
     <div className="space-y-2 pb-20">
+      <h2 className="sr-only">{t('list.title') || 'Pokémon List'}</h2>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}

@@ -33,7 +33,7 @@ export default function SortSelector() {
     <div className="flex items-center gap-3">
       <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-foreground/70 hidden sm:block">{t('sort.label')}</span>
       <Select value={sortBy} onValueChange={(val: SortValue | null) => val && setSortBy(val)}>
-        <SelectTrigger className="w-[200px] rounded-full bg-card/50 backdrop-blur-xl border-border/50 text-[11px] font-bold uppercase tracking-wider h-10 focus:ring-primary/20 hover:border-border/70 transition-all">
+        <SelectTrigger aria-label={t('sort.label')} className="w-[200px] rounded-full bg-card/50 backdrop-blur-xl border-border/50 text-[11px] font-bold uppercase tracking-wider h-10 focus:ring-primary/20 hover:border-border/70 transition-all">
           <SelectValue>
             {(() => {
               const current = options.find(o => o.value === sortBy);

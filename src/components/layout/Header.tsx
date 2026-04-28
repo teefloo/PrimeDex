@@ -172,7 +172,7 @@ export default function Header() {
           className="glass-toolbar inline-flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-1.5 px-3 py-2 md:max-w-[calc(100vw-3rem)] md:px-4"
         >
           <div className="flex shrink-0 items-center justify-start">
-            <Link href="/" className="flex items-center gap-2 group" aria-label={t('header.home_aria')}>
+            <Link href="/" className="flex items-center gap-2 group" aria-label={`${t('header.home_aria')} - PrimeDex`}>
               <div className="shrink-0 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
                 <PrimeDexLogo className="h-5 w-5 md:h-6 md:w-6 transition-all duration-300 drop-shadow-[0_0_8px_rgba(190,93,72,0.18)] group-hover:drop-shadow-[0_0_14px_rgba(190,93,72,0.32)]" />
               </div>
@@ -185,7 +185,7 @@ export default function Header() {
 
                 <div className="flex h-3 items-center gap-1 px-1 py-0.5">
                   <div className="h-1 w-1 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.45)]" />
-                  <span className="min-w-[4.4rem] text-[8px] font-black uppercase tracking-[0.22em] text-foreground/70 md:text-[9px]">
+                  <span suppressHydrationWarning className="min-w-[4.4rem] text-[8px] font-black uppercase tracking-[0.22em] text-foreground/70 md:text-[9px]">
                     {mounted ? caughtCount : 0} / 1025
                   </span>
                   <div className="h-[2px] w-7 overflow-hidden rounded-full bg-muted/70">
@@ -270,7 +270,7 @@ export default function Header() {
                   aria-label={t('header.language_title', { language: languageLabel })}
                 >
                   <Languages className="h-4 w-4" />
-                  <span className="hidden min-w-[24px] text-center text-[10px] font-black uppercase sm:inline">{languageLabel}</span>
+                  <span suppressHydrationWarning className="hidden min-w-[24px] text-center text-[10px] font-black uppercase sm:inline">{languageLabel}</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs font-bold">
@@ -285,6 +285,7 @@ export default function Header() {
                   onClick={cycleTheme}
                   className="glass-control flex h-8 w-8 items-center justify-center text-foreground/70 hover:border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-500 active:scale-95"
                   aria-label={themeLabel}
+                  suppressHydrationWarning
                 >
                   {!mounted ? (
                     <div className="h-4 w-4 md:h-[18px] md:w-[18px]" />
@@ -340,7 +341,7 @@ export default function Header() {
                     <SheetClose
                       render={
                         <Link href="/" className="flex items-center gap-4 rounded-xl p-4 text-sm font-semibold uppercase tracking-[0.18em] text-foreground/70 transition-all hover:bg-muted/50 hover:text-primary">
-                          <PrimeDexLogo className="h-5 w-5 flex-shrink-0" /> {t('header.home_aria')}
+                          <PrimeDexLogo className="h-5 w-5 flex-shrink-0" /> {t('header.home_aria')} - PrimeDex
                         </Link>
                       }
                     />
