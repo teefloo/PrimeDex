@@ -2,11 +2,11 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
-import { getBaseSpeciesName } from '@/lib/form-names';
+import { getBaseSpeciesName, getFormDisplayName } from '@/lib/form-names';
 import { PokemonDetail, PokemonSpecies, TYPE_COLORS, PokemonCardType, LocalizedNameEntry } from '@/types/pokemon';
 import { Heart, ArrowLeftRight, Plus, Minus } from 'lucide-react';
 import { usePrimeDexStore } from '@/store/primedex';
-import { cn, formatPokemonSlugName } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -136,18 +136,17 @@ export const PokemonCard = memo(function PokemonCard({ name, index = 0, initialD
   const pokemonGqlData = pokemonData as GqlPokemonData | undefined;
 
   const pokemonName = pokemonData?.name || name;
-  let displayName = pokemonName.includes('-')
-    ? formatPokemonSlugName(pokemonName)
-    : pokemonName;
-  if (!pokemonName.includes('-')) {
-    if (speciesData?.names?.length) {
-      const entry = speciesData.names.find(n => n?.language?.name === resolvedLang) || speciesData.names.find(n => n?.language?.name === 'en');
-      if (entry?.name) displayName = entry.name;
-    } else if (pokemonGqlData?.localizedNames?.length) {
-      const entry = pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === resolvedLang) || pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === 'en');
-      if (entry?.name) displayName = entry.name;
-    }
+  let baseLocalizedName = pokemonName;
+  if (speciesData?.names?.length) {
+    const entry = speciesData.names.find(n => n?.language?.name === resolvedLang) || speciesData.names.find(n => n?.language?.name === 'en');
+    if (entry?.name) baseLocalizedName = entry.name;
+  } else if (pokemonGqlData?.localizedNames?.length) {
+    const entry = pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === resolvedLang) || pokemonGqlData.localizedNames.find((n: LocalizedNameEntry) => n?.language === 'en');
+    if (entry?.name) baseLocalizedName = entry.name;
   }
+  const displayName = pokemonName.includes('-')
+    ? getFormDisplayName(pokemonName, baseLocalizedName, resolvedLang)
+    : baseLocalizedName;
 
   const prefetchDetails = useCallback(() => {
     if (!name) return;

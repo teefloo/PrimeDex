@@ -27,8 +27,8 @@ import {
 import { PokemonDetail, PokemonSpecies, PokemonEncounter, PokemonEncounterVersionDetail, PokemonEncounterDetail, TYPE_COLORS } from '@/types/pokemon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrimeDexStore } from '@/store/primedex';
-import { cn, formatId, formatName, formatLocationName, formatPokemonSlugName } from '@/lib/utils';
-import { getBaseSpeciesName } from '@/lib/form-names';
+import { cn, formatId, formatName, formatLocationName } from '@/lib/utils';
+import { getBaseSpeciesName, getFormDisplayName } from '@/lib/form-names';
 import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useMounted } from '@/hooks/useMounted';
@@ -263,7 +263,7 @@ export function PokemonDetailClient({
     || species?.names?.find(n => n.language.name === 'en')?.name
     || getBaseSpeciesName(pokemon.name);
   const displayName = pokemon.name.includes('-')
-    ? formatPokemonSlugName(pokemon.name)
+    ? getFormDisplayName(pokemon.name, baseLocalizedName, resolvedLang)
     : baseLocalizedName;
 
   const flavorText = localized?.pokemon_v2_pokemonspeciesflavortexts?.[0]?.flavor_text?.replace(/\f/g, ' ')
@@ -593,7 +593,7 @@ export function PokemonDetailClient({
                             key={form.name}
                             className="px-3 py-1.5 rounded-xl bg-background/40 border border-border/40 text-xs font-black text-foreground/80"
                           >
-                            {formatName(form.name)}
+                            {getFormDisplayName(form.name, baseLocalizedName, resolvedLang)}
                           </span>
                         ))}
                       </div>

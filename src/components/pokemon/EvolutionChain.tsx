@@ -12,7 +12,8 @@ import { REST_API_BASE } from '@/lib/api/client';
 import apiClient from '@/lib/api/client';
 import { usePrimeDexStore } from '@/store/primedex';
 import { getPokemonDetail, getPokemonSpecies } from '@/lib/api';
-import { cn, formatId, formatPokemonSlugName } from '@/lib/utils';
+import { getFormDisplayName } from '@/lib/form-names';
+import { cn, formatId } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 
 interface EvolutionChainProps {
@@ -126,11 +127,12 @@ function EvolutionItem({ name, isCurrent }: { name: string; isCurrent?: boolean 
   });
 
   const sprite = pokemonData?.sprites.other['official-artwork'].front_default || pokemonData?.sprites.front_default;
+  const baseLocalizedName = speciesData?.names?.find(n => n.language.name === resolvedLang)?.name
+    || speciesData?.names?.find(n => n.language.name === 'en')?.name
+    || name;
   const displayName = name.includes('-')
-    ? formatPokemonSlugName(name)
-    : speciesData?.names?.find(n => n.language.name === resolvedLang)?.name
-      || speciesData?.names?.find(n => n.language.name === 'en')?.name
-      || name;
+    ? getFormDisplayName(name, baseLocalizedName, resolvedLang)
+    : baseLocalizedName;
 
   const hasError = pokemonError && speciesError;
   const hasPartialData = pokemonData || speciesData;
@@ -207,11 +209,12 @@ function AlternateFormItem({ form }: { form: AlternateForm }) {
 
   const sprite = pokemonData?.sprites.other['official-artwork'].front_default || pokemonData?.sprites.front_default;
   
+  const baseLocalizedName = speciesData?.names?.find(n => n.language.name === resolvedLang)?.name
+    || speciesData?.names?.find(n => n.language.name === 'en')?.name
+    || baseName;
   const displayName = form.name.includes('-')
-    ? formatPokemonSlugName(form.name)
-    : speciesData?.names?.find(n => n.language.name === resolvedLang)?.name
-      || speciesData?.names?.find(n => n.language.name === 'en')?.name
-      || baseName;
+    ? getFormDisplayName(form.name, baseLocalizedName, resolvedLang)
+    : baseLocalizedName;
 
   const formConfig: Record<string, {
     badge: string;

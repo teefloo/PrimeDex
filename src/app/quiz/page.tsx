@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { PokemonDetail } from '@/types/pokemon';
 import { useTranslation } from '@/lib/i18n';
+import { getFormDisplayName } from '@/lib/form-names';
 import { usePrimeDexStore } from '@/store/primedex';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
@@ -118,7 +119,12 @@ function QuizPageContent() {
     
     const speciesNames = summary.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
     const localized = speciesNames.find((sn) => sn.pokemon_v2_language?.name === resolvedLang);
-    return localized?.name || internalName;
+    const baseName = localized?.name || internalName;
+    
+    if (internalName.includes('-')) {
+      return getFormDisplayName(internalName, baseName, resolvedLang);
+    }
+    return baseName;
   }, [allNames, resolvedLang]);
 
   useEffect(() => {
@@ -153,7 +159,7 @@ function QuizPageContent() {
 
   const getNextPokemon = useCallback(() => {
     const basePool = filteredPool.length > 0 ? filteredPool : (allNames || []);
-    const pool = basePool.filter((p) => !p.name.includes('-mega') && !p.name.includes('-primal') && !p.name.includes('-ultra'));
+    const pool = basePool.filter((p) => !p.name.includes('-primal') && !p.name.includes('-ultra'));
     if (pool.length === 0) return null;
 
     if (isDaily) {
@@ -212,7 +218,7 @@ function QuizPageContent() {
     
     let pool: Array<{ name: string; url?: string }> = allNames
       ?.map((p) => ({ name: p.name }))
-      .filter((p) => !p.name.includes('-mega') && !p.name.includes('-primal') && !p.name.includes('-ultra')) || [];
+      .filter((p) => !p.name.includes('-primal') && !p.name.includes('-ultra')) || [];
     
     if (selectedGen || selectedType) {
       const genPool = selectedGen ? await getPokemonByGeneration(selectedGen) : null;
