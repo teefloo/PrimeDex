@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { cn, formatPokemonSlugName } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { getFormDisplayName } from '@/lib/form-names';
 import type { GraphQLPokemonSearchIndex } from '@/types/pokemon';
 import type { SupportedLanguage } from '@/lib/languages';
 
@@ -166,7 +167,7 @@ export function HeaderSearch({
                 const localized = speciesNames.find((speciesName) => speciesName.pokemon_v2_language?.name === resolvedLang);
                 const baseLocalizedName = localized?.name || pokemon.name;
                 const displayName = pokemon.name.includes('-')
-                  ? formatPokemonSlugName(pokemon.name)
+                  ? getFormDisplayName(pokemon.name, baseLocalizedName, resolvedLang)
                   : baseLocalizedName;
                 const isActive = index === activeIndex;
 
@@ -191,7 +192,6 @@ export function HeaderSearch({
                         width={32}
                         height={32}
                         className="object-contain drop-shadow-md group-hover/item:scale-110 transition-transform"
-                        unoptimized
                       />
                     </div>
                     <span className="text-xs font-black capitalize flex-1 truncate text-foreground/80 group-hover/item:text-primary">

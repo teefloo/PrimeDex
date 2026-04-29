@@ -1,50 +1,18 @@
-import { Metadata } from 'next';
-import { t } from '@/lib/server-i18n';
-import { SITE_URL } from '@/lib/site';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: t('meta.quiz_title'),
-  description: t('meta.quiz_description'),
-  alternates: {
-    canonical: '/quiz',
-  },
+  title: "Pokémon Quiz - PrimeDex",
+  description: "Test your Pokémon knowledge with interactive quizzes. Identify Pokémon by silhouette, type, and more.",
   openGraph: {
-    title: t('meta.quiz_title'),
-    description: t('meta.quiz_description'),
-    url: '/quiz',
-    type: 'website',
+    title: "Pokémon Quiz - PrimeDex",
+    description: "Test your Pokémon knowledge with interactive quizzes.",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: t('meta.quiz_title'),
-    description: t('meta.quiz_description'),
+    title: "Pokémon Quiz - PrimeDex",
+    description: "Test your Pokémon knowledge with interactive quizzes.",
   },
 };
 
-export default function QuizLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const baseUrl = SITE_URL;
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebApplication',
-            name: "Who's That Pokémon? — PrimeDex Quiz",
-            applicationCategory: 'GameApplication',
-            operatingSystem: 'All',
-            description: 'Test your Pokémon knowledge with classic, silhouette, and stats quiz modes.',
-            url: `${baseUrl}/quiz`,
-            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-          }),
-        }}
-      />
-      {children}
-    </>
-  );
+export default function QuizLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

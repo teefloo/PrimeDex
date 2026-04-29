@@ -1,33 +1,18 @@
-import { Metadata } from 'next';
-import { t } from '@/lib/server-i18n';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: t('meta.favorites_title'),
-  description: t('meta.favorites_description'),
-  robots: {
-    index: false,
-    follow: true,
-  },
-  alternates: {
-    canonical: '/favorites',
-  },
+  title: "Favorite Pokémon - PrimeDex",
+  description: "View your collection of favorite Pokémon. Quick access to all the Pokémon you've marked as favorites.",
   openGraph: {
-    title: t('meta.favorites_title'),
-    description: t('meta.favorites_description'),
-    url: '/favorites',
-    type: 'website',
+    title: "Favorite Pokémon - PrimeDex",
+    description: "View your collection of favorite Pokémon.",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: t('meta.favorites_title'),
-    description: t('meta.favorites_description'),
+    title: "Favorite Pokémon - PrimeDex",
+    description: "View your collection of favorite Pokémon.",
   },
 };
 
-export default function FavoritesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+export default function FavoritesLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

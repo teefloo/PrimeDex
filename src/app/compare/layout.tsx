@@ -1,50 +1,18 @@
-import { Metadata } from 'next';
-import { t } from '@/lib/server-i18n';
-import { SITE_URL } from '@/lib/site';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: t('meta.compare_title'),
-  description: t('meta.compare_description'),
-  alternates: {
-    canonical: '/compare',
-  },
+  title: "Compare Pokémon - PrimeDex",
+  description: "Compare stats, types, abilities, and more between any two Pokémon side by side. Find out which Pokémon comes out on top.",
   openGraph: {
-    title: t('meta.compare_title'),
-    description: t('meta.compare_description'),
-    url: '/compare',
-    type: 'website',
+    title: "Compare Pokémon - PrimeDex",
+    description: "Compare stats, types, abilities, and more between any two Pokémon side by side.",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: t('meta.compare_title'),
-    description: t('meta.compare_description'),
+    title: "Compare Pokémon - PrimeDex",
+    description: "Compare stats, types, abilities, and more between any two Pokémon side by side.",
   },
 };
 
-export default function CompareLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const baseUrl = SITE_URL;
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebApplication',
-            name: 'Pokémon Comparison Tool — PrimeDex',
-            applicationCategory: 'GameApplication',
-            operatingSystem: 'All',
-            description: 'Compare Pokémon stats, types, abilities, and movesets side-by-side.',
-            url: `${baseUrl}/compare`,
-            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-          }),
-        }}
-      />
-      {children}
-    </>
-  );
+export default function CompareLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

@@ -298,7 +298,6 @@ export default function ComparePage() {
                         fill
                         sizes="48px"
                         className="object-contain"
-                        unoptimized
                       />
                     </div>
                     <div className="min-w-0 flex-1">

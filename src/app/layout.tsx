@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
+import Script from "next/script";
 import Providers from "./providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,7 @@ const displayFont = Fraunces({
 
 const bodyFont = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-body",
   display: "swap",
   preload: true,
@@ -44,6 +45,16 @@ export const metadata: Metadata = {
   category: "games",
   alternates: {
     canonical: "/",
+    languages: {
+      en: "/",
+      fr: "/?lang=fr",
+      de: "/?lang=de",
+      es: "/?lang=es",
+      it: "/?lang=it",
+      ja: "/?lang=ja",
+      ko: "/?lang=ko",
+      "pt-BR": "/?lang=pt-BR",
+    },
   },
   robots: {
     index: true,
@@ -121,18 +132,18 @@ export default function RootLayout({
         {/* DNS Prefetch & Preconnect for external APIs */}
         <link rel="preconnect" href="https://pokeapi.co" />
         <link rel="preconnect" href="https://raw.githubusercontent.com" />
-        <link rel="preconnect" href="https://beta.pokeapi.co" />
         <link rel="dns-prefetch" href="https://pokeapi.co" />
         <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
-        <link rel="dns-prefetch" href="https://beta.pokeapi.co" />
-        <script
+        <Script
           id="website-jsonld"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
-        <script
+        <Script
           id="organization-jsonld"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>

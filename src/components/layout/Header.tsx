@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { getFormDisplayName } from '@/lib/form-names';
 import { useTranslation, loadLanguage } from '@/lib/i18n';
 import { usePrimeDexStore } from '@/store/primedex';
 import { getAllPokemonSearchIndex } from '@/lib/api/graphql';
@@ -410,7 +411,10 @@ export default function Header() {
                   {searchResults.map((pokemon) => {
                     const speciesNames = pokemon.pokemon_v2_pokemonspecy?.pokemon_v2_pokemonspeciesnames || [];
                     const localized = speciesNames.find((speciesName) => speciesName.pokemon_v2_language?.name === resolvedLang);
-                    const displayName = localized?.name || pokemon.name;
+                    const baseLocalizedName = localized?.name || pokemon.name;
+                    const displayName = pokemon.name.includes('-')
+                      ? getFormDisplayName(pokemon.name, baseLocalizedName, resolvedLang)
+                      : baseLocalizedName;
 
                     return (
                       <button
@@ -430,7 +434,6 @@ export default function Header() {
                             width={32}
                             height={32}
                             className="object-contain transition-transform drop-shadow-md group-hover/item:scale-110"
-                            unoptimized
                           />
                         </div>
                         <span className="flex-1 truncate text-xs font-black capitalize text-foreground/80 group-hover/item:text-primary">

@@ -416,7 +416,6 @@ export function TCGFilters({ filters, onChange }: TCGFiltersProps) {
                           alt={set.name}
                           fill
                           className="object-contain p-2"
-                          unoptimized
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-white/[0.03] to-transparent text-primary/70">

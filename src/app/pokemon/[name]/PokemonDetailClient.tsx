@@ -90,7 +90,6 @@ function ItemCard({ item, language }: { item: HeldItem; language: string }) {
             height={48}
             className="w-full h-full object-contain filter group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all"
             onError={() => setImgError(true)}
-            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-foreground/30">

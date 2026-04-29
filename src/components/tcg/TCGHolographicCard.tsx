@@ -193,7 +193,6 @@ export const TCGHolographicCard = memo(function TCGHolographicCard({
               priority={priority}
               className={cn('card__image', imageClassName)}
               onLoad={() => setLoading(false)}
-              unoptimized
             />
             <div className="card__shine" aria-hidden="true" />
             <div className="card__glare" aria-hidden="true" />
