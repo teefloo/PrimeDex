@@ -2,6 +2,7 @@
 
 ## Files
 - `pokemon.ts` shared Pokemon type system
+- `tcg.ts` TCG-specific types
 
 ## Conventions
 - Treat this folder as the source of truth for shared domain types.

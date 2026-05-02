@@ -13,9 +13,12 @@
 
 ## Conventions
 - Store IDs and primitives only.
-- Persist with `idb-keyval`.
+- Persist with `idb-keyval` (IndexedDB, not localStorage).
 - Mutate through store actions.
 - Keep shape stable across upgrades.
+- The store is very large; use selectors to avoid re-renders.
+- Check `_hasHydrated` before trusting persisted values in effects.
+- `resetFilters()` resets UI filter state only, not favorites/team/history.
 
 ## Commit Attribution
 AI-authored commits MUST include:

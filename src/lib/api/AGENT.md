@@ -1,11 +1,11 @@
 # API
 
 ## Files
-- `client.ts` Axios base instance, interceptors, retry logic
+- `client.ts` Axios base instances (REST + GraphQL), interceptors, retry logic
 - `rest.ts` PokeAPI REST endpoints
-- `graphql.ts` GraphQL endpoint
-- `tcg.ts` Pokemon TCG client
-- `cache.ts` cache helpers
+- `graphql.ts` PokeAPI GraphQL beta endpoints (raw string queries, no codegen)
+- `tcg.ts` Pokemon TCGdex client
+- `cache.ts` IndexedDB cache helpers with offline fallback
 - `keys.ts` TanStack Query key factory
 
 ## Conventions
@@ -14,6 +14,11 @@
 - Keep request and response types explicit.
 - Keep API concerns centralized here.
 - Store secrets only in environment variables.
+
+## Endpoints
+- REST: `https://pokeapi.co/api/v2`
+- GraphQL: `https://beta.pokeapi.co/graphql/v1beta`
+- TCG: `https://api.tcgdex.net`
 
 ## Commit Attribution
 AI-authored commits MUST include:

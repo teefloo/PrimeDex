@@ -9,7 +9,7 @@
 
 ## Conventions
 - Use across multiple routes.
-- Put `Header` and `Breadcrumbs` in the root layout.
+- `Header` is rendered per-page, not in the root layout.
 - Open `SettingsModal` from shared state, not page-local state.
 - Keep shell elements responsive and click-safe.
 - Icon-only controls need `aria-label`.

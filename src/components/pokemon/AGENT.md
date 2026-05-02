@@ -14,6 +14,11 @@
 - Keep interactive widgets SSR-safe.
 - Favor small, composable components.
 
+## Conventions
+- Heavy components (e.g., `EvolutionChain`, `AdvancedInfo`) use `next/dynamic`.
+- Use `useMounted` when browser APIs would cause hydration mismatches.
+- `CompareBarSlot` is rendered globally in `AppContent.tsx`.
+
 ## Commit Attribution
 AI-authored commits MUST include:
 `Co-authored-by: Gemini CLI <agent@gemini.google.com>`

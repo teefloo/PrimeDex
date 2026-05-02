@@ -2,7 +2,7 @@
 
 ## Scope
 - `app/`: route segments, layouts, metadata, and route handlers.
-- `components/`: `ui/`, `pokemon/`, and `layout/`.
+- `components/`: `ui/`, `pokemon/`, `layout/`, and `tcg/`.
 - `hooks/`: custom hooks.
 - `lib/`: utilities, i18n, and API integration.
 - `store/`: persisted Zustand state.
@@ -13,7 +13,7 @@
 - Use `@/` for internal imports.
 - Keep Server Components as the default.
 - Use `"use client"` only where interaction requires it.
-- Treat `src/types/pokemon.ts` as the source of truth.
+- Treat `src/types/pokemon.ts` as the source of truth for domain types.
 - Follow the closest `AGENT.md` for local rules.
 
 ## Commit Attribution
