@@ -2,6 +2,18 @@ import type { TCGCard, TCGSet } from '@/types/tcg';
 
 export const TCG_SET_IMAGE_PREVIEW_LIMIT = 36;
 
+// Card detail URLs are public catalog pages. The optional `tcgLang` query
+// selects card data, but it must never turn a valid card URL into a noindex
+// page or make the page's indexability depend on the interface locale.
+export const PUBLIC_TCG_CARD_ROBOTS = {
+  index: true,
+  follow: true,
+  googleBot: {
+    index: true,
+    follow: true,
+  },
+} as const;
+
 export function getTCGSetPreviewCards(cards: TCGCard[]): TCGCard[] {
   return cards.slice(0, TCG_SET_IMAGE_PREVIEW_LIMIT);
 }

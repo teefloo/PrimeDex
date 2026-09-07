@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import { isTcgLangSupported } from '@/lib/api/tcg';
 import { getTCGCardCached } from '@/lib/api/server-cache';
 import { SITE_URL } from '@/lib/site';
 import { TCGCardDetailRoute } from '@/components/tcg/TCGCardDetailRoute';
@@ -11,6 +10,7 @@ import { buildInLanguage } from '@/lib/seo';
 import { supportedLanguages } from '@/lib/languages';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { normalizeTCGCardLanguage, type TCGCardLanguage } from '@/lib/tcg-language';
+import { PUBLIC_TCG_CARD_ROBOTS } from '@/lib/tcg-seo';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -59,9 +59,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     // the root layout template from appending a second one.
     title: { absolute: title },
     description,
-    robots: isTcgLangSupported(tcgLanguage)
-      ? { index: true, follow: true }
-      : { index: false, follow: true },
+    robots: PUBLIC_TCG_CARD_ROBOTS,
     alternates: {
       canonical: `/${canonicalLanguage}/tcg/cards/${encodedCardId}`,
       languages: { ...languages, 'x-default': `/en/tcg/cards/${encodedCardId}` },
